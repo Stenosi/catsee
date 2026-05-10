@@ -1,1 +1,178 @@
-@AGENTS.md
+# CatSee — Briefing per Claude Code
+
+Questo file è il punto d'ingresso per chi (umano o AI) inizia a lavorare sul progetto. Contiene il **contesto essenziale** del prodotto e link ai documenti dettagliati.
+
+> **Per Claude Code:** leggi questo file all'inizio di ogni sessione. Per task specifici, leggi anche il documento di riferimento dalla sezione "Documenti chiave".
+
+---
+
+## TL;DR del prodotto
+
+CatSee è una **PWA** (Progressive Web App) per amanti dei gatti. L'utente, durante una passeggiata, scatta una foto di un gatto randagio direttamente dall'app (stile BeReal, no upload da galleria), la geolocalizza e la pubblica su una **mappa globale** condivisa con la community.
+
+**Anime del prodotto:**
+1. **Diario personale** — tieni traccia dei gatti che incontri.
+2. **Social leggero** — segui altri utenti, reagisci con emoji.
+3. **Gamification onesta** — badge, streak, contatori con anti-cheating.
+
+**Tre principi non negoziabili:**
+- **Privacy-first.** Coordinate vere mai esposte, fuzzing entro 100m di default.
+- **Autenticità.** Foto solo da fotocamera live in-app, no upload da galleria.
+- **Wholesome social.** No DM, no commenti testuali liberi (solo emoji), no algoritmi di engagement.
+
+## Stato del progetto
+
+- **Fase:** sviluppo MVP v1.0
+- **Target lancio:** Italia (focus iniziale Marche), poi globale
+- **Lingua MVP:** italiano (i18n predisposta da subito)
+- **Tema MVP:** solo chiaro (codice dark-mode-ready via CSS variables)
+- **Piattaforma MVP:** mobile-first PWA (desktop come visualizzazione read-only in v1.x)
+
+## Stack tecnologico
+
+| Layer | Tecnologia |
+|---|---|
+| Framework | Next.js 15 (App Router) + React 19 |
+| Linguaggio | TypeScript |
+| Styling | Tailwind CSS v4 + shadcn/ui |
+| State | Zustand + TanStack Query |
+| i18n | next-intl |
+| Mappa | Leaflet + react-leaflet + leaflet.markercluster + OpenStreetMap |
+| Database | Neon PostgreSQL serverless + PostGIS |
+| ORM | Drizzle ORM (modalità `push` per MVP) |
+| Auth | Auth.js v5 (magic link via Resend + Google OAuth) |
+| Storage | Cloudflare R2 (S3-compatible, free tier 10GB) |
+| AI is-a-cat | TensorFlow.js + COCO-SSD (client-side) |
+| Palette colori | node-vibrant (client-side) |
+| Hosting | Vercel free tier |
+| Rate limiting | Upstash Ratelimit |
+| Analytics | Plausible/Umami self-hosted (cookieless, GDPR) |
+| Error tracking | Sentry free tier |
+
+## Documenti chiave
+
+Tutti in `docs/`. Consultali per i dettagli prima di prendere decisioni di implementazione.
+
+| File | Contenuto |
+|---|---|
+| `docs/SPEC.md` | Specifica funzionale completa: feature MVP, roadmap futura, principi di design, considerazioni legali, modello dati high-level |
+| `docs/WIREFRAMES.md` | Wireframe testuali di tutte le schermate mobile MVP, pattern UI globali, flow utente |
+| `docs/DATABASE.md` | Setup database, struttura schema Drizzle, comandi quotidiani, strategia migrazioni |
+
+## Struttura repository
+
+```
+catsee/
+├── CLAUDE.md                      ← questo file
+├── docs/
+│   ├── SPEC.md
+│   ├── WIREFRAMES.md
+│   └── DATABASE.md
+├── src/
+│   ├── db/
+│   │   ├── client.ts              ← client Drizzle ↔ Neon
+│   │   ├── geo.ts                 ← helper PostGIS
+│   │   ├── index.ts               ← re-export
+│   │   └── schema/                ← schema diviso per dominio
+│   ├── app/                       ← Next.js App Router
+│   ├── components/
+│   │   └── ui/                    ← componenti shadcn/ui
+│   └── lib/                       ← utility condivise
+├── scripts/
+│   ├── 0_setup_postgis.sql        ← UNA tantum, su Neon
+│   └── seed.ts                    ← popola badges + admin
+├── drizzle.config.ts
+├── .env.example
+└── package.json
+```
+
+## Convenzioni di codice
+
+- **TypeScript ovunque.** No `any`, no `// @ts-ignore` se evitabile.
+- **camelCase in TS, snake_case in DB.** Drizzle traduce.
+- **CSS variables di shadcn/ui.** Mai colori hardcoded (`bg-white`, `text-black`). Usa `bg-background`, `text-foreground`, ecc. per dark-mode readiness.
+- **Server Components di default.** `'use client'` solo dove serve davvero (interazioni, browser API).
+- **Server Actions per le mutazioni.** Niente API REST custom in MVP, le Server Actions di Next.js bastano.
+- **Validazione con Zod** su ogni input utente, sia client che server.
+- **Soft delete** dove abbiamo `deletedAt`, mai DELETE hard nel codice applicativo.
+- **Rate limiting** su tutte le mutazioni (login, post, like, follow).
+
+## Decisioni architetturali importanti
+
+### Privacy coordinate
+Salvare sempre `locationReal` (vero) e `locationFuzzed` (offset random ~100m) nel DB. Le API pubbliche espongono SOLO `locationFuzzed` (a meno che l'utente abbia opt-in `preciseLocation: true`). Le coordinate vere sono visibili solo all'autore nella sua mappa privata.
+
+### Encryption
+Nessuna application-level encryption. Affidiamo a Neon la encryption-at-rest (automatica, gratuita). La protezione della privacy viene dal fuzzing, non dalla crittografia.
+
+### Pulizia file R2
+Niente DELETE sincroni. Quando un file diventa orfano (avatar sostituito, post eliminato, ecc.), aggiungiamo una riga a `r2_cleanup_queue` con stato `pending`. Un cron job notturno (Vercel Cron) processa la coda con retry automatici, max 5 tentativi.
+
+### Camera
+Non usiamo la camera di sistema (salverebbe in galleria). Usiamo `navigator.mediaDevices.getUserMedia()` per il feed video in-app + canvas per la cattura del frame. Garantisce l'autenticità BeReal-style.
+
+### AI verifica
+Verifica "is-a-cat" via TensorFlow.js + COCO-SSD client-side. Zero costi, zero latenza server, foto non viaggia mai per essere validata. Se fallisce, post va in moderazione admin.
+
+### Soft delete + GDPR
+Eliminazione account → 1) `deletedAt = now()`, 2) anonimizzazione email/username, 3) job cleanup file R2, 4) hard delete dopo 30 giorni.
+
+## Anti-pattern da evitare
+
+- ❌ DM, commenti testuali liberi, algoritmi di engagement (scelte filosofiche permanenti).
+- ❌ Cookie banner. Usiamo analytics cookieless.
+- ❌ Tracking pixel di terze parti. Mai.
+- ❌ Pubblicità. Mai.
+- ❌ Hardcoded colors / strings (rompe dark mode e i18n).
+- ❌ DB queries dentro componenti React. Usa Server Components o Server Actions.
+- ❌ Coordinate esatte in API pubbliche.
+- ❌ EXIF non strippato dalle foto.
+
+## Flow di sviluppo locale
+
+```bash
+pnpm dev              # avvia Next.js
+pnpm db:push          # sincronizza schema dopo modifiche
+pnpm db:studio        # esplora il DB nel browser
+pnpm db:seed          # popola badges + promuovi admin
+pnpm lint             # ESLint
+```
+
+## Per Claude Code: come aiutarmi al meglio
+
+- **Quando proponi feature nuove**, controlla prima in `docs/SPEC.md` se è già stata pensata (potrebbe essere in roadmap v1.1+ deliberatamente).
+- **Per UI**, usa il design system shadcn/ui esistente. Non aggiungere componenti senza motivo.
+- **Per query DB**, sfrutta gli helper in `src/db/geo.ts` per query geografiche e gli indici esistenti.
+- **Pubblica codice piccolo e testabile**, non file giganti.
+- **Discuti le decisioni grosse** prima di implementarle: non farti scappare lo scope.
+- **Mantieni la documentazione aggiornata** (specialmente `CLAUDE.md` se aggiungi qualcosa di importante).
+
+## Roadmap di sviluppo (alto livello)
+
+L'ordine di sviluppo che ha più senso (non rigido):
+
+1. ✅ Setup repo, schema DB, dipendenze
+2. ⬜ Auth.js + magic link (Resend) + Google OAuth
+3. ⬜ Onboarding (username + nickname)
+4. ⬜ Layout di base + bottom navbar
+5. ⬜ Profilo proprio (read-only base)
+6. ⬜ Mappa pubblica con pin
+7. ⬜ Flow scatto: camera → AI verify → palette → form → save
+8. ⬜ Feed (Seguiti / Esplora / Vicini)
+9. ⬜ Reazioni emoji + Follow/Unfollow
+10. ⬜ Sistema badge + unlock animations
+11. ⬜ Moderazione (segnalazioni, pannello admin)
+12. ⬜ PWA manifest + service worker + install prompt
+13. ⬜ Job cron R2 cleanup
+14. ⬜ Privacy policy + ToS + GDPR consent
+15. ⬜ Beta launch
+
+## Decisioni aperte / da prendere
+
+- Naming definitivo (CatSee è placeholder).
+- Branding: logo, palette finale, tono di voce.
+- Design dettagliato schermate (per ora wireframe testuali, code-first approach).
+- Lista parole offensive italiane curata per `obscenity`.
+- Strategia testing (Vitest? Playwright? quanto coverage?).
+- Domain name e hosting di produzione.
+- Privacy policy e ToS dettagliati (template + adattamento, possibile consulenza legale a scaling).
