@@ -29,33 +29,18 @@ Per ogni schermata: **Scopo · Layout · Componenti · Comportamenti · Edge cas
 
 ## 0. Pattern globali
 
-### 0.1 Sistema tipografico provvisorio
+### 0.1 Tipografia e palette
 
-Scale Tailwind senza personalizzazioni in MVP.
+→ Vedi `docs/DESIGN_SYSTEM.md` per font, scala tipografica, token colore OKLCH, linee guida d'uso e note dark mode.
 
-- **Display (titoli marketing):** text-3xl, font-bold
-- **H1 (titoli pagina):** text-2xl, font-semibold
-- **H2 (sezioni):** text-xl, font-semibold
-- **Body:** text-base
-- **Caption (timestamp, meta):** text-sm, text-muted-foreground
-- **Micro (badge label):** text-xs
+Riepilogo per navigare i wireframe:
 
-### 0.2 Palette light mode (provvisoria, da rifinire)
+- Testi secondari/meta: `text-sm text-muted-foreground`
+- Azioni primarie (FAB, "Pubblica"): `bg-primary text-primary-foreground`
+- Feedback negativi: `bg-destructive`, `bg-warning`
+- Feedback positivi: `bg-success`
 
-Variabili shadcn/ui + valori coerenti col tema "felino caldo":
-- `--background`: hsl bianco quasi puro
-- `--foreground`: hsl quasi nero
-- `--primary`: arancione caldo (richiamo pelo gatto)
-- `--primary-foreground`: bianco
-- `--secondary`: grigio chiaro neutro
-- `--muted`: grigio chiaro per testi secondari
-- `--accent`: complementare al primary (da definire)
-- `--destructive`: rosso standard
-- `--border`: grigio molto chiaro
-
-Codice sempre via CSS custom properties → switch dark mode in v1.x a costo zero.
-
-### 0.3 Layout di base (post-login)
+### 0.2 Layout di base (post-login)
 
 ```
 ┌──────────────────────────┐
@@ -69,26 +54,27 @@ Codice sempre via CSS custom properties → switch dark mode in v1.x a costo zer
 └──────────────────────────┘
 ```
 
-### 0.4 Bottom Navbar — versione MVP (4 voci)
+### 0.4 Bottom Navbar — versione MVP (5 voci)
 
-**Decisione:** 4 voci anziché 5. La distinzione Home/Esplora rischiava di sovrapporsi. Le accorpiamo in un'unica voce **Feed** con tab interne.
+**Decisione:** 5 voci. La distinzione Home/Esplora rischiava di sovrapporsi, quindi Feed rimane una voce unica con tab interne. La **Ricerca** è spostata dall'header alla navbar (era accessibile da header variante A), portando le voci a 5 e permettendo al FAB di stare geometricamente al centro (2 | FAB | 2).
 
 ```
-┌───────────────────────────────────┐
-│  {🗺️}    {🏠}    ┌────┐    {👤}  │
-│  Mappa   Feed    │ 📷 │   Profilo │
-│                  └────┘            │
-└───────────────────────────────────┘
+┌──────────────────────────────────────────┐
+│  {🗺️}   {🏠}   ┌────┐   {🔍}   {👤}   │
+│  Mappa   Feed   │ 📷 │   Cerca  Profilo  │
+│                 └────┘                   │
+└──────────────────────────────────────────┘
 ```
 
-**Logica delle 4 voci:**
+**Logica delle 5 voci:**
 - **Mappa** = visione spaziale dei dati (la lente più caratteristica del prodotto).
 - **Feed** = visione temporale dei dati, con tab interne: *Seguiti* / *Esplora* / *Vicini*.
 - **Scatta (FAB)** = azione di creazione, sempre al centro, prominente.
+- **Cerca** = ricerca utenti per username/nickname; in v1.1 ricerca multi-tipo.
 - **Profilo** = il proprio profilo + accesso a settings globali.
 
 **Componenti:**
-- 4 voci con icona + label corta sotto (text-xs).
+- 5 voci con icona + label corta sotto (text-xs); il FAB non ha label.
 - FAB centrale: più grande, colore primary, sporge ~8px sopra la barra (estetica BeReal/Strava).
 - Voce attiva: icona piena + colore primary; voci inattive: outline + grigio.
 
@@ -109,13 +95,13 @@ Codice sempre via CSS custom properties → switch dark mode in v1.x a costo zer
 
 Header alto 56px, sticky, sfondo background.
 
-**Variante A — Mappa / Feed (con ricerca):**
+**Variante A — Mappa / Feed (solo logo):**
 ```
 ┌──────────────────────────┐
-│ {logo}   <ricerca>       │
+│ {logo}                   │
 └──────────────────────────┘
 ```
-La barra di ricerca apre la schermata 3.4 dedicata al tap.
+La ricerca non è più nell'header: è accessibile direttamente dalla voce "Cerca" nella navbar.
 
 **Variante B — Schermata di dettaglio (con back):**
 ```
@@ -140,13 +126,21 @@ L'ingranaggio porta alle impostazioni globali (vedi sezione 4).
 ```
 Menu `{⋮}` per: Segnala, Blocca (v1.1).
 
+**Variante E — Cerca (tab principale, no back):**
+```
+┌──────────────────────────┐
+│ <ricerca...>         {x} │
+└──────────────────────────┘
+```
+L'header della schermata Cerca è la search bar stessa, a piena larghezza. `{x}` compare solo se c'è testo e svuota il campo.
+
 ### 0.6 Stati globali ricorrenti
 
 - **Loading liste:** skeleton screen via `<Skeleton>` di shadcn/ui (3-5 placeholder animati che simulano la card finale).
 - **Loading azioni puntuali:** spinner inline sul bottone (bottone disabilitato + spinner).
 - **Empty state:** illustrazione minimale + frase + CTA. Mai un vuoto secco.
 - **Error generico:** banner rosso top con messaggio + bottone "riprova".
-- **Toast:** in basso, sopra la navbar, durata 3s, auto-dismiss. Variante info / success / error.
+- **Toast (Sonner):** in basso, sopra la navbar, durata 3s, auto-dismiss. Implementato via `Sonner` (shadcn/ui depreca il proprio `Toast`). Variante info / success / error.
 
 ### 0.7 Banner "Installa la PWA" (globale)
 
@@ -452,7 +446,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 
 ---
 
-## 2. Core (4 schermate via navbar)
+## 2. Core (5 schermate via navbar)
 
 ### 2.1 Feed
 
@@ -461,7 +455,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 **Layout:**
 ```
 ┌──────────────────────────┐
-│ {logo} <ricerca>         │  ← header variante A
+│ {logo}                   │  ← header variante A
 ├──────────────────────────┤
 │                          │
 │  [Seguiti] [Esplora] [Vicini]│  ← tabs
@@ -531,7 +525,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 **Layout:**
 ```
 ┌──────────────────────────┐
-│ {logo} <ricerca>         │  ← header variante A
+│ {logo}                   │  ← header variante A
 ├──────────────────────────┤
 │                          │
 │   ┌──────────────────┐   │
@@ -557,7 +551,8 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 ```
 
 **Componenti:**
-- Header: logo small, search bar (link a 3.4).
+
+- Header: solo logo (variante A — la ricerca è accessibile dalla voce "Cerca" in navbar).
 - Riga filtri pill orizzontali: Data, Colore, Username; tap apre bottom sheet con opzioni.
 - Mappa Leaflet a pieno schermo.
 - FAB "recenter" in basso a destra (sopra navbar).
@@ -569,7 +564,6 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 - Tap su pin → bottom sheet preview (foto + nickname + autore + data + bottone "vedi dettaglio").
 - Tap su cluster → zoom-in automatico.
 - Tap su filtro → bottom sheet con opzioni multi-select.
-- Tap search → 3.4 ricerca.
 
 **Empty state:**
 - Nessun pin nell'area visibile: overlay semitrasparente "Nessun gatto avvistato qui. Sii il primo!" + CTA "Scatta".
@@ -746,9 +740,9 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 
 **Comportamenti:** tap su riga → 3.2 profilo. Bottone segui inline.
 
-### 3.4 Risultati ricerca (MVP: solo utenti)
+### 3.4 Cerca (tab navbar — MVP: solo utenti)
 
-**Scopo:** trovare utenti per username/nickname.
+**Scopo:** trovare utenti per username/nickname. Accessibile direttamente dalla voce "Cerca" nella bottom navbar — non più come sub-page dell'header.
 
 **MVP:** solo utenti.
 **v1.1:** ricerca multi-tipo (utenti / gatti per nickname / location), tab orizzontali stile Instagram.
@@ -756,7 +750,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 **Layout MVP:**
 ```
 ┌──────────────────────────┐
-│ {<}  <ricerca attiva> {x}│
+│ <ricerca...>         {x} │  ← header variante E (search bar a piena larghezza)
 ├──────────────────────────┤
 │                          │
 │  Risultati per "mario"   │
@@ -1379,6 +1373,8 @@ Il FAB "Scatta" apre una sequenza fullscreen con la navbar nascosta.
 
 ## Changelog
 
+- **0.3** (2026-05-10 — post-setup):
+  - Toast: confermato Sonner come implementazione (nota in sezione 0.6).
 - **0.2** (2026-04-27):
   - Bottom navbar a 4 voci (Mappa, Feed, Scatta, Profilo) anziché 5.
   - Feed con tab interne Seguiti / Esplora / Vicini (con range slider).

@@ -110,7 +110,7 @@ Per garantire un ambiente safe e prevenire abusi:
 
 ### 4.5 Ricerca
 
-- **Barra di ricerca globale** accessibile dall'header dell'app.
+- **Voce "Cerca" nella bottom navbar** (spostata dall'header: con 4 tab + FAB il FAB non era centrato; aggiungendo Cerca si arriva a 5 slot con FAB al centro geometrico). Accessibile direttamente come tab principale.
 - Cerca utenti per username (`@mario_rossi`) o nickname.
 - Risultati: lista utenti con avatar, nickname, @username, contatore avvistamenti.
 - Click → vai al profilo dell'utente.
@@ -389,7 +389,7 @@ Decisioni rimandate da prendere in fasi future:
 
 - Branding completo (nome definitivo, logo, palette colori, tono di voce).
 - Wireframe e flow utente dettagliati.
-- Schema DB completo con constraint, indici, PostGIS per query geografiche.
+- ✅ Schema DB completo con constraint, indici, PostGIS per query geografiche — risolto nel setup iniziale (2026-05-10), schema pushato su Neon con PostGIS attivo.
 - Definizione precisa API endpoints (REST? RSC + Server Actions?).
 - Strategia di testing dettagliata.
 - Setup repository (struttura cartelle, conventional commits, branching strategy).
@@ -400,6 +400,15 @@ Decisioni rimandate da prendere in fasi future:
 
 ## Changelog
 
+- **0.4** (2026-05-10 — post-setup):
+  - Schema DB completo pushato su Neon (PostgreSQL 17, regione Europa, PostGIS attivo).
+  - Auth.js v5 beta installato con DrizzleAdapter; magic link e Google OAuth prossimo step.
+  - shadcn/ui installato con stile **base-nova** (usa `@base-ui/react` come primitive, colori OKLCH).
+  - Palette colori **"Ginger Cat"** (primary ambra arancio caldo) applicata in `globals.css`.
+  - Font **Plus Jakarta Sans** (variable) per UI; Geist Mono per codice.
+  - Token custom `--warning` / `--success` aggiunti oltre allo schema shadcn standard.
+  - Sonner sostituisce il componente Toast deprecato di shadcn/ui.
+  - React Compiler abilitato.
 - **0.3** (2026-04-26):
   - Aggiunta ricerca utenti per username/nickname (sezione 4.5).
   - Aggiunto filtro mappa per username (sezione 4.4).

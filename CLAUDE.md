@@ -58,6 +58,8 @@ Tutti in `docs/`. Consultali per i dettagli prima di prendere decisioni di imple
 | `docs/SPEC.md` | Specifica funzionale completa: feature MVP, roadmap futura, principi di design, considerazioni legali, modello dati high-level |
 | `docs/WIREFRAMES.md` | Wireframe testuali di tutte le schermate mobile MVP, pattern UI globali, flow utente |
 | `docs/DATABASE.md` | Setup database, struttura schema Drizzle, comandi quotidiani, strategia migrazioni |
+| `docs/DESIGN_SYSTEM.md` | Palette colori (token OKLCH, motivazioni, linee guida d'uso), tipografia, anti-pattern, note dark mode |
+| `docs/KNOWN_BUGS.md` | Bug confermati non ancora risolti: sintomi, cause investigate, tentativi falliti, prossimi passi |
 
 ## Struttura repository
 
@@ -176,3 +178,18 @@ L'ordine di sviluppo che ha più senso (non rigido):
 - Strategia testing (Vitest? Playwright? quanto coverage?).
 - Domain name e hosting di produzione.
 - Privacy policy e ToS dettagliati (template + adattamento, possibile consulenza legale a scaling).
+
+## Aggiornamenti post-setup (2026-05-10)
+
+Decisioni prese durante il setup iniziale, non ancora documentate altrove:
+
+- **Schema DB:** completo e pushato su Neon con PostGIS attivo. Tabelle operative: `users`, `sightings`, `reactions`, `follows`, `badges`, `user_badges`, `reports`, `r2_cleanup_queue` + tabelle Auth.js (`accounts`, `sessions`, `verificationTokens`, `authenticators`).
+- **Auth.js v5 (beta):** installato con `DrizzleAdapter`. Magic link (Resend) e Google OAuth pronti come passo successivo.
+- **shadcn/ui:** installato con stile **base-nova** (stile di default dell'init corrente — usa `@base-ui/react` come primitive invece di Radix UI). CSS variables in formato **OKLCH**. File di config: `components.json`.
+- **Palette colori:** "Ginger Cat" (ambra arancio caldo). Definita in `src/app/globals.css` con variabili OKLCH per light e dark mode. Token custom aggiuntivi: `--warning`, `--warning-foreground`, `--success`, `--success-foreground` (non standard shadcn, esposti come `bg-warning`, `bg-success` via `@theme inline`).
+- **Font:** **Plus Jakarta Sans** (variable font, pesi 400/500/600/700) via `next/font/google`. CSS variable: `--font-sans`. Font mono: Geist Mono (`--font-geist-mono`) per snippet di codice.
+- **Sonner:** usato al posto del componente `Toast` deprecato di shadcn/ui.
+- **React Compiler:** abilitato in `next.config.ts`.
+- **AGENTS.md:** presente nella root con best practice Next.js aggiornate.
+- **Database:** PostgreSQL 17 su Neon, regione Europa.
+- **Pulizia R2:** strategia confermata — coda `r2_cleanup_queue` + cron job notturno Vercel, niente delete sincroni.
