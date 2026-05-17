@@ -154,8 +154,8 @@ pnpm lint             # ESLint
 L'ordine di sviluppo che ha più senso (non rigido):
 
 1. ✅ Setup repo, schema DB, dipendenze
-2. ⬜ Auth.js + magic link (Resend) + Google OAuth
-3. ⬜ Onboarding (username + nickname)
+2. ✅ Auth.js + magic link (Resend) — Google OAuth rimandato a dopo il lancio
+3. ✅ Onboarding (username + nickname)
 4. ✅ Layout di base + bottom navbar
 5. ✅ Profilo proprio (read-only base)
 6. ⬜ Mappa pubblica con pin
@@ -193,6 +193,27 @@ Decisioni prese durante il setup iniziale, non ancora documentate altrove:
 - **AGENTS.md:** presente nella root con best practice Next.js aggiornate.
 - **Database:** PostgreSQL 17 su Neon, regione Europa.
 - **Pulizia R2:** strategia confermata — coda `r2_cleanup_queue` + cron job notturno Vercel, niente delete sincroni.
+
+## Aggiornamenti sessione 3 (2026-05-17)
+
+### Auth.js completato
+
+- **`src/auth.ts`:** Auth.js v5 con `DrizzleAdapter` wrappato. Override di `createUser` per iniettare `username` temp e `onboardingCompleted: false` (il nostro schema ha `username/nickname NOT NULL`, l'adapter di default non li conosce). Session callback arricchisce la sessione con `id`, `username`, `nickname`, `role`, `onboardingCompleted`.
+- **`src/proxy.ts`:** sostituisce `middleware.ts` (rinomina richiesta da Next.js 16). Protegge le route: non autenticato → `/login`; autenticato ma non onboarded → `/onboarding`; route pubbliche: `/`, `/mappa`, `/login`, `/api/auth`.
+- **Provider:** solo Resend (magic link). Google OAuth rimandato a post-lancio — setup troppo lento in sviluppo.
+- **`/api/auth/dev-login`:** endpoint dev-only che crea sessione Auth.js reale senza email. Configura `DEV_USER_EMAIL` in `.env`. **Invisibile in produzione** (`NODE_ENV !== 'development'` → 404).
+- **Schema:** aggiunte colonne `email_verified` (timestamp, nullable) e `onboarding_completed` (boolean, default false) a `users`. Pushato su Neon.
+
+### Onboarding
+
+- **`src/app/(auth)/onboarding/page.tsx`:** 2 step (username → nickname). Validazione live username con debounce 400ms (server action `checkUsername`). Controllo disponibilità, formato, parole riservate, obscenity (libreria `obscenity` con dataset inglese).
+- **Pagine auth** nel route group `(auth)` — layout senza AppHeader/BottomNavbar.
+
+### Convenzioni stabilite
+
+- **`src/lib/session.ts`:** helper `getSession()`, `requireSession()`, `requireOnboardedSession()` da usare in tutti i Server Components e Server Actions che richiedono autenticazione. **Non usare `auth()` direttamente nei componenti** — usa questi helper.
+- **Input styled manualmente:** il progetto non ha ancora un componente `<Input>` shadcn. Fino a che non viene installato, usare `<input className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ...">` (stesso stile del componente shadcn).
+- **Route group `(auth)`:** tutte le schermate senza navbar (login, onboarding, future schermate fullscreen) vanno qui.
 
 ## Aggiornamenti sessione 2 (2026-05-15)
 
