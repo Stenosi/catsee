@@ -1,10 +1,16 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { Settings } from "lucide-react";
+import { useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { Settings, ChevronLeft, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const HIDDEN_PATHS = ["/scatta", "/cerca"];
+const HIDDEN_PATHS = ["/scatta"];
+
+const BACK_HEADERS: Record<string, string> = {
+  "/profilo/modifica": "Modifica profilo",
+  "/profilo/badge": "Badge",
+};
 
 export default function AppHeader() {
   const pathname = usePathname();
@@ -19,11 +25,89 @@ export default function AppHeader() {
 }
 
 function HeaderContent({ pathname }: { pathname: string }) {
-  if (pathname === "/profilo" || pathname.startsWith("/profilo/")) {
+  if (BACK_HEADERS[pathname]) {
+    return <BackHeader title={BACK_HEADERS[pathname]} />;
+  }
+
+  if (pathname === "/profilo") {
     return <ProfiloHeader />;
   }
 
+  if (pathname === "/cerca") {
+    return <CercaHeader />;
+  }
+
   return <LogoHeader />;
+}
+
+function BackHeader({ title }: { title: string }) {
+  const router = useRouter();
+
+  return (
+    <div className="flex w-full items-center gap-2">
+      <button
+        onClick={() => router.back()}
+        aria-label="Torna indietro"
+        className={cn(
+          "flex items-center justify-center w-9 h-9 -ml-2 rounded-full",
+          "text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        )}
+      >
+        <ChevronLeft className="w-5 h-5" strokeWidth={1.75} />
+      </button>
+      <span className="text-base font-semibold text-foreground">{title}</span>
+    </div>
+  );
+}
+
+function CercaHeader() {
+  const [hasText, setHasText] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleClear = () => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.value = "";
+    setHasText(false);
+    el.focus();
+  };
+
+  return (
+    <div className="relative flex-1">
+      <Search
+        className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
+        strokeWidth={2}
+      />
+      <input
+        ref={inputRef}
+        type="search"
+        autoComplete="off"
+        placeholder="Cerca utenti…"
+        onInput={(e) => setHasText((e.target as HTMLInputElement).value.length > 0)}
+        className={cn(
+          "w-full h-9 rounded-full pl-9 text-sm font-medium",
+          "bg-muted text-foreground placeholder:text-muted-foreground",
+          "border border-border outline-none caret-primary",
+          "[&::-webkit-search-cancel-button]:hidden",
+          hasText ? "pr-9" : "pr-4"
+        )}
+      />
+      {hasText && (
+        <button
+          type="button"
+          aria-label="Cancella ricerca"
+          onPointerDown={(e) => { e.preventDefault(); handleClear(); }}
+          className={cn(
+            "absolute right-2 top-1/2 -translate-y-1/2",
+            "flex items-center justify-center w-6 h-6 rounded-full",
+            "text-muted-foreground hover:text-foreground transition-colors"
+          )}
+        >
+          <X className="w-4 h-4" strokeWidth={2.5} />
+        </button>
+      )}
+    </div>
+  );
 }
 
 function LogoHeader() {
@@ -35,7 +119,6 @@ function LogoHeader() {
 function ProfiloHeader() {
   return (
     <div className="flex w-full items-center justify-between">
-      {/* @ Username unico */}
       <span className="text-base font-semibold text-foreground">@stenosi</span>
       <button
         aria-label="Impostazioni"

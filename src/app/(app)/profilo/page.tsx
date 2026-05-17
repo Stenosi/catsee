@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Cat, Pencil, Award, MapPin, Frown, LayoutGrid } from "lucide-react";
@@ -98,14 +98,20 @@ export default function ProfiloPage() {
 
         {/* Azioni */}
         <div className="w-full flex gap-2">
-          <Button size="sm" variant="secondary" className="flex-1">
+          <Link
+            href="/profilo/modifica"
+            className={cn(buttonVariants({ size: "sm", variant: "secondary" }),
+              "flex-1")}>
             <Pencil aria-hidden="true" data-icon="inline-start" />
             Modifica profilo
-          </Button>
-          <Button size="sm" variant="secondary" className="flex-1">
+          </Link>
+          <Link
+            href="/profilo/badge"
+            className={cn(buttonVariants({ size: "sm", variant: "secondary" }),
+              "flex-1")}>
             <Award aria-hidden="true" data-icon="inline-start" />
             Mostra badge
-          </Button>
+          </Link>
         </div>
       </div>
 
