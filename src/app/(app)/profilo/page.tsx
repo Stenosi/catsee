@@ -76,14 +76,6 @@ export default function ProfiloPage() {
               </Badge>
             </div>
 
-            {/*
-              <dl> è una "description list": una lista di coppie termine→valore.
-              <dt> (description term) è l'etichetta — es. "follower".
-              <dd> (description details) è il valore — es. "353".
-              È la struttura semantica corretta per statistiche, metadati, glossari:
-              gli screen reader associano ogni valore alla sua etichetta invece di
-              leggere i numeri come testo generico senza contesto.
-            */}
             <dl className="flex gap-4 text-xs font-medium">
               <div className="flex flex-col items-center -space-y-1">
                 <dd className="text-foreground">353</dd>
@@ -119,7 +111,7 @@ export default function ProfiloPage() {
 
       {/* Tab Post / Mappa */}
       <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="flex flex-col flex-1">
-        <TabsList variant="line" className="w-full rounded-none border-b p-0">
+        <TabsList variant="line" className="w-full rounded-none border-b p-0 gap-0">
           <TabsTrigger value="post" className="flex-1 rounded-none border-none h-full p-0">
             <LayoutGrid />
             Post

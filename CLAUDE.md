@@ -59,7 +59,7 @@ Tutti in `docs/`. Consultali per i dettagli prima di prendere decisioni di imple
 | `docs/WIREFRAMES.md` | Wireframe testuali di tutte le schermate mobile MVP, pattern UI globali, flow utente |
 | `docs/DATABASE.md` | Setup database, struttura schema Drizzle, comandi quotidiani, strategia migrazioni |
 | `docs/DESIGN_SYSTEM.md` | Palette colori (token OKLCH, motivazioni, linee guida d'uso), tipografia, anti-pattern, note dark mode |
-| `docs/KNOWN_BUGS.md` | Bug confermati non ancora risolti: sintomi, cause investigate, tentativi falliti, prossimi passi |
+| `docs/KNOWN_BUGS.md` | Bug confermati (risolti e aperti): sintomi, cause, tentativi, soluzione adottata |
 
 ## Struttura repository
 
@@ -156,8 +156,8 @@ L'ordine di sviluppo che ha più senso (non rigido):
 1. ✅ Setup repo, schema DB, dipendenze
 2. ⬜ Auth.js + magic link (Resend) + Google OAuth
 3. ⬜ Onboarding (username + nickname)
-4. ⬜ Layout di base + bottom navbar
-5. ⬜ Profilo proprio (read-only base)
+4. ✅ Layout di base + bottom navbar
+5. ✅ Profilo proprio (read-only base)
 6. ⬜ Mappa pubblica con pin
 7. ⬜ Flow scatto: camera → AI verify → palette → form → save
 8. ⬜ Feed (Seguiti / Esplora / Vicini)
@@ -193,3 +193,51 @@ Decisioni prese durante il setup iniziale, non ancora documentate altrove:
 - **AGENTS.md:** presente nella root con best practice Next.js aggiornate.
 - **Database:** PostgreSQL 17 su Neon, regione Europa.
 - **Pulizia R2:** strategia confermata — coda `r2_cleanup_queue` + cron job notturno Vercel, niente delete sincroni.
+
+## Aggiornamenti sessione 2 (2026-05-15)
+
+### Layout shell completato
+
+- **`src/app/(app)/layout.tsx`:** shell `h-dvh overflow-hidden flex flex-col` con `AppHeader` (`shrink-0`) + `<main className="flex-1 overflow-y-auto">` + `BottomNavbar` (`shrink-0`). Niente `sticky` — non necessario quando il parent non scrolla.
+- **`src/app/page.tsx`:** redirect verso `/mappa`.
+- **Pagine placeholder:** `mappa`, `feed`, `scatta`, `cerca` — tutte con contenuto minimo.
+
+### Bottom navbar
+
+- 5 tab (Mappa, Feed, [FAB Scatta], Cerca, Profilo). FAB centrato, `-translate-y-2` per sollevarsi, `w-14 h-14 rounded-full`.
+- Nascosta su `/scatta` via `HIDDEN_PATHS`.
+- Safe area: `pb-[env(safe-area-inset-bottom)]` sul `<nav>`, altezza fissa `h-16` sull'inner div.
+
+### Gesture bar / safe area
+
+- `viewport` export in `src/app/layout.tsx` con `viewportFit: "cover"`.
+- `html { @apply bg-card; }` in `globals.css` — l'elemento `html` riempie le aree fuori dal contenuto (gesture bar in basso, status bar in alto) con il colore della navbar.
+
+### App header
+
+- Variante per route: logo su mappa/feed, titolo + settings su profilo, searchbar su cerca.
+- Nascosto su `/scatta`.
+
+### Tabs shadcn — fix visivi
+
+- `src/components/ui/tabs.tsx`: `after:bottom-[-5px]` → `after:bottom-0` (indicatore a filo), `after:bg-foreground` → `after:bg-primary`.
+- Rimosso shadow da tutti i `TabsTrigger` (non solo quando attivi).
+
+### Pagina Profilo
+
+- Avatar con `onLoadingStatusChange` + `Skeleton` overlay + `AvatarFallback` sempre nel DOM (base-ui gestisce la visibilità).
+- Stats con `<dl>/<dd>/<dt>` (HTML semantico per coppie chiave-valore).
+- Badge gatti avvistati con `aria-label`.
+- Tabs Post / Mappa con swipe orizzontale: `|deltaX| ≥ 50 && |deltaX| > |deltaY|` per non interferire con lo scroll verticale.
+- Empty state con componente `Empty` di shadcn per entrambe le tab.
+
+### Workflow testing mobile
+
+Il dev server Next.js **non funziona via IP di rete locale** su mobile: il WebSocket HMR fallisce durante `hydrate()`, impedendo l'idratazione React (app visiva ma non interattiva). Vedere `docs/KNOWN_BUGS.md` KB-001 e KB-002 per dettagli.
+
+**Strategia adottata:** sviluppo e debug su desktop; testing mobile su **Vercel** (deploy automatico da `main`, URL HTTPS stabile, nessun problema HMR).
+
+### Vercel
+
+- Progetto collegato al repo GitHub `main`. Deploy automatico ad ogni push.
+- Free tier Vercel sufficiente per MVP.
