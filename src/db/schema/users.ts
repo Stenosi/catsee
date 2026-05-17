@@ -11,6 +11,7 @@ import {
   index,
 } from 'drizzle-orm/pg-core';
 
+
 // ============================================================================
 // ENUM
 // ============================================================================
@@ -44,6 +45,9 @@ export const users = pgTable(
     // ── Identificatore
     id: uuid('id').primaryKey().defaultRandom(),
 
+    // ── Auth.js
+    emailVerified: timestamp('email_verified', { mode: 'date', withTimezone: true }),
+
     // ── Identità
     email: text('email').notNull().unique(),
     username: text('username').notNull().unique(),
@@ -62,6 +66,9 @@ export const users = pgTable(
     banned: boolean('banned').default(false).notNull(),
     bannedAt: timestamp('banned_at', { withTimezone: true }),
     bannedReason: text('banned_reason'),
+
+    // ── Onboarding
+    onboardingCompleted: boolean('onboarding_completed').default(false).notNull(),
 
     // ── Preferenze
     settings: jsonb('settings')
