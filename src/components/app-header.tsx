@@ -12,25 +12,25 @@ const BACK_HEADERS: Record<string, string> = {
   "/profilo/badge": "Badge",
 };
 
-export default function AppHeader() {
+export default function AppHeader({ username }: { username: string }) {
   const pathname = usePathname();
 
   if (HIDDEN_PATHS.includes(pathname)) return null;
 
   return (
     <header className="shrink-0 z-40 h-14 bg-card border-b border-border flex items-center px-4">
-      <HeaderContent pathname={pathname} />
+      <HeaderContent pathname={pathname} username={username} />
     </header>
   );
 }
 
-function HeaderContent({ pathname }: { pathname: string }) {
+function HeaderContent({ pathname, username }: { pathname: string, username: string }) {
   if (BACK_HEADERS[pathname]) {
     return <BackHeader title={BACK_HEADERS[pathname]} />;
   }
 
   if (pathname === "/profilo") {
-    return <ProfiloHeader />;
+    return <ProfiloHeader username={username} />;
   }
 
   if (pathname === "/cerca") {
@@ -116,10 +116,10 @@ function LogoHeader() {
   );
 }
 
-function ProfiloHeader() {
+function ProfiloHeader({ username }: { username: string }) {
   return (
     <div className="flex w-full items-center justify-between">
-      <span className="text-base font-semibold text-foreground">@stenosi</span>
+      <span className="text-base font-semibold text-foreground">@{username}</span>
       <button
         aria-label="Impostazioni"
         className={cn(
