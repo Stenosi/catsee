@@ -2,7 +2,7 @@ import { auth } from '@/auth';
 import { NextResponse } from 'next/server';
 
 // Route accessibili senza login
-const PUBLIC_PATHS = ['/', '/mappa', '/login', '/api/auth'];
+const PUBLIC_PATHS = ['/', '/mappa', '/login', '/api/auth', '/termini', '/privacy'];
 
 function isPublic(pathname: string): boolean {
   return PUBLIC_PATHS.some(
