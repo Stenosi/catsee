@@ -262,3 +262,18 @@ Il dev server Next.js **non funziona via IP di rete locale** su mobile: il WebSo
 
 - Progetto collegato al repo GitHub `main`. Deploy automatico ad ogni push.
 - Free tier Vercel sufficiente per MVP.
+
+## Aggiornamenti sessione 4 (2026-05-18)
+
+### Pagina Profilo connessa al DB
+
+- **`src/app/(app)/profilo/page.tsx`** refactored a Server Component: chiama `requireOnboardedSession()`, poi `Promise.all` con 4 query parallele (dati utente + count sightings approvati + count follower + count seguiti).
+- **`src/app/(app)/profilo/_components/profilo-client.tsx`** nuovo Client Component che riceve i dati come props e gestisce avatar loading state, swipe tabs, interazioni.
+- **Pattern Server/Client split:** quando una pagina ha dati DB + interazioni, il Server Component fa il fetch e passa props al Client Component. Seguire questo pattern per le altre pagine.
+- **`AvatarFallback` con iniziali:** nickname a 2+ parole → prima lettera di ogni parola (es. "Davide Marsili" → "DM"); altrimenti prime 2 lettere. Gestito con `split(/\s+/)`.
+- **`(app)/layout.tsx`** ora async: chiama `requireOnboardedSession()` e passa `username` come prop ad `AppHeader`, così `ProfiloHeader` mostra lo `@username` reale invece di un valore hardcoded.
+
+### Convenzioni aggiuntive
+
+- **Dati sessione in Client Components dell'header:** passare come prop dal layout Server Component, non usare `useSession()` — evita di aggiungere `SessionProvider`. Rivalutare se altri componenti client avranno bisogno della sessione in futuro.
+- **Conteggio avvistamenti:** usa solo `moderationStatus = 'approved'` e `deletedAt IS NULL` per il badge pubblico sul profilo.
