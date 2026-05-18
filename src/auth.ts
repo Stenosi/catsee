@@ -19,12 +19,12 @@ declare module 'next-auth' {
 
 // DrizzleAdapter aspetta una users table con colonne name/image che noi non abbiamo.
 // Sovrascriviamo createUser per iniettare username e nickname generati temporaneamente.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const baseAdapter = DrizzleAdapter(db, {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   usersTable: schema.users as any,
-  accountsTable: schema.accounts,
-  sessionsTable: schema.sessions,
-  verificationTokensTable: schema.verificationTokens,
+  accountsTable: schema.accounts as any,
+  sessionsTable: schema.sessions as any,
+  verificationTokensTable: schema.verificationTokens as any,
 });
 
 const adapter = {
