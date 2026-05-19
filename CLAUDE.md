@@ -262,6 +262,7 @@ Il dev server Next.js **non funziona via IP di rete locale** su mobile: il WebSo
 
 - Progetto collegato al repo GitHub `main`. Deploy automatico ad ogni push.
 - Free tier Vercel sufficiente per MVP.
+- **Regione:** impostare la regione delle Functions su `fra1` (Frankfurt) nelle Settings del progetto Vercel, per minimizzare la latenza verso Neon Europa. Il default `iad1` (Washington) aggiunge ~200ms per query.
 
 ## Aggiornamenti sessione 4 (2026-05-18)
 

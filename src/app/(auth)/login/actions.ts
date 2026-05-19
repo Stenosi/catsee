@@ -1,6 +1,7 @@
 'use server';
 
 import { signIn } from '@/auth';
+import { AuthError } from 'next-auth';
 import { z } from 'zod';
 import { cookies } from 'next/headers';
 
@@ -29,8 +30,11 @@ export async function loginWithEmail(formData: FormData) {
   try {
     await signIn('resend', { email: result.data, redirectTo: '/mappa' });
   } catch (err) {
-    // I redirect di Next.js sono implementati come eccezioni: vanno rilanciati.
-    if (err instanceof Error && err.message === 'NEXT_REDIRECT') throw err;
-    return { error: 'Errore durante invio email. Riprova.' };
+    // AuthError = errore applicativo (es. Resend down, email non valida lato provider)
+    if (err instanceof AuthError) {
+      return { error: 'Errore durante invio email. Riprova.' };
+    }
+    // Tutto il resto (inclusi i redirect di Next.js) va rilanciato
+    throw err;
   }
 }
