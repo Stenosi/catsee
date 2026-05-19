@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { loginWithEmail } from './actions';
 
 const schema = z.object({
-  email: z.string().email("Inserisci un'email valida."),
+  email: z.email("Inserisci un'email valida."),
 });
 type FormValues = z.infer<typeof schema>;
 
