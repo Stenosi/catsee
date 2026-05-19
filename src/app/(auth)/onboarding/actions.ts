@@ -6,17 +6,12 @@ import { users } from '@/db/schema';
 import { eq, and, ne } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'obscenity';
+import { containsProfanity } from '@/lib/obscenity';
 
 const RESERVED_USERNAMES = new Set([
   'admin', 'support', 'moderator', 'staff', 'official',
   'catsee', 'help', 'info', 'contact', 'team', 'bot',
 ]);
-
-const matcher = new RegExpMatcher({
-  ...englishDataset.build(),
-  ...englishRecommendedTransformers,
-});
 
 const usernameSchema = z
   .string()
@@ -42,7 +37,7 @@ export async function checkUsername(
     return { available: false, error: 'Questo username è riservato.' };
   }
 
-  if (matcher.hasMatch(username)) {
+  if (containsProfanity(username)) {
     return { available: false, error: 'Questo username non è ammesso.' };
   }
 
@@ -81,7 +76,7 @@ export async function completeOnboarding(formData: FormData) {
     return { error: 'Questo username è riservato.' };
   }
 
-  if (matcher.hasMatch(username) || matcher.hasMatch(nickname)) {
+  if (containsProfanity(username) || containsProfanity(nickname)) {
     return { error: 'Il testo contiene parole non ammesse.' };
   }
 
