@@ -29,6 +29,7 @@
     "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cuss": "^2.2.0",
     "drizzle-orm": "^0.45.2",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",

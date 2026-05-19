@@ -53,6 +53,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      cuss:
+        specifier: ^2.2.0
+        version: 2.2.0
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@neondatabase/serverless@1.1.0)(@upstash/redis@1.38.0)
@@ -2580,6 +2583,9 @@ packages:
 
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
+
+  cuss@2.2.0:
+    resolution: {integrity: sha512-3hlHOhMiZ6YdHY5LPUhfxlx1Pj14eGttv2l9ADB1Lkv7e/us5XD798wrVLJ9DHmDO8SzCDuA+ItByFZ3M1dIYg==}
 
   damerau-levenshtein@1.0.8:
     resolution: {integrity: sha512-sdQSFB7+llfUcQHUQO3+B8ERRj0Oa4w9POWMI/puGtuf7gFywGmkaLCElnudfTiKZV+NvHqL0ifzdrI8Ro7ESA==}
@@ -7418,6 +7424,8 @@ snapshots:
   cssesc@3.0.0: {}
 
   csstype@3.2.3: {}
+
+  cuss@2.2.0: {}
 
   damerau-levenshtein@1.0.8: {}
 

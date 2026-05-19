@@ -3,10 +3,10 @@
 import { useState, useEffect, useTransition, useRef } from 'react';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { checkUsername, completeOnboarding } from './actions';
 
 type Step = 'username' | 'nickname';
-
 type UsernameState = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 
 export default function OnboardingPage() {
@@ -19,7 +19,6 @@ export default function OnboardingPage() {
   const [isPending, startTransition] = useTransition();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Validazione live username con debounce 400ms
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!username) {
@@ -43,13 +42,7 @@ export default function OnboardingPage() {
     }, 400);
   }, [username]);
 
-  function handleUsernameNext() {
-    if (usernameState !== 'available') return;
-    setStep('nickname');
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function handleSubmit() {
     setFormError('');
     const formData = new FormData();
     formData.set('username', username);
@@ -62,6 +55,7 @@ export default function OnboardingPage() {
 
   const canProceedUsername = usernameState === 'available';
   const canSubmit = canProceedUsername && nickname.trim().length > 0 && !isPending;
+  const isUsernameError = usernameState === 'taken' || usernameState === 'invalid';
 
   return (
     <div className="flex flex-col flex-1 px-6 pt-8 pb-8 max-w-sm mx-auto w-full">
@@ -69,7 +63,7 @@ export default function OnboardingPage() {
       {/* Progress dots */}
       <div className="flex gap-2 mb-10" aria-label={`Step ${step === 'username' ? 1 : 2} di 2`}>
         <div className="w-2 h-2 rounded-full bg-primary" />
-        <div className={`w-2 h-2 rounded-full ${step === 'nickname' ? 'bg-primary' : 'bg-muted'}`} />
+        <div className={`w-2 h-2 rounded-full transition-colors ${step === 'nickname' ? 'bg-primary' : 'bg-muted'}`} />
       </div>
 
       {step === 'username' && (
@@ -84,23 +78,22 @@ export default function OnboardingPage() {
               Username
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground select-none">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground select-none pointer-events-none z-10">
                 @
               </span>
-              <input
+              <Input
                 id="username"
                 type="text"
-                name="username"
                 autoComplete="username"
                 autoCapitalize="none"
                 spellCheck={false}
                 placeholder="mario_rossi"
                 value={username}
                 onChange={(e) => setUsername(e.target.value.toLowerCase())}
-                className="w-full rounded-lg border border-input bg-background pl-7 pr-9 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 aria-describedby="username-feedback"
+                aria-invalid={isUsernameError}
+                className="pl-7 pr-9"
               />
-              {/* Icona stato */}
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
                 {usernameState === 'checking' && (
                   <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" aria-hidden="true" />
@@ -108,24 +101,27 @@ export default function OnboardingPage() {
                 {usernameState === 'available' && (
                   <CheckCircle className="w-4 h-4 text-success" aria-hidden="true" />
                 )}
-                {(usernameState === 'taken' || usernameState === 'invalid') && (
+                {isUsernameError && (
                   <XCircle className="w-4 h-4 text-destructive" aria-hidden="true" />
                 )}
               </div>
             </div>
-            <p id="username-feedback" className={`text-xs ${usernameState === 'available' ? 'text-success' : 'text-destructive'} min-h-[1rem]`}>
+            <p
+              id="username-feedback"
+              role="status"
+              className={`text-xs min-h-4 ${usernameState === 'available' ? 'text-success' : 'text-destructive'}`}
+            >
               {usernameState === 'available' && 'Disponibile!'}
-              {(usernameState === 'taken' || usernameState === 'invalid') && usernameError}
+              {isUsernameError && usernameError}
             </p>
           </div>
 
-          {/* Hint */}
           <div className="rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
             💡 Solo lettere, numeri, punto e underscore. Non può iniziare o finire con punto o underscore.
           </div>
 
           <Button
-            onClick={handleUsernameNext}
+            onClick={() => setStep('nickname')}
             disabled={!canProceedUsername}
             className="w-full mt-auto"
           >
@@ -135,31 +131,28 @@ export default function OnboardingPage() {
       )}
 
       {step === 'nickname' && (
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 gap-8">
+        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="flex flex-col flex-1 gap-8">
           <div className="flex flex-col gap-1">
             <h1 className="text-2xl font-semibold text-foreground">Come vuoi essere chiamato?</h1>
-            <p className="text-sm text-muted-foreground">Il tuo nome visibile. Modificabile sempre.</p>
+            <p className="text-sm text-muted-foreground">Il tuo nome visibile. Modificabile sempre. Anche con emoji!</p>
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="nickname" className="text-sm font-medium text-foreground">
               Nickname
             </label>
-            <input
+            <Input
               id="nickname"
               type="text"
-              name="nickname"
               autoComplete="nickname"
               placeholder="Mario Rossi 🐱"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               maxLength={30}
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             />
             <p className="text-xs text-muted-foreground text-right">{nickname.length}/30</p>
           </div>
 
-          {/* Hint */}
           <div className="rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
             💡 Il tuo nome visibile agli altri. Puoi anche usare emoji!
           </div>

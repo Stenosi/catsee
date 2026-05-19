@@ -17,13 +17,11 @@ export default function VerifyPage() {
   const [cooldown, setCooldown] = useState(0);
   const [resending, setResending] = useState(false);
 
-  // Legge l'email dal cookie (non-httpOnly) impostato dall'action di login
   useEffect(() => {
     const match = document.cookie.match(/auth_email_hint=([^;]+)/);
     if (match) setEmailHint(decodeURIComponent(match[1]));
   }, []);
 
-  // Countdown per il bottone "Reinvia"
   useEffect(() => {
     if (cooldown <= 0) return;
     const id = setTimeout(() => setCooldown((c) => c - 1), 1000);
@@ -35,43 +33,43 @@ export default function VerifyPage() {
     setResending(true);
     const formData = new FormData();
     formData.set('email', emailHint);
-    await loginWithEmail(formData).catch(() => null); // ignora redirect
+    await loginWithEmail(formData).catch(() => null);
     setCooldown(30);
     setResending(false);
   }
 
   return (
-    <div className="flex flex-col flex-1 items-center justify-center px-6 py-12 gap-6 max-w-sm mx-auto w-full text-center">
+    <div className="flex flex-col flex-1 items-center justify-center px-6 py-12 gap-8 max-w-sm mx-auto w-full text-center">
 
-      {/* Icona */}
-      <div className="flex items-center justify-center w-16 h-16 rounded-full bg-muted">
-        <Mail className="w-8 h-8 text-muted-foreground" aria-hidden="true" />
+      <div className="flex items-center justify-center w-20 h-20 rounded-full bg-muted">
+        <Mail className="w-10 h-10 text-muted-foreground" aria-hidden="true" />
       </div>
 
-      {/* Testo */}
-      <div className="flex flex-col gap-2">
-        <h1 className="text-xl font-semibold text-foreground">Controlla la tua email</h1>
-        {emailHint ? (
+      <div className="flex flex-col gap-3">
+        <h1 className="text-2xl font-semibold text-foreground">Controlla la tua email</h1>
+        <div className="flex flex-col gap-1.5">
+          {emailHint ? (
+            <p className="text-sm text-muted-foreground">
+              Abbiamo inviato un link a{' '}
+              <span className="font-medium text-foreground">{maskEmail(emailHint)}</span>.
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Abbiamo inviato un link di accesso alla tua email.
+            </p>
+          )}
           <p className="text-sm text-muted-foreground">
-            Abbiamo inviato un link a{' '}
-            <span className="font-medium text-foreground">{maskEmail(emailHint)}</span>.
+            Apri il link dallo stesso dispositivo per accedere.
           </p>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Abbiamo inviato un link di accesso alla tua email.
-          </p>
-        )}
-        <p className="text-sm text-muted-foreground">
-          Apri il link dallo stesso dispositivo per accedere.
-        </p>
+        </div>
       </div>
 
-      {/* Azioni */}
       <div className="flex flex-col gap-3 w-full">
         <Button
           variant="secondary"
           onClick={handleResend}
           disabled={cooldown > 0 || resending || !emailHint}
+          className="w-full"
         >
           {cooldown > 0 ? `Reinvia tra ${cooldown}s` : 'Reinvia link'}
         </Button>

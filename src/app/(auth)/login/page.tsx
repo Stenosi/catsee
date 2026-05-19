@@ -2,30 +2,45 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { loginWithEmail } from './actions';
 
+const schema = z.object({
+  email: z.string().email("Inserisci un'email valida."),
+});
+type FormValues = z.infer<typeof schema>;
+
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
+  const [serverError, setServerError] = useState('');
   const [isPending, startTransition] = useTransition();
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    mode: 'onChange',
+  });
+
+  function onSubmit(values: FormValues) {
+    setServerError('');
     const formData = new FormData();
-    formData.set('email', email);
+    formData.set('email', values.email);
     startTransition(async () => {
       const result = await loginWithEmail(formData);
-      if (result?.error) setError(result.error);
+      if (result?.error) setServerError(result.error);
     });
   }
 
   return (
     <div className="flex flex-col flex-1 px-6 pt-4 pb-8">
 
-      {/* Back */}
       <Link
         href="/mappa"
         className="flex items-center gap-1 text-sm text-muted-foreground w-fit -ml-1 py-2"
@@ -35,41 +50,37 @@ export default function LoginPage() {
         Mappa
       </Link>
 
-      {/* Contenuto centrato verticalmente */}
       <div className="flex flex-col flex-1 justify-center gap-8 max-w-sm mx-auto w-full">
 
-        {/* Intestazione */}
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold text-foreground">Bentornato</h1>
           <p className="text-sm text-muted-foreground">Inserisci la tua email per accedere.</p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3" noValidate>
           <div className="flex flex-col gap-1.5">
             <label htmlFor="email" className="text-sm font-medium text-foreground">
               Email
             </label>
-            <input
+            <Input
               id="email"
               type="email"
-              name="email"
               autoComplete="email"
               autoCapitalize="none"
               spellCheck={false}
               placeholder="mario@esempio.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               disabled={isPending}
-              required
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
+              aria-invalid={!!(errors.email || serverError)}
+              {...register('email')}
             />
-            {error && (
-              <p className="text-xs text-destructive" role="alert">{error}</p>
+            {(errors.email || serverError) && (
+              <p className="text-xs text-destructive" role="alert">
+                {errors.email?.message ?? serverError}
+              </p>
             )}
           </div>
 
-          <Button type="submit" disabled={isPending || !email.trim()} className="w-full">
+          <Button type="submit" disabled={isPending || !isValid} className="w-full">
             {isPending ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
@@ -81,7 +92,6 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        {/* Disclaimer legale — no checkbox, pattern moderno GDPR */}
         <p className="text-xs text-muted-foreground text-center">
           Continuando accetti i{' '}
           <Link href="/termini" className="underline underline-offset-2 hover:text-foreground">
