@@ -6,6 +6,10 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { cookies } from 'next/headers';
 
+export async function loginWithGoogle() {
+  await signIn('google', { redirectTo: '/mappa' });
+}
+
 const emailSchema = z.email();
 
 export async function loginWithEmail(formData: FormData) {
