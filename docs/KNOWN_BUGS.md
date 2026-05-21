@@ -39,6 +39,40 @@ Con idratazione corretta (Vercel o port forwarding) la searchbar e il cambio tab
 
 ---
 
+## KB-003 — Profanity filter non applicato su tutti i campi
+
+**Schermata:** globale (tutti i form con input testuale)
+**Priorità:** alta (contenuto inappropriato potrebbe passare inosservato)
+**Ambiente:** tutti
+**Stato:** ⚠️ PARZIALMENTE RISOLTO — leetspeak fixato il 2026-05-21; da auditare i campi futuri
+
+### Contesto
+
+Due problemi scoperti in test manuale (2026-05-21):
+
+1. Il filtro `containsProfanity()` era stato dimenticato sul campo `bio` nella Server Action di modifica profilo.
+2. Il filtro non gestiva il leetspeak (es. "P3ne", "c4zzo") per le parole italiane — la regex semplice faceva match solo su testo esatto.
+
+### Fix applicati
+
+- `bio`: aggiunto check in `actions.ts` di modifica profilo.
+- Leetspeak: `src/lib/obscenity.ts` riscritto con due matcher separati. Il matcher italiano usa `resolveLeetSpeakTransformer` + `toAsciiLowerCaseTransformer` + `skipNonAlphabeticTransformer`. Il motivo della separazione: `englishRecommendedTransformers` contiene una whitelist che rompe il matching delle parole italiane se i due dataset vengono uniti.
+
+### Stato attuale
+
+- ✅ `username` — controllato (onboarding + modifica profilo)
+- ✅ `nickname` — controllato (onboarding + modifica profilo)
+- ✅ `bio` — fixato il 2026-05-21
+- ⬜ `catName` (nome del gatto nel post) — da implementare quando si sviluppa il flow di scatto
+- ⬜ `notes` (note del post) — idem
+- ⬜ Qualsiasi altro campo testuale libero aggiunto in futuro
+
+### Azione richiesta
+
+Prima del lancio beta, fare un audit completo di tutte le Server Actions che accettano input testuale e verificare che `containsProfanity()` sia chiamato. Aggiungere un test automatico su `containsProfanity('cazzo')` e altri termini comuni per evitare regressioni.
+
+---
+
 ## KB-002 — HMR Next.js rompe la pagina su mobile con port forwarding
 
 **Schermata:** globale

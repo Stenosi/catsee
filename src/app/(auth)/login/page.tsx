@@ -29,26 +29,24 @@ export default function LoginPage() {
 
       <div className="flex flex-col flex-1 justify-center gap-8 max-w-sm mx-auto w-full">
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 text-center">
           <h1 className="text-2xl font-semibold text-foreground">Bentornato</h1>
           <p className="text-sm text-muted-foreground">Accedi per avvistare gatti e seguire la community.</p>
         </div>
 
-        <div className="flex flex-col gap-3">
-          <Button
-            onClick={handleGoogle}
-            disabled={isPending}
-            variant="outline"
-            className="w-full gap-2"
-          >
-            {isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <GoogleIcon />
-            )}
-            Continua con Google
-          </Button>
-        </div>
+        <Button
+          onClick={handleGoogle}
+          disabled={isPending}
+          variant="outline"
+          className="w-full gap-2"  
+        >
+          {isPending ? (
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <GoogleIcon />
+          )}
+          Continua con Google
+        </Button>
 
         <p className="text-xs text-muted-foreground text-center">
           Continuando accetti i{' '}

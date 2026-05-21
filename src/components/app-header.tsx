@@ -12,7 +12,7 @@ const BACK_HEADERS: Record<string, string> = {
   "/profilo/badge": "Badge",
 };
 
-export default function AppHeader({ username }: { username: string }) {
+export default function AppHeader({ username }: { username: string | null }) {
   const pathname = usePathname();
 
   if (HIDDEN_PATHS.includes(pathname)) return null;
@@ -24,7 +24,7 @@ export default function AppHeader({ username }: { username: string }) {
   );
 }
 
-function HeaderContent({ pathname, username }: { pathname: string, username: string }) {
+function HeaderContent({ pathname, username }: { pathname: string; username: string | null }) {
   if (BACK_HEADERS[pathname]) {
     return <BackHeader title={BACK_HEADERS[pathname]} />;
   }
@@ -86,7 +86,7 @@ function CercaHeader() {
         onInput={(e) => setHasText((e.target as HTMLInputElement).value.length > 0)}
         className={cn(
           "w-full h-9 rounded-full pl-9 text-sm font-medium",
-          "bg-muted text-foreground placeholder:text-muted-foreground",
+          "bg-muted/50 text-foreground placeholder:text-muted-foreground/50",
           "border border-border outline-none caret-primary",
           "[&::-webkit-search-cancel-button]:hidden",
           hasText ? "pr-9" : "pr-4"
@@ -116,10 +116,10 @@ function LogoHeader() {
   );
 }
 
-function ProfiloHeader({ username }: { username: string }) {
+function ProfiloHeader({ username }: { username: string | null }) {
   return (
     <div className="flex w-full items-center justify-between">
-      <span className="text-base font-semibold text-foreground">@{username}</span>
+      <span className="text-base font-semibold text-foreground">{username ? `@${username}` : ""}</span>
       <button
         aria-label="Impostazioni"
         className={cn(

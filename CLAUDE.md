@@ -158,6 +158,8 @@ L'ordine di sviluppo che ha più senso (non rigido):
 3. ✅ Onboarding (username + nickname)
 4. ✅ Layout di base + bottom navbar
 5. ✅ Profilo proprio (read-only base)
+5b. ✅ Modifica profilo (nickname, bio, username con lock 30gg)
+5c. ✅ Pagina badge (catalogo + progresso + emoji fill)
 6. ⬜ Mappa pubblica con pin
 7. ⬜ Flow scatto: camera → AI verify → palette → form → save
 8. ⬜ Feed (Seguiti / Esplora / Vicini)
@@ -263,6 +265,52 @@ Il dev server Next.js **non funziona via IP di rete locale** su mobile: il WebSo
 - Progetto collegato al repo GitHub `main`. Deploy automatico ad ogni push.
 - Free tier Vercel sufficiente per MVP.
 - **Regione:** impostare la regione delle Functions su `fra1` (Frankfurt) nelle Settings del progetto Vercel, per minimizzare la latenza verso Neon Europa. Il default `iad1` (Washington) aggiunge ~200ms per query.
+
+## Aggiornamenti sessione 5 (2026-05-21)
+
+### Route pubbliche — layout (app)
+
+- **`(app)/layout.tsx`** ora usa `getSession()` invece di `requireOnboardedSession()`. Il layout non redirige più gli utenti non autenticati — `/mappa` è accessibile come spettatore. Le singole pagine che richiedono auth (es. `/profilo`) chiamano `requireOnboardedSession()` nella loro page.
+- **`AppHeader`** accetta `username: string | null` per supportare utenti non loggati.
+
+### Onboarding — restyling step 1 e 2
+
+- Sottotesto username: "Il tuo nome univoco su CatSee. Nessun altro può averlo."
+- Hint box sostituito con componente `Alert` (shadcn) + lista puntata dei vincoli. Installato `src/components/ui/alert.tsx`.
+- Progress indicator animato: linea che si disegna da pallino 1 a pallino 2, con `delay-300` solo in avanzamento (non in ritorno).
+
+### Modifica profilo
+
+- **`src/app/(app)/profilo/modifica/page.tsx`** — Server Component: carica utente dal DB, calcola `usernameLockedDays` server-side.
+- **`src/app/(app)/profilo/modifica/_components/modifica-client.tsx`** — Client Component: `react-hook-form` + Zod, avatar placeholder con overlay fotocamera, nickname/bio/username con validazione, username locked con `Alert` + giorni rimanenti, bottone salva abilitato solo se `isDirty`.
+- **`src/app/(app)/profilo/modifica/actions.ts`** — Server Action `saveProfile`: valida tutti i campi, check lock 30gg, profanity su nickname+bio+username, unicità username, `revalidatePath`, redirect a `/profilo` al successo.
+- **Sonner** installato (`pnpm add sonner`). `<Toaster position="top-center" richColors />` aggiunto al root layout. Usare `toast.success()` / `toast.error()` per feedback mutazioni.
+
+### Pagina badge
+
+- **`src/app/(app)/profilo/badge/page.tsx`** — Server Component puro (no interazioni).
+- Badge raggruppati per categoria, flex wrap con `basis-[40%]` per riempire le righe incomplete.
+- Badge con `target > 1` non ancora sbloccati: emoji con fill dal basso via `clip-path: inset(X% 0 -20% 0)` (layer colorato su layer grayscale), barra `Progress` h-1.5 con counter `X/Y` a destra, descrizione sotto. Il `-20%` sul bottom compensa il padding sotto la baseline delle emoji.
+- Barra totale in cima: "Badge sbloccati X/Y" con `Progress`.
+- Installato `src/components/ui/progress.tsx`.
+
+### Schema badges
+
+- Aggiunto campo `target: integer` nullable. `null` = badge booleano (no barra). Pushato su Neon.
+- Seed aggiornato con target: milestone (1/5/10/50), pantera (5), streak/time/special (`null`). Descrizioni riscritte all'imperativo.
+
+### Obscenity — fix leetspeak italiano
+
+- `src/lib/obscenity.ts` riscritto con **due matcher separati**: inglese con `englishRecommendedTransformers`, italiano con soli `resolveLeetSpeakTransformer` + `toAsciiLowerCaseTransformer` + `skipNonAlphabeticTransformer`. Il motivo: i transformer inglesi includono una whitelist che rompe il matching delle parole italiane se i dataset vengono uniti. Ora "c4zzo", "P3ne" ecc. vengono bloccati.
+- **Regola:** aggiungere `containsProfanity()` a OGNI campo testuale libero nelle Server Actions. Vedi KB-003 in `docs/KNOWN_BUGS.md` per la checklist.
+
+### Convenzioni aggiornate
+
+- **`<Input>` shadcn** ora installato — non usare più stili manuali inline per i campi testo.
+- **`<Alert>` shadcn** per box informativi (sostituisce i `<div>` con emoji 💡).
+- **`<Progress>` shadcn** per barre di avanzamento.
+- **Sonner `toast`** per feedback post-mutazione (successo/errore).
+- **Avatar upload** rimandato a quando si implementa il flow scatto — stessa infrastruttura R2. Il bottone "Cambia foto" è già presente visivamente in modifica profilo.
 
 ## Aggiornamenti sessione 4 (2026-05-18)
 

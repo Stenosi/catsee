@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useTransition, useRef } from 'react';
-import { Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { checkUsername, completeOnboarding } from './actions';
 
 type Step = 'username' | 'nickname';
@@ -60,17 +61,20 @@ export default function OnboardingPage() {
   return (
     <div className="flex flex-col flex-1 px-6 pt-8 pb-8 max-w-sm mx-auto w-full">
 
-      {/* Progress dots */}
-      <div className="flex gap-2 mb-10" aria-label={`Step ${step === 'username' ? 1 : 2} di 2`}>
-        <div className="w-2 h-2 rounded-full bg-primary" />
-        <div className={`w-2 h-2 rounded-full transition-colors ${step === 'nickname' ? 'bg-primary' : 'bg-muted'}`} />
+      {/* Progress indicator */}
+      <div className="flex items-center mb-10" aria-label={`Step ${step === 'username' ? 1 : 2} di 2`}>
+        <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
+        <div className="relative w-10 h-0.5 bg-muted mx-1">
+          <div className={`absolute inset-y-0 left-0 bg-primary transition-all duration-500 ease-in-out ${step === 'nickname' ? 'w-full' : 'w-0'}`} />
+        </div>
+        <div className={`w-2 h-2 rounded-full shrink-0 transition-colors duration-200 ${step === 'nickname' ? 'delay-300' : 'delay-0'} ${step === 'nickname' ? 'bg-primary' : 'bg-muted'}`} />
       </div>
 
       {step === 'username' && (
         <div className="flex flex-col flex-1 gap-8">
           <div className="flex flex-col gap-1">
             <h1 className="text-2xl font-semibold text-foreground">Crea il tuo username</h1>
-            <p className="text-sm text-muted-foreground">Il tuo handle pubblico. Modificabile ogni 30 giorni.</p>
+            <p className="text-sm text-muted-foreground">Il tuo nome unico su CatSee. Nessun altro può averlo - modificabile ogni 30 giorni.</p>
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -116,9 +120,18 @@ export default function OnboardingPage() {
             </p>
           </div>
 
-          <div className="rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
-            💡 Solo lettere, numeri, punto e underscore. Non può iniziare o finire con punto o underscore.
-          </div>
+          <Alert>
+            <Info />
+            <AlertTitle>Requisiti username</AlertTitle>
+            <AlertDescription>
+              <ul className="list-disc list-inside space-y-1 mt-1">
+                <li>Solo lettere, numeri, punto e underscore</li>
+                <li>Da 3 a 30 caratteri</li>
+                <li>Non può iniziare o finire con <code>.</code> o <code>_</code></li>
+                <li>Modificabile ogni 30 giorni</li>
+              </ul>
+            </AlertDescription>
+          </Alert>
 
           <Button
             onClick={() => setStep('nickname')}
@@ -134,7 +147,7 @@ export default function OnboardingPage() {
         <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="flex flex-col flex-1 gap-8">
           <div className="flex flex-col gap-1">
             <h1 className="text-2xl font-semibold text-foreground">Come vuoi essere chiamato?</h1>
-            <p className="text-sm text-muted-foreground">Il tuo nome visibile. Modificabile sempre. Anche con emoji!</p>
+            <p className="text-sm text-muted-foreground">Il nome che gli altri vedono sul tuo profilo. Puoi cambiarlo quando vuoi.</p>
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -153,9 +166,17 @@ export default function OnboardingPage() {
             <p className="text-xs text-muted-foreground text-right">{nickname.length}/30</p>
           </div>
 
-          <div className="rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
-            💡 Il tuo nome visibile agli altri. Puoi anche usare emoji!
-          </div>
+          <Alert>
+            <Info />
+            <AlertTitle>Note sul nickname</AlertTitle>
+            <AlertDescription>
+              <ul className="list-none pl-0 space-y-1 mt-1">
+                <li>Può contenere spazi, emoji e caratteri speciali</li>
+                <li>Massimo 30 caratteri</li>
+                <li>Modificabile in qualsiasi momento</li>
+              </ul>
+            </AlertDescription>
+          </Alert>
 
           {formError && (
             <p className="text-sm text-destructive" role="alert">{formError}</p>

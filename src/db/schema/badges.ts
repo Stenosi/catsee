@@ -2,6 +2,7 @@ import {
   pgTable,
   uuid,
   text,
+  integer,
   timestamp,
   primaryKey,
   index,
@@ -47,6 +48,12 @@ export const badges = pgTable('badges', {
    * Più basso = mostrato prima.
    */
   displayOrder: text('display_order').notNull(),
+
+  /**
+   * Target numerico per badge progressivi (es. 10 per "avvista 10 gatti").
+   * null = badge booleano, nessuna barra di progresso.
+   */
+  target: integer('target'),
 
   createdAt: timestamp('created_at', { withTimezone: true })
     .defaultNow()
