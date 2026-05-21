@@ -130,7 +130,7 @@ export default function ProfiloClient({
 
                 {/* Bio */}
                 {bio && (
-                    <p className="text-xs text-muted-foreground">{bio}</p>
+                    <p className="text-xs text-muted-foreground whitespace-pre-wrap">{bio}</p>
                 )}
 
                 {/* Azioni */}

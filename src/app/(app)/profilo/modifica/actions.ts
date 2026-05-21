@@ -29,6 +29,7 @@ const nicknameSchema = z
 const bioSchema = z
   .string()
   .max(150, 'Massimo 150 caratteri.')
+  .refine((v) => v.split('\n').length <= 4, 'Massimo 4 righe.')
   .optional();
 
 export type SaveProfileResult =

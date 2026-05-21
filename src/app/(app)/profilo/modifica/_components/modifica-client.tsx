@@ -23,6 +23,7 @@ const schema = z.object({
   bio: z
     .string()
     .max(150, 'Massimo 150 caratteri')
+    .refine((v) => v.split('\n').length <= 4, 'Massimo 4 righe')
     .optional(),
   username: z
     .string()
@@ -78,6 +79,7 @@ export default function ModificaClient({
   });
 
   const bioValue = watch('bio') ?? '';
+  const bioLines = bioValue.split('\n').length;
 
   function handleSave() {
     const values = {
@@ -188,6 +190,9 @@ export default function ModificaClient({
               maxLength={150}
               placeholder="Racconta qualcosa di te..."
               aria-invalid={!!errors.bio}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && bioLines >= 4) e.preventDefault();
+              }}
               className={cn(
                 'w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm',
                 'transition-colors outline-none resize-none',
@@ -204,7 +209,7 @@ export default function ModificaClient({
                 <span />
               )}
               <p className="text-xs text-muted-foreground shrink-0">
-                {bioValue.length}/150
+                {bioLines}/4 righe · {bioValue.length}/150
               </p>
             </div>
           </div>
