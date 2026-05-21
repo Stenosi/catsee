@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -80,6 +80,15 @@ export default function ModificaClient({
 
   const bioValue = watch('bio') ?? '';
   const bioLines = bioValue.split('\n').length;
+
+  const { ref: registerBioRef, ...bioRegister } = register('bio');
+
+  const bioCallbackRef = useCallback((el: HTMLTextAreaElement | null) => {
+    registerBioRef(el);
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [registerBioRef]);
 
   function handleSave() {
     const values = {
@@ -186,21 +195,27 @@ export default function ModificaClient({
             </label>
             <textarea
               id="bio"
-              rows={3}
+              rows={1}
               maxLength={150}
               placeholder="Racconta qualcosa di te..."
               aria-invalid={!!errors.bio}
+              ref={bioCallbackRef}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && bioLines >= 4) e.preventDefault();
               }}
+              onInput={(e) => {
+                const el = e.currentTarget;
+                el.style.height = 'auto';
+                el.style.height = `${el.scrollHeight}px`;
+              }}
               className={cn(
                 'w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm',
-                'transition-colors outline-none resize-none',
+                'transition-colors outline-none resize-none overflow-hidden',
                 'placeholder:text-muted-foreground/50',
                 'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
                 'aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20',
               )}
-              {...register('bio')}
+              {...bioRegister}
             />
             <div className="flex justify-between items-start min-h-4">
               {errors.bio ? (
