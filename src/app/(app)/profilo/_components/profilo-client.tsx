@@ -21,6 +21,28 @@ import { cn } from '@/lib/utils';
 const TABS = ['post', 'mappa'] as const;
 type Tab = (typeof TABS)[number];
 
+function ThumbImage({ src, alt }: { src: string; alt: string }) {
+    const [loaded, setLoaded] = useState(false);
+    return (
+        <div className="relative w-full h-full">
+            {!loaded && <Skeleton className="absolute inset-0 rounded-none" />}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+                src={src}
+                alt={alt}
+                onLoad={() => setLoaded(true)}
+                className={cn('w-full h-full object-cover transition-opacity duration-500', loaded ? 'opacity-100' : 'opacity-0')}
+            />
+        </div>
+    );
+}
+
+interface PostPreview {
+    id: string;
+    thumbnailUrl: string;
+    catNickname: string;
+}
+
 interface Props {
     nickname: string;
     username: string;
@@ -29,6 +51,7 @@ interface Props {
     catCount: number;
     followerCount: number;
     followingCount: number;
+    posts: PostPreview[];
 }
 
 export default function ProfiloClient({
@@ -39,6 +62,7 @@ export default function ProfiloClient({
     catCount,
     followerCount,
     followingCount,
+    posts,
 }: Props) {
     const [status, setStatus] = useState<'loading' | 'loaded' | 'error' | 'idle'>(
         avatarUrl ? 'loading' : 'idle',
@@ -76,6 +100,7 @@ export default function ProfiloClient({
                 alt={`Foto profilo di ${nickname}`}
                 open={avatarLightbox}
                 onClose={() => setAvatarLightbox(false)}
+                circle
             />
         )}
         <div className="flex flex-col h-full">
@@ -167,7 +192,7 @@ export default function ProfiloClient({
             </div>
 
             {/* Tab Post / Mappa */}
-            <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="flex flex-col flex-1">
+            <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="flex flex-col flex-1 gap-0">
                 <TabsList variant="line" className="w-full rounded-none border-b p-0 gap-0">
                     <TabsTrigger value="post" className="flex-1 rounded-none border-none h-full p-0">
                         <LayoutGrid />
@@ -185,20 +210,30 @@ export default function ProfiloClient({
                     onTouchEnd={handleTouchEnd}
                 >
                     <TabsContent value="post" className="flex-1 mt-0">
-                        <Empty className="rounded-none h-full">
-                            <EmptyMedia>
-                                <Frown className="w-10 h-10 opacity-40" aria-hidden="true" />
-                            </EmptyMedia>
-                            <EmptyHeader>
-                                <EmptyTitle>Nessun gatto qui</EmptyTitle>
-                                <EmptyDescription>Non hai ancora avvistato nessun gatto.</EmptyDescription>
-                            </EmptyHeader>
-                            <EmptyContent>
-                                <Link href="/scatta" className={buttonVariants({ size: 'lg' })}>
-                                    Inizia ora!
-                                </Link>
-                            </EmptyContent>
-                        </Empty>
+                        {posts.length === 0 ? (
+                            <Empty className="rounded-none h-full">
+                                <EmptyMedia>
+                                    <Frown className="w-10 h-10 opacity-40" aria-hidden="true" />
+                                </EmptyMedia>
+                                <EmptyHeader>
+                                    <EmptyTitle>Nessun gatto qui</EmptyTitle>
+                                    <EmptyDescription>Non hai ancora avvistato nessun gatto.</EmptyDescription>
+                                </EmptyHeader>
+                                <EmptyContent>
+                                    <Link href="/scatta" className={buttonVariants({ size: 'lg' })}>
+                                        Inizia ora!
+                                    </Link>
+                                </EmptyContent>
+                            </Empty>
+                        ) : (
+                            <div className="grid grid-cols-3 gap-0.5">
+                                {posts.map((post) => (
+                                    <div key={post.id} className="aspect-square overflow-hidden">
+                                        <ThumbImage src={post.thumbnailUrl} alt={post.catNickname} />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </TabsContent>
 
                     <TabsContent value="mappa" className="flex-1 mt-0">

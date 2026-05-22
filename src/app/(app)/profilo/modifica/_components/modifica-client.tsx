@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useTransition, useCallback } from 'react';
+import { useState, useTransition, useCallback, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,7 +14,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
-import { saveProfile } from '../actions';
+import { saveProfile, getAvatarUploadUrl, saveAvatarUrl } from '../actions';
+
+const AvatarCropModal = dynamic(() => import('./avatar-crop-modal'), { ssr: false });
 
 const schema = z.object({
   nickname: z
@@ -53,8 +56,50 @@ export default function ModificaClient({
   const [avatarStatus, setAvatarStatus] = useState<'loading' | 'loaded' | 'error' | 'idle'>(
     avatarUrl ? 'loading' : 'idle',
   );
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState(avatarUrl);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Reset input così lo stesso file può essere riselezionato
+    e.target.value = '';
+    setCropSrc(URL.createObjectURL(file));
+  }
+
+  async function handleCropConfirm(blob: Blob) {
+    if (!cropSrc) return;
+    URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+    setUploadingAvatar(true);
+
+    try {
+      const urlResult = await getAvatarUploadUrl();
+      if (!urlResult.success) { toast.error(urlResult.error); return; }
+
+      const res = await fetch(urlResult.uploadUrl, {
+        method: 'PUT',
+        body: blob,
+        headers: { 'Content-Type': 'image/jpeg' },
+      });
+      if (!res.ok) { toast.error('Errore durante il caricamento. Riprova.'); return; }
+
+      const saveResult = await saveAvatarUrl(urlResult.key);
+      if (!saveResult.success) { toast.error(saveResult.error); return; }
+
+      setCurrentAvatarUrl(saveResult.avatarUrl);
+      setAvatarStatus('loading');
+      toast.success('Foto profilo aggiornata!');
+    } catch {
+      toast.error('Qualcosa è andato storto. Riprova.');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
 
   const isUsernameLocked = usernameLockedDays > 0;
 
@@ -117,20 +162,37 @@ export default function ModificaClient({
 
   return (
     <div className="flex flex-col h-full">
+      {cropSrc && (
+        <AvatarCropModal
+          imageSrc={cropSrc}
+          onConfirm={handleCropConfirm}
+          onCancel={() => { URL.revokeObjectURL(cropSrc); setCropSrc(null); }}
+        />
+      )}
+
       <div className="flex flex-col gap-6 px-4 py-6">
 
         {/* Avatar */}
         <div className="flex justify-center">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+          />
           <button
             type="button"
             aria-label="Cambia foto profilo"
             className="relative group"
+            disabled={uploadingAvatar}
+            onClick={() => fileInputRef.current?.click()}
           >
             <div className="relative">
               <Avatar size="2xl" className="overflow-hidden">
-                {avatarUrl && (
+                {currentAvatarUrl && (
                   <AvatarImage
-                    src={avatarUrl}
+                    src={currentAvatarUrl}
                     alt="Foto profilo"
                     onLoadingStatusChange={(s) => setAvatarStatus(s)}
                     className={cn(
@@ -141,7 +203,7 @@ export default function ModificaClient({
                 )}
                 <AvatarFallback>{avatarFallback}</AvatarFallback>
               </Avatar>
-              {avatarStatus === 'loading' && (
+              {(avatarStatus === 'loading' || uploadingAvatar) && (
                 <Skeleton className="absolute inset-0 rounded-full" />
               )}
             </div>
@@ -153,7 +215,10 @@ export default function ModificaClient({
               'bg-primary text-primary-foreground border-2 border-background',
               'transition-transform group-active:scale-95',
             )}>
-              <Camera className="w-3.5 h-3.5" strokeWidth={2} />
+              {uploadingAvatar
+                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                : <Camera className="w-3.5 h-3.5" strokeWidth={2} />
+              }
             </div>
           </button>
         </div>

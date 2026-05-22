@@ -1,12 +1,15 @@
 'use server';
 
 import { db } from '@/db';
-import { users } from '@/db/schema';
+import { users, r2CleanupQueue } from '@/db/schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { requireOnboardedSession } from '@/lib/session';
 import { containsProfanity } from '@/lib/obscenity';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { r2, R2_BUCKET, R2_PUBLIC_URL } from '@/lib/r2';
 
 const RESERVED_USERNAMES = new Set([
   'admin', 'support', 'moderator', 'staff', 'official',
@@ -138,4 +141,54 @@ export async function saveProfile(formData: {
   revalidatePath('/profilo/modifica');
 
   return { success: true };
+}
+
+// ── Avatar upload ─────────────────────────────────────────────────────────────
+
+export type GetAvatarUploadUrlResult =
+  | { success: true; key: string; uploadUrl: string }
+  | { success: false; error: string };
+
+export async function getAvatarUploadUrl(): Promise<GetAvatarUploadUrlResult> {
+  const session = await requireOnboardedSession();
+  const key = `avatars/${session.user.id}.jpg`;
+  try {
+    const uploadUrl = await getSignedUrl(
+      r2,
+      new PutObjectCommand({ Bucket: R2_BUCKET, Key: key, ContentType: 'image/jpeg' }),
+      { expiresIn: 300 },
+    );
+    return { success: true, key, uploadUrl };
+  } catch {
+    return { success: false, error: 'Errore nella generazione del link di upload.' };
+  }
+}
+
+export type SaveAvatarResult = { success: true; avatarUrl: string } | { success: false; error: string };
+
+export async function saveAvatarUrl(key: string): Promise<SaveAvatarResult> {
+  const session = await requireOnboardedSession();
+  const userId = session.user.id;
+
+  const current = await db.query.users.findFirst({
+    where: (u, { eq }) => eq(u.id, userId),
+    columns: { avatarUrl: true },
+  });
+
+  const newUrl = `${R2_PUBLIC_URL}/${key}`;
+
+  await db.update(users).set({ avatarUrl: newUrl, updatedAt: new Date() }).where(eq(users.id, userId));
+
+  // Accoda il vecchio avatar per la cleanup notturna
+  if (current?.avatarUrl) {
+    const oldKey = current.avatarUrl.replace(`${R2_PUBLIC_URL}/`, '');
+    if (oldKey !== key) {
+      await db.insert(r2CleanupQueue).values({ r2Key: oldKey, fileType: 'avatar' });
+    }
+  }
+
+  revalidatePath('/profilo');
+  revalidatePath('/profilo/modifica');
+
+  return { success: true, avatarUrl: newUrl };
 }

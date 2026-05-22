@@ -8,9 +8,10 @@ interface Props {
   alt?: string;
   open: boolean;
   onClose: () => void;
+  circle?: boolean;
 }
 
-export default function ImageLightbox({ src, alt = '', open, onClose }: Props) {
+export default function ImageLightbox({ src, alt = '', open, onClose, circle = false }: Props) {
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -22,7 +23,7 @@ export default function ImageLightbox({ src, alt = '', open, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-4"
+      className="fixed inset-0 z-200 bg-black/90 flex items-center justify-center p-4"
       onClick={onClose}
     >
       <button
@@ -36,7 +37,7 @@ export default function ImageLightbox({ src, alt = '', open, onClose }: Props) {
       <img
         src={src}
         alt={alt}
-        className="max-w-full max-h-full object-contain rounded-lg"
+        className={circle ? 'w-64 h-64 object-cover rounded-full' : 'max-w-full max-h-full object-contain rounded-lg'}
       />
     </div>
   );
