@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useState, useRef } from 'react';
+import ImageLightbox from '@/components/image-lightbox';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -42,6 +43,7 @@ export default function ProfiloClient({
     const [status, setStatus] = useState<'loading' | 'loaded' | 'error' | 'idle'>(
         avatarUrl ? 'loading' : 'idle',
     );
+    const [avatarLightbox, setAvatarLightbox] = useState(false);
     const [tab, setTab] = useState<Tab>('post');
     const touchStartX = useRef<number | null>(null);
     const touchStartY = useRef<number | null>(null);
@@ -67,6 +69,15 @@ export default function ProfiloClient({
     const formattedFollowing = followingCount.toLocaleString('it-IT');
 
     return (
+        <>
+        {avatarUrl && (
+            <ImageLightbox
+                src={avatarUrl}
+                alt={`Foto profilo di ${nickname}`}
+                open={avatarLightbox}
+                onClose={() => setAvatarLightbox(false)}
+            />
+        )}
         <div className="flex flex-col h-full">
 
             {/* Intestazione profilo */}
@@ -74,8 +85,11 @@ export default function ProfiloClient({
                 <div className="flex items-center gap-8 px-2">
 
                     {/* Avatar con skeleton di caricamento */}
-                    <div className="relative">
-                        <Avatar size="2xl" className="overflow-hidden">
+                    <div
+                        className="relative"
+                        onClick={() => avatarUrl && status === 'loaded' && setAvatarLightbox(true)}
+                    >
+                        <Avatar size="2xl" className={cn('overflow-hidden', avatarUrl && status === 'loaded' && 'cursor-pointer')}>
                             {avatarUrl && (
                                 <AvatarImage
                                     src={avatarUrl}
@@ -205,5 +219,6 @@ export default function ProfiloClient({
             </Tabs>
 
         </div>
+        </>
     );
 }
