@@ -122,13 +122,16 @@ export default async function BadgePage() {
                   )}
                 >
                   <div className="relative inline-flex" aria-hidden="true">
-                    <span className={cn('text-3xl leading-none', !unlocked && 'grayscale opacity-70')}>
+                    <span className={cn('text-3xl leading-none pb-0.5', !unlocked && 'grayscale opacity-70')}>
                       {badge.icon}
                     </span>
                     {showProgress && (
                       <span
-                        className="text-3xl leading-none absolute top-0 left-0"
-                        style={{ clipPath: `inset(${100 - Math.min((progress! / badge.target!) * 100, 100)}% 0 -20% 0)` }}
+                        className="text-3xl leading-none pb-0.5 absolute inset-0"
+                        style={{
+                          maskImage: `linear-gradient(to top, black ${Math.min((progress! / badge.target!) * 100, 100)}%, transparent ${Math.min((progress! / badge.target!) * 100, 100)}%)`,
+                          WebkitMaskImage: `linear-gradient(to top, black ${Math.min((progress! / badge.target!) * 100, 100)}%, transparent ${Math.min((progress! / badge.target!) * 100, 100)}%)`,
+                        }}
                       >
                         {badge.icon}
                       </span>
