@@ -31,16 +31,21 @@ interface Props {
   originLng: number;
   pinLat: number;
   pinLng: number;
+  restrictToOrigin?: boolean;
   onChange: (lat: number, lng: number) => void;
 }
 
-export default function PositionMap({ originLat, originLng, pinLat, pinLng, onChange }: Props) {
+export default function PositionMap({ originLat, originLng, pinLat, pinLng, restrictToOrigin = true, onChange }: Props) {
   const markerRef = useRef<L.Marker>(null);
 
   function handleDragEnd() {
     const marker = markerRef.current;
     if (!marker) return;
     const { lat, lng } = marker.getLatLng();
+    if (!restrictToOrigin) {
+      onChange(lat, lng);
+      return;
+    }
     const dist = haversineMeters(originLat, originLng, lat, lng);
     if (dist <= MAX_METERS) {
       onChange(lat, lng);
@@ -58,18 +63,20 @@ export default function PositionMap({ originLat, originLng, pinLat, pinLng, onCh
   return (
     <MapContainer
       center={[originLat, originLng]}
-      zoom={17}
+      zoom={restrictToOrigin ? 17 : 6}
       className="h-full w-full"
-      zoomControl={false}
+      zoomControl={!restrictToOrigin}
       scrollWheelZoom={false}
       attributionControl={false}
     >
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      <Circle
-        center={[originLat, originLng]}
-        radius={MAX_METERS}
-        pathOptions={{ color: 'oklch(0.705 0.213 47.604)', fillColor: 'oklch(0.705 0.213 47.604)', fillOpacity: 0.1, weight: 1.5 }}
-      />
+      {restrictToOrigin && (
+        <Circle
+          center={[originLat, originLng]}
+          radius={MAX_METERS}
+          pathOptions={{ color: 'oklch(0.705 0.213 47.604)', fillColor: 'oklch(0.705 0.213 47.604)', fillOpacity: 0.1, weight: 1.5 }}
+        />
+      )}
       <Marker
         ref={markerRef}
         position={[pinLat, pinLng]}

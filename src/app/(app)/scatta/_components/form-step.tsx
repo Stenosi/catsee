@@ -22,7 +22,7 @@ const PositionMap = dynamic(() => import('./position-map'), {
 const CAT_COLORS = [
   { id: 'black', label: 'Nero', dot: '#1c1c1e' },
   { id: 'white', label: 'Bianco', dot: '#e5e5ea' },
-  { id: 'grey', label: 'Grigio', dot: '#8e8e93' },
+  { id: 'gray', label: 'Grigio', dot: '#8e8e93' },
   { id: 'orange', label: 'Rosso / Arancione', dot: '#ff9500' },
   { id: 'tabby', label: 'Tigrato', dot: '#a16207' },
   { id: 'calico', label: 'Calico', dot: '#e879f9' },
@@ -49,15 +49,19 @@ interface Props {
   geoError: string | null;
   onBack: () => void;
   onPublish: (data: PostFormData) => void;
+  publishing?: boolean;
 }
 
-export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish }: Props) {
-  const [pinLat, setPinLat] = useState<number | null>(null);
-  const [pinLng, setPinLng] = useState<number | null>(null);
+export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish, publishing = false }: Props) {
+  const FALLBACK_LAT = 41.9028;
+  const FALLBACK_LNG = 12.4964;
+
+  const [pinLat, setPinLat] = useState<number>(() => coords?.lat ?? FALLBACK_LAT);
+  const [pinLng, setPinLng] = useState<number>(() => coords?.lng ?? FALLBACK_LNG);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
-  // Sync pin with GPS when coords arrive
-  if (coords && pinLat === null) {
+  // Sync pin with GPS when coords arrive after mount
+  if (coords && pinLat === FALLBACK_LAT && pinLng === FALLBACK_LNG) {
     setPinLat(coords.lat);
     setPinLng(coords.lng);
   }
@@ -99,7 +103,6 @@ export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish
   }
 
   function onSubmit(data: z.infer<typeof schema>) {
-    if (!pinLat || !pinLng) return;
     onPublish({ ...data, pinLat, pinLng });
   }
 
@@ -253,32 +256,36 @@ export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish
               Posizione
             </label>
 
-            {geoError ? (
-              <Alert variant="destructive">
-                <TriangleAlert />
-                <AlertDescription>
-                  {geoError} — la posizione GPS è necessaria per pubblicare.
-                </AlertDescription>
-              </Alert>
-            ) : !coords ? (
+            {!coords && !geoError ? (
               <div className="h-48 rounded-xl bg-muted flex items-center justify-center gap-2 text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span className="text-sm">Ricerca posizione GPS…</span>
               </div>
             ) : (
-              <div className="h-48 rounded-xl overflow-hidden border border-border">
-                <PositionMap
-                  originLat={coords.lat}
-                  originLng={coords.lng}
-                  pinLat={pinLat ?? coords.lat}
-                  pinLng={pinLng ?? coords.lng}
-                  onChange={(lat, lng) => { setPinLat(lat); setPinLng(lng); }}
-                />
-              </div>
+              <>
+                {geoError && (
+                  <Alert variant="destructive" className="py-2">
+                    <TriangleAlert />
+                    <AlertDescription className="text-xs">{geoError}</AlertDescription>
+                  </Alert>
+                )}
+                <div className="h-48 rounded-xl overflow-hidden border border-border">
+                  <PositionMap
+                    originLat={coords?.lat ?? FALLBACK_LAT}
+                    originLng={coords?.lng ?? FALLBACK_LNG}
+                    pinLat={pinLat}
+                    pinLng={pinLng}
+                    restrictToOrigin={!!coords}
+                    onChange={(lat, lng) => { setPinLat(lat); setPinLng(lng); }}
+                  />
+                </div>
+              </>
             )}
 
             <p className="text-xs text-muted-foreground">
-              Trascina il pin per aggiustare la posizione (max 50m).
+              {coords
+                ? 'Trascina il pin per aggiustare la posizione (max 50m).'
+                : 'Trascina il pin per impostare la posizione manualmente.'}
             </p>
           </div>
 
@@ -292,10 +299,10 @@ export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish
             type="submit"
             form="post-form"
             className="w-full"
-            disabled={isSubmitting || !!geoError || !coords}
+            disabled={isSubmitting || publishing || (!coords && !geoError)}
             onClick={handleSubmit(onSubmit)}
           >
-            {isSubmitting ? (
+            {(isSubmitting || publishing) ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Pubblicazione…

@@ -43,7 +43,21 @@ export default function CameraStep({ onCapture }: Props) {
 
   useEffect(() => {
     startCamera('environment');
-    return () => { streamRef.current?.getTracks().forEach((t) => t.stop()); };
+
+    function stopStream() {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+
+    function handleVisibilityChange() {
+      if (document.hidden) stopStream();
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      stopStream();
+    };
   }, [startCamera]);
 
   function flipCamera() {
