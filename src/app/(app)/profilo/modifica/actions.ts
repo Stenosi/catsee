@@ -192,3 +192,27 @@ export async function saveAvatarUrl(key: string): Promise<SaveAvatarResult> {
 
   return { success: true, avatarUrl: newUrl };
 }
+
+export type RemoveAvatarResult = { success: true } | { success: false; error: string };
+
+export async function removeAvatar(): Promise<RemoveAvatarResult> {
+  const session = await requireOnboardedSession();
+  const userId = session.user.id;
+
+  const current = await db.query.users.findFirst({
+    where: (u, { eq }) => eq(u.id, userId),
+    columns: { avatarUrl: true },
+  });
+
+  if (!current?.avatarUrl) return { success: true };
+
+  await db.update(users).set({ avatarUrl: null, updatedAt: new Date() }).where(eq(users.id, userId));
+
+  const oldKey = current.avatarUrl.replace(`${R2_PUBLIC_URL}/`, '');
+  await db.insert(r2CleanupQueue).values({ r2Key: oldKey, fileType: 'avatar' });
+
+  revalidatePath('/profilo');
+  revalidatePath('/profilo/modifica');
+
+  return { success: true };
+}

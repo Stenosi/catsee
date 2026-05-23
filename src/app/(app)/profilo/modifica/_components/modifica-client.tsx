@@ -13,8 +13,19 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
-import { saveProfile, getAvatarUploadUrl, saveAvatarUrl } from '../actions';
+import { saveProfile, getAvatarUploadUrl, saveAvatarUrl, removeAvatar } from '../actions';
 
 const AvatarCropModal = dynamic(() => import('./avatar-crop-modal'), { ssr: false });
 
@@ -69,6 +80,21 @@ export default function ModificaClient({
     // Reset input così lo stesso file può essere riselezionato
     e.target.value = '';
     setCropSrc(URL.createObjectURL(file));
+  }
+
+  async function handleRemoveAvatar() {
+    setUploadingAvatar(true);
+    try {
+      const result = await removeAvatar();
+      if (!result.success) { toast.error(result.error); return; }
+      setCurrentAvatarUrl(null);
+      setAvatarStatus('idle');
+      toast.success('Foto profilo rimossa.');
+    } catch {
+      toast.error('Qualcosa è andato storto. Riprova.');
+    } finally {
+      setUploadingAvatar(false);
+    }
   }
 
   async function handleCropConfirm(blob: Blob) {
@@ -173,7 +199,7 @@ export default function ModificaClient({
       <div className="flex flex-col gap-6 px-4 py-6">
 
         {/* Avatar */}
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-2">
           <input
             ref={fileInputRef}
             type="file"
@@ -221,6 +247,32 @@ export default function ModificaClient({
               }
             </div>
           </button>
+          {currentAvatarUrl && (
+            <AlertDialog>
+              <AlertDialogTrigger
+                render={<Button type="button" variant="destructive" size="sm" disabled={uploadingAvatar} />}
+              >
+                Rimuovi foto
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Rimuovere la foto profilo?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    La foto verrà eliminata definitivamente. Al suo posto verrà mostrato il tuo avatar con le iniziali.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annulla</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleRemoveAvatar}
+                    className="bg-destructive/10 text-destructive hover:bg-destructive/20"
+                  >
+                    Rimuovi
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
 
         {/* Campi form */}
