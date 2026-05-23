@@ -326,3 +326,54 @@ Il dev server Next.js **non funziona via IP di rete locale** su mobile: il WebSo
 
 - **Dati sessione in Client Components dell'header:** passare come prop dal layout Server Component, non usare `useSession()` — evita di aggiungere `SessionProvider`. Rivalutare se altri componenti client avranno bisogno della sessione in futuro.
 - **Conteggio avvistamenti:** usa solo `moderationStatus = 'approved'` e `deletedAt IS NULL` per il badge pubblico sul profilo.
+
+## Aggiornamenti sessione 6 (2026-05-23)
+
+### Flow scatto completato (Fasi A–D)
+
+- **`src/lib/r2.ts`** — client S3 per Cloudflare R2. Usa `@aws-sdk/client-s3` (già in `package.json`). Credenziali via env: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL`.
+- **`src/app/(app)/scatta/actions.ts`** — due server actions:
+  - `getUploadUrls()`: genera due presigned PUT URL (foto originale + thumbnail, scadenza 5 min)
+  - `publishSighting()`: valida, calcola fuzzed coords con `fuzzCoordinates()`, inserisce in DB con `makePoint()` per entrambe le geography column
+- **Upload pattern:** presigned URL → PUT diretto da browser a R2, zero payload su server Next.js. `browser-image-compression` per thumbnail 400px lato client.
+- **GPS fallback desktop:** se GPS non disponibile, mappa centrata su Roma (41.9028, 12.4964), pin libero senza restrizione 50m. `PositionMap` accetta `restrictToOrigin?: boolean` (default `true`). In produzione il flusso da desktop sarà disabilitato del tutto.
+- **`tag_colors` allineamento:** il form usava `'grey'`, lo schema DB usa `'gray'` — allineati su `'gray'`.
+- **Camera stream:** aggiunto listener `visibilitychange` in `CameraStep` per fermare lo stream immediatamente quando la pagina va in background (previene spia fotocamera accesa dopo navigazione).
+
+### Avatar upload con crop
+
+- **`avatar-crop-modal.tsx`** — modal fullscreen con `react-easy-crop` (già installato). Crop circolare 1:1, canvas resize a 400×400 JPEG. Pattern `onConfirm(blob)` / `onCancel()`.
+- **`modifica/actions.ts`** aggiunte: `getAvatarUploadUrl()` (key fisso `avatars/{userId}.jpg`) e `saveAvatarUrl()` (update `users.avatar_url` + enqueue vecchio file in `r2_cleanup_queue`).
+- **`ModificaClient`:** file input nascosto triggerato dal tap sull'avatar, spinner Loader2 sull'overlay fotocamera durante upload, aggiornamento ottimistico del preview post-upload.
+
+### Profilo — griglia post
+
+- **`profilo/page.tsx`:** query aggiuntiva per ultimi 60 sighting approvati; URL thumbnail costruiti server-side (`${R2_PUBLIC_URL}/${key}`).
+- **`ProfiloClient`:** griglia 3 colonne `aspect-square` stile Instagram. `ThumbImage` (componente interno) mostra `Skeleton` durante il caricamento poi fade-in `opacity`.
+
+### Componenti aggiornati
+
+- **`ImageLightbox`:** prop `circle?: boolean` — quando `true` mostra l'immagine come cerchio 64×64 (ideale per preview foto profilo). Default `false` (rettangolo `rounded-lg`).
+- **`alert.tsx`:** variante `destructive` usa `bg-destructive/10` invece di `bg-card` per maggiore visibilità.
+
+### Roadmap aggiornata
+
+```text
+7. ✅ Flow scatto: camera → form → R2 upload → DB save (AI verify e palette: rimandati)
+5d. ✅ Avatar upload con crop
+5e. ✅ Griglia post nel profilo (thumbnail da R2)
+```
+
+### Debiti tecnici e TODO aperti
+
+- **AI verify (TF.js + COCO-SSD):** saltato per ora, tutti i post vanno in `approved` direttamente. Da implementare in Fase B.
+- **Palette colori (node-vibrant):** `extractedPalette` salvato come array vuoto `[]`. Da popolare lato client al momento della pubblicazione.
+- **Desktop lock `/scatta`:** in produzione questa route dovrà essere inaccessibile da desktop (o mostrare un messaggio). Da aggiungere prima del lancio.
+- **Cron job R2 cleanup:** `r2_cleanup_queue` viene popolata correttamente (vecchi avatar), ma il job notturno Vercel non è ancora implementato.
+- **`getAvatarUploadUrl` key fissa:** usa `avatars/{userId}.jpg` — sovrascrive sempre la stessa chiave R2. Questo significa che il vecchio file viene sovrascritto prima che il cleanup sia eseguito. Funziona, ma la cleanup queue accumula entry inutili. Soluzione futura: usare un UUID nel key e affidarsi interamente alla cleanup queue.
+
+### Convenzioni aggiornate
+
+- **R2 upload:** usare sempre il pattern presigned URL (server action genera URL → client fa PUT direttamente). Mai passare file binari attraverso server actions/API routes.
+- **URL R2 pubblici:** costruire sempre server-side come `${process.env.R2_PUBLIC_URL}/${key}` e passarli come prop al client. Mai esporre `R2_PUBLIC_URL` come `NEXT_PUBLIC_`.
+- **`ThumbImage`:** quando serve un'immagine con skeleton di caricamento in una lista/griglia, usare il pattern componente locale con `useState(false)` + `onLoad` + `Skeleton` overlay.
