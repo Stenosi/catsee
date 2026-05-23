@@ -364,6 +364,16 @@ Il dev server Next.js **non funziona via IP di rete locale** su mobile: il WebSo
 5e. ✅ Griglia post nel profilo (thumbnail da R2)
 ```
 
+### Avatar — rimozione foto profilo
+
+- **`removeAvatar` server action** in `modifica/actions.ts`: imposta `avatar_url = null` + accoda il vecchio file in `r2_cleanup_queue`.
+- **UI:** bottone `Button variant="destructive" size="sm"` visibile solo se esiste una foto, avvolto in `AlertDialog` di conferma prima di procedere.
+- **`AlertDialog` shadcn** installato (`src/components/ui/alert-dialog.tsx`). Usa `@base-ui/react/alert-dialog` — non supporta `asChild`, usare il pattern `render={<Button ... />}` sul `AlertDialogTrigger` (vedi come `AlertDialogCancel` usa lo stesso pattern).
+
+### Bug noto — upload avatar da mobile su Vercel
+
+L'upload avatar fallisce con "Errore nella generazione del link di upload" su Vercel da mobile. Da localhost funziona. Causa non ancora identificata — il `catch` di `getAvatarUploadUrl` ingoia l'eccezione reale senza loggarla. **Prossimo step:** aggiungere `console.error` nel catch e leggere i Vercel Function Logs per vedere l'errore reale.
+
 ### Debiti tecnici e TODO aperti
 
 - **AI verify (TF.js + COCO-SSD):** saltato per ora, tutti i post vanno in `approved` direttamente. Da implementare in Fase B.
