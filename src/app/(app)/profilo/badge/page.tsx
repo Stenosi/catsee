@@ -2,18 +2,7 @@ import { requireOnboardedSession } from '@/lib/session';
 import { db } from '@/db';
 import { badges, userBadges, sightings } from '@/db/schema';
 import { eq, and, isNull, count, sql } from 'drizzle-orm';
-import { cn } from '@/lib/utils';
-import { Progress } from '@/components/ui/progress';
-
-const CATEGORY_LABELS: Record<string, string> = {
-  milestone: 'Traguardi',
-  streak: 'Serie',
-  time: 'Orari',
-  color: 'Colori',
-  special: 'Speciali',
-};
-
-const CATEGORY_ORDER = ['milestone', 'streak', 'time', 'color', 'special'];
+import { BadgesClient, type BadgeRow } from './_components/badges-client';
 
 const MILESTONE_IDS = ['first_cat', 'explorer_5', 'cat_hunter_10', 'cat_master_50'];
 
@@ -64,7 +53,6 @@ export default async function BadgePage() {
     )
     .orderBy(badges.displayOrder);
 
-  // Calcola i progressi solo per badge non ancora sbloccati con target
   const lockedWithTarget = rows.filter((r) => r.unlockedAt === null && r.target !== null);
   const needsMilestone = lockedWithTarget.some((r) => MILESTONE_IDS.includes(r.id));
   const needsBlack = lockedWithTarget.some((r) => r.id === 'panther_5');
@@ -82,107 +70,24 @@ export default async function BadgePage() {
 
   const unlockedCount = rows.filter((r) => r.unlockedAt !== null).length;
 
-  const grouped = CATEGORY_ORDER.reduce<Record<string, typeof rows>>((acc, cat) => {
-    const items = rows.filter((r) => r.category === cat);
-    if (items.length > 0) acc[cat] = items;
-    return acc;
-  }, {});
+  // Serialize for the Client Component (Dates → ISO strings)
+  const items: BadgeRow[] = rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    description: r.description,
+    icon: r.icon,
+    category: r.category,
+    displayOrder: r.displayOrder,
+    target: r.target,
+    unlockedAt: r.unlockedAt ? r.unlockedAt.toISOString() : null,
+    progress: progressMap[r.id] ?? null,
+  }));
 
   return (
-    <div className="flex flex-col gap-6 px-4 py-6">
-
-      {/* Contatore totale */}
-      <div className="flex flex-col gap-2">
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Badge sbloccati</span>
-          <span className="font-semibold text-muted-foreground">{unlockedCount}/{rows.length}</span>
-        </div>
-        <Progress value={rows.length > 0 ? (unlockedCount / rows.length) * 100 : 0} />
-      </div>
-
-      {Object.entries(grouped).map(([category, items]) => (
-        <section key={category} className="flex flex-col gap-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {CATEGORY_LABELS[category] ?? category}
-          </h2>
-
-          <div className="flex flex-wrap gap-3">
-            {items.map((badge) => {
-              const unlocked = badge.unlockedAt !== null;
-              const progress = progressMap[badge.id] ?? null;
-              const showProgress = !unlocked && badge.target !== null && badge.target > 1 && progress !== null;
-
-              return (
-                <div
-                  key={badge.id}
-                  className={cn(
-                    'flex flex-1 basis-[40%] sm:basis-[30%] md:basis-[20%] lg:basis-[10%] flex-col items-center gap-1.5 rounded-xl p-3',
-                    'border border-border bg-card',
-                    !unlocked && 'opacity-50',
-                  )}
-                >
-                  <div className="relative inline-flex" aria-hidden="true">
-                    <span className={cn('text-3xl leading-none pb-0.5', !unlocked && 'grayscale opacity-70')}>
-                      {badge.icon}
-                    </span>
-                    {showProgress && (
-                      <span
-                        className="text-3xl leading-none pb-0.5 absolute inset-0"
-                        style={{
-                          maskImage: `linear-gradient(to top, black ${Math.min((progress! / badge.target!) * 100, 100)}%, transparent ${Math.min((progress! / badge.target!) * 100, 100)}%)`,
-                          WebkitMaskImage: `linear-gradient(to top, black ${Math.min((progress! / badge.target!) * 100, 100)}%, transparent ${Math.min((progress! / badge.target!) * 100, 100)}%)`,
-                        }}
-                      >
-                        {badge.icon}
-                      </span>
-                    )}
-                  </div>
-
-                  <span className="text-xs font-medium text-foreground text-center leading-tight">
-                    {badge.name}
-                  </span>
-
-                  {unlocked ? (
-                    <span className="text-[10px] text-muted-foreground">
-                      {new Date(badge.unlockedAt!).toLocaleDateString('it-IT', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </span>
-                  ) : showProgress ? (
-                    <div className="w-full flex flex-col gap-1 mt-0.5">
-                      <div className="flex items-center gap-1.5">
-                        <Progress
-                          value={Math.min((progress / badge.target!) * 100, 100)}
-                          className="flex-1"
-                        />
-                        <span className="text-[10px] text-muted-foreground shrink-0">
-                          {progress}/{badge.target}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground text-center leading-tight">
-                        {badge.description}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-[10px] text-muted-foreground text-center leading-tight">
-                      {badge.description}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      ))}
-
-      {rows.length === 0 && (
-        <p className="text-sm text-muted-foreground text-center py-12">
-          Nessun badge disponibile al momento.
-        </p>
-      )}
-
-    </div>
+    <BadgesClient
+      items={items}
+      unlockedCount={unlockedCount}
+      totalCount={rows.length}
+    />
   );
 }

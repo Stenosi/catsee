@@ -10,6 +10,7 @@ const HIDDEN_PATHS = ["/scatta"];
 const BACK_HEADERS: Record<string, string> = {
   "/profilo/modifica": "Modifica profilo",
   "/profilo/badge": "Badge",
+  "/impostazioni": "Impostazioni",
 };
 
 export default function AppHeader({ username }: { username: string | null }) {
@@ -117,11 +118,13 @@ function LogoHeader() {
 }
 
 function ProfiloHeader({ username }: { username: string | null }) {
+  const router = useRouter();
   return (
     <div className="flex w-full items-center justify-between">
       <span className="text-base font-semibold text-foreground">{username ? `@${username}` : ""}</span>
       <button
         aria-label="Impostazioni"
+        onClick={() => router.push('/impostazioni')}
         className={cn(
           "flex items-center justify-center w-9 h-9 rounded-full",
           "text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"

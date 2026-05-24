@@ -370,9 +370,9 @@ Il dev server Next.js **non funziona via IP di rete locale** su mobile: il WebSo
 - **UI:** bottone `Button variant="destructive" size="sm"` visibile solo se esiste una foto, avvolto in `AlertDialog` di conferma prima di procedere.
 - **`AlertDialog` shadcn** installato (`src/components/ui/alert-dialog.tsx`). Usa `@base-ui/react/alert-dialog` — non supporta `asChild`, usare il pattern `render={<Button ... />}` sul `AlertDialogTrigger` (vedi come `AlertDialogCancel` usa lo stesso pattern).
 
-### Bug noto — upload avatar da mobile su Vercel
+### Bug risolto — upload avatar su Vercel
 
-L'upload avatar fallisce con "Errore nella generazione del link di upload" su Vercel da mobile. Da localhost funziona. Causa non ancora identificata — il `catch` di `getAvatarUploadUrl` ingoia l'eccezione reale senza loggarla. **Prossimo step:** aggiungere `console.error` nel catch e leggere i Vercel Function Logs per vedere l'errore reale.
+L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. **Causa:** le variabili d'ambiente R2 (`R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL`) erano presenti solo nel `.env` locale e non erano state aggiunte alle Environment Variables di Vercel. **Soluzione:** aggiungere tutte e 5 le variabili in Vercel → Settings → Environment Variables.
 
 ### Debiti tecnici e TODO aperti
 
