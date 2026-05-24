@@ -273,8 +273,6 @@ export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish
                   <PositionMap
                     originLat={coords?.lat ?? FALLBACK_LAT}
                     originLng={coords?.lng ?? FALLBACK_LNG}
-                    pinLat={pinLat}
-                    pinLng={pinLng}
                     restrictToOrigin={!!coords}
                     onChange={(lat, lng) => { setPinLat(lat); setPinLng(lng); }}
                   />

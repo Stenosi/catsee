@@ -1,18 +1,15 @@
 'use client';
 
-import { useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Circle } from 'react-leaflet';
-import L from 'leaflet';
+import { useEffect } from 'react';
+import { MapContainer, TileLayer, Circle, useMap, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 const MAX_METERS = 50;
 
-const pinIcon = L.divIcon({
-  className: '',
-  html: '<div style="width:20px;height:20px;border-radius:50%;background:oklch(0.705 0.213 47.604);border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.35)"></div>',
-  iconSize: [20, 20],
-  iconAnchor: [10, 10],
-});
+const PIN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="36" viewBox="0 0 28 36">
+  <path d="M14 0C6.268 0 0 6.268 0 14c0 9.333 14 22 14 22S28 23.333 28 14C28 6.268 21.732 0 14 0z" fill="oklch(0.705 0.213 47.604)" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.35))"/>
+  <circle cx="14" cy="14" r="5" fill="white"/>
+</svg>`;
 
 function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371000;
@@ -26,64 +23,96 @@ function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number)
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+function ScrollWheelOnHover() {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    const enable = () => map.scrollWheelZoom.enable();
+    const disable = () => map.scrollWheelZoom.disable();
+    container.addEventListener('mouseenter', enable);
+    container.addEventListener('mouseleave', disable);
+    return () => {
+      container.removeEventListener('mouseenter', enable);
+      container.removeEventListener('mouseleave', disable);
+    };
+  }, [map]);
+  return null;
+}
+
+interface SnapperProps {
+  originLat: number;
+  originLng: number;
+  restrictToOrigin: boolean;
+  onChange: (lat: number, lng: number) => void;
+}
+
+function CenterTracker({ originLat, originLng, restrictToOrigin, onChange }: SnapperProps) {
+  const map = useMapEvents({
+    moveend() {
+      const { lat, lng } = map.getCenter();
+      if (!restrictToOrigin) {
+        onChange(lat, lng);
+        return;
+      }
+      const dist = haversineMeters(originLat, originLng, lat, lng);
+      if (dist <= MAX_METERS) {
+        onChange(lat, lng);
+      } else {
+        const scale = MAX_METERS / dist;
+        const snapped = {
+          lat: originLat + (lat - originLat) * scale,
+          lng: originLng + (lng - originLng) * scale,
+        };
+        map.panTo(snapped, { animate: true, duration: 0.25 });
+        onChange(snapped.lat, snapped.lng);
+      }
+    },
+  });
+  void map;
+  return null;
+}
+
 interface Props {
   originLat: number;
   originLng: number;
-  pinLat: number;
-  pinLng: number;
   restrictToOrigin?: boolean;
   onChange: (lat: number, lng: number) => void;
 }
 
-export default function PositionMap({ originLat, originLng, pinLat, pinLng, restrictToOrigin = true, onChange }: Props) {
-  const markerRef = useRef<L.Marker>(null);
-
-  function handleDragEnd() {
-    const marker = markerRef.current;
-    if (!marker) return;
-    const { lat, lng } = marker.getLatLng();
-    if (!restrictToOrigin) {
-      onChange(lat, lng);
-      return;
-    }
-    const dist = haversineMeters(originLat, originLng, lat, lng);
-    if (dist <= MAX_METERS) {
-      onChange(lat, lng);
-    } else {
-      const scale = MAX_METERS / dist;
-      const snapped = {
-        lat: originLat + (lat - originLat) * scale,
-        lng: originLng + (lng - originLng) * scale,
-      };
-      marker.setLatLng(snapped);
-      onChange(snapped.lat, snapped.lng);
-    }
-  }
-
+export default function PositionMap({ originLat, originLng, restrictToOrigin = true, onChange }: Props) {
   return (
-    <MapContainer
-      center={[originLat, originLng]}
-      zoom={restrictToOrigin ? 17 : 6}
-      className="h-full w-full"
-      zoomControl={!restrictToOrigin}
-      scrollWheelZoom={false}
-      attributionControl={false}
-    >
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      {restrictToOrigin && (
-        <Circle
-          center={[originLat, originLng]}
-          radius={MAX_METERS}
-          pathOptions={{ color: 'oklch(0.705 0.213 47.604)', fillColor: 'oklch(0.705 0.213 47.604)', fillOpacity: 0.1, weight: 1.5 }}
+    <div className="relative h-full w-full">
+      <MapContainer
+        center={[originLat, originLng]}
+        zoom={restrictToOrigin ? 17 : 6}
+        className="h-full w-full"
+        zoomControl={false}
+        scrollWheelZoom={false}
+        attributionControl={false}
+      >
+        <ScrollWheelOnHover />
+        <CenterTracker
+          originLat={originLat}
+          originLng={originLng}
+          restrictToOrigin={restrictToOrigin}
+          onChange={onChange}
         />
-      )}
-      <Marker
-        ref={markerRef}
-        position={[pinLat, pinLng]}
-        draggable
-        icon={pinIcon}
-        eventHandlers={{ dragend: handleDragEnd }}
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        {restrictToOrigin && (
+          <Circle
+            center={[originLat, originLng]}
+            radius={MAX_METERS}
+            pathOptions={{ color: 'oklch(0.705 0.213 47.604)', fillColor: 'oklch(0.705 0.213 47.604)', fillOpacity: 0.1, weight: 1.5 }}
+          />
+        )}
+      </MapContainer>
+
+      {/* Pin fisso al centro, punta ancorata al punto esatto */}
+      <div
+        className="pointer-events-none absolute inset-0 flex items-center justify-center z-1000"
+        style={{ paddingBottom: 36 }}
+        dangerouslySetInnerHTML={{ __html: PIN_SVG }}
       />
-    </MapContainer>
+    </div>
   );
 }
