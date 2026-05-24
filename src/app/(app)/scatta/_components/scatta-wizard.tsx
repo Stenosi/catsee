@@ -13,6 +13,53 @@ import type { PaletteEntry } from '@/db/schema/sightings';
 
 type Step = 'camera' | 'preview' | 'form';
 
+// ── Palette → cat color mapping ───────────────────────────────────────────────
+
+function hexToHsl(hex: string): [number, number, number] {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min) return [0, 0, l * 100];
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h: number;
+  switch (max) {
+    case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+    case g: h = ((b - r) / d + 2) / 6; break;
+    default: h = ((r - g) / d + 4) / 6;
+  }
+  return [h * 360, s * 100, l * 100];
+}
+
+function matchToCatColor(hex: string): string | null {
+  const [h, s, l] = hexToHsl(hex);
+  if (l < 18) return 'black';
+  if (l > 87) return 'white';
+  if (s < 14) return l < 45 ? 'tuxedo' : 'gray';
+  if (h >= 15 && h <= 55 && s >= 45) {
+    if (l < 45) return 'tabby';
+    if (l > 68) return 'siamese';
+    return 'orange';
+  }
+  if (h >= 15 && h <= 60 && s >= 12 && l > 58) return 'siamese';
+  return null;
+}
+
+function mapPaletteToColors(palette: PaletteEntry[]): string[] {
+  const totals: Record<string, number> = {};
+  for (const { hex, percentage } of palette) {
+    const color = matchToCatColor(hex);
+    if (color) totals[color] = (totals[color] ?? 0) + percentage;
+  }
+  return Object.entries(totals)
+    .filter(([, pct]) => pct >= 8)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 3)
+    .map(([id]) => id);
+}
+
 export interface CapturedCoords {
   lat: number;
   lng: number;
@@ -28,6 +75,7 @@ export default function ScattaWizard() {
   const [geoError, setGeoError] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [extractedPalette, setExtractedPalette] = useState<PaletteEntry[]>([]);
+  const [suggestedColors, setSuggestedColors] = useState<string[]>([]);
 
   // GPS avviato subito, mentre l'utente è ancora sulla camera
   useEffect(() => {
@@ -57,6 +105,7 @@ export default function ScattaWizard() {
         percentage: Math.round((s.population / total) * 100),
       }));
       setExtractedPalette(colors);
+      setSuggestedColors(mapPaletteToColors(colors));
     }).catch(() => {
       // palette non estratta — si salva [] come fallback
     });
@@ -151,6 +200,7 @@ export default function ScattaWizard() {
           onBack={handleRetry}
           onPublish={handlePublish}
           publishing={publishing}
+          suggestedColors={suggestedColors}
         />
       )}
     </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import ImageLightbox from '@/components/image-lightbox';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -50,9 +50,10 @@ interface Props {
   onBack: () => void;
   onPublish: (data: PostFormData) => void;
   publishing?: boolean;
+  suggestedColors?: string[];
 }
 
-export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish, publishing = false }: Props) {
+export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish, publishing = false, suggestedColors }: Props) {
   const FALLBACK_LAT = 41.9028;
   const FALLBACK_LNG = 12.4964;
 
@@ -71,13 +72,19 @@ export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish
     watch,
     setValue,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, dirtyFields },
   } = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: { catName: '', colors: [], notes: '' },
   });
 
   const selectedColors = watch('colors');
+
+  useEffect(() => {
+    if (suggestedColors && suggestedColors.length > 0 && !dirtyFields.colors) {
+      setValue('colors', suggestedColors, { shouldValidate: true });
+    }
+  }, [suggestedColors, dirtyFields.colors, setValue]);
   const furLength = watch('furLength');
   const catNameValue = watch('catName');
   const notesValue = watch('notes') ?? '';
