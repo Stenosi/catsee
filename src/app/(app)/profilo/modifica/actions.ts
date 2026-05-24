@@ -151,7 +151,7 @@ export type GetAvatarUploadUrlResult =
 
 export async function getAvatarUploadUrl(): Promise<GetAvatarUploadUrlResult> {
   const session = await requireOnboardedSession();
-  const key = `avatars/${session.user.id}.jpg`;
+  const key = `avatars/${session.user.id}/${crypto.randomUUID()}.jpg`;
   try {
     const uploadUrl = await getSignedUrl(
       r2,
