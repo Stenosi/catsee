@@ -379,8 +379,8 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 - **AI verify (TF.js + COCO-SSD):** saltato per ora, tutti i post vanno in `approved` direttamente. Da implementare in Fase B.
 - **Palette colori (node-vibrant):** `extractedPalette` salvato come array vuoto `[]`. Da popolare lato client al momento della pubblicazione.
 - **Desktop lock `/scatta`:** in produzione questa route dovrà essere inaccessibile da desktop (o mostrare un messaggio). Da aggiungere prima del lancio.
-- **Cron job R2 cleanup:** `r2_cleanup_queue` viene popolata correttamente (vecchi avatar), ma il job notturno Vercel non è ancora implementato.
-- **`getAvatarUploadUrl` key fissa:** usa `avatars/{userId}.jpg` — sovrascrive sempre la stessa chiave R2. Questo significa che il vecchio file viene sovrascritto prima che il cleanup sia eseguito. Funziona, ma la cleanup queue accumula entry inutili. Soluzione futura: usare un UUID nel key e affidarsi interamente alla cleanup queue.
+- ~~**Cron job R2 cleanup**~~ ✅ Risolto — vedi sessione 7b.
+- ~~**`getAvatarUploadUrl` key fissa**~~ ✅ Risolto — vedi sessione 7b.
 
 ### Convenzioni aggiornate
 
