@@ -387,3 +387,30 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 - **R2 upload:** usare sempre il pattern presigned URL (server action genera URL → client fa PUT direttamente). Mai passare file binari attraverso server actions/API routes.
 - **URL R2 pubblici:** costruire sempre server-side come `${process.env.R2_PUBLIC_URL}/${key}` e passarli come prop al client. Mai esporre `R2_PUBLIC_URL` come `NEXT_PUBLIC_`.
 - **`ThumbImage`:** quando serve un'immagine con skeleton di caricamento in una lista/griglia, usare il pattern componente locale con `useState(false)` + `onLoad` + `Skeleton` overlay.
+
+## Aggiornamenti sessione 7 (2026-05-25)
+
+### Pagina impostazioni
+
+- **`src/app/(app)/impostazioni/page.tsx`** — Client Component minimale con bottone logout. `AppHeader` già mostra back-arrow su questa route via `BACK_HEADERS`.
+- **`src/app/(app)/impostazioni/actions.ts`** — Server Action `signOutAction` che chiama `signOut()` di Auth.js e redirige a `/login`.
+- **ProfiloHeader** collegato: tap sull'icona ⚙️ fa `router.push('/impostazioni')`.
+
+### Badge — animazione unlock
+
+- **`src/app/(app)/profilo/badge/_components/badges-client.tsx`** — Client Component che riceve i badge dal Server Component (`badge/page.tsx`) e gestisce l'animazione confetti al primo render dei badge sbloccati (via `canvas-confetti`).
+- **`tailwindcss-motion`** installato per animazioni CSS badge.
+- **Pattern Server/Client split badge:** `page.tsx` fa le query DB e passa dati come props; `BadgesClient` gestisce animazioni e interazioni.
+- **`scripts/dev-unlock-badge.ts`** — script dev-only per sbloccare badge manualmente via CLI (`pnpm tsx scripts/dev-unlock-badge.ts <userId> <badgeSlug>`). Non è parte del prodotto.
+
+### Mappa posizione in /scatta — UX fixed-center pin
+
+- **Pattern adottato:** niente più `<Marker>` draggable. Il pin SVG è un overlay CSS fisso al centro del container (`absolute inset-0 flex items-center justify-center`, `paddingBottom: 36` per ancorare la punta). L'utente sposta la mappa sotto il pin (stile Google Maps / Uber).
+- **`CenterTracker`** (componente interno): usa `useMapEvents({ moveend })` per leggere il centro della mappa. Se `restrictToOrigin=true` e il centro supera i 50m dall'origine GPS, fa `map.panTo(snapped, { animate: true })` per riportare la mappa nel raggio.
+- **Props rimosse:** `PositionMap` non accetta più `pinLat`/`pinLng` (il pin è sempre al centro, le coordinate vengono aggiornate via `onChange` a ogni `moveend`).
+- **Scroll wheel zoom:** abilitato solo su `mouseenter` del container, disabilitato su `mouseleave` (tramite `ScrollWheelOnHover`). Nessun bottone zoom UI.
+
+### Bug fix — ImageLightbox sopra la mappa Leaflet
+
+- **Causa:** Leaflet assegna z-index interni elevati ai propri pane (marker pane = 600, tooltip = 650). Il lightbox con `z-200` finiva sotto.
+- **Fix:** `z-1000` su `ImageLightbox` (sopra qualsiasi pane Leaflet).
