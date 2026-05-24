@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import imageCompression from 'browser-image-compression';
+import { Vibrant } from 'node-vibrant/browser';
 import CameraStep from './camera-step';
 import PreviewStep from './preview-step';
 import FormStep, { type PostFormData } from './form-step';
 import { getUploadUrls, publishSighting } from '../actions';
+import type { PaletteEntry } from '@/db/schema/sightings';
 
 type Step = 'camera' | 'preview' | 'form';
 
@@ -25,6 +27,7 @@ export default function ScattaWizard() {
   const [coords, setCoords] = useState<CapturedCoords | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
+  const [extractedPalette, setExtractedPalette] = useState<PaletteEntry[]>([]);
 
   // GPS avviato subito, mentre l'utente è ancora sulla camera
   useEffect(() => {
@@ -43,6 +46,21 @@ export default function ScattaWizard() {
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
     );
   }, []);
+
+  useEffect(() => {
+    if (step !== 'form' || !capturedUrl) return;
+    Vibrant.from(capturedUrl).getPalette().then((swatches) => {
+      const valid = Object.values(swatches).filter((s) => s !== null);
+      const total = valid.reduce((sum, s) => sum + s.population, 0) || 1;
+      const colors: PaletteEntry[] = valid.map((s) => ({
+        hex: s.hex,
+        percentage: Math.round((s.population / total) * 100),
+      }));
+      setExtractedPalette(colors);
+    }).catch(() => {
+      // palette non estratta — si salva [] come fallback
+    });
+  }, [step, capturedUrl]);
 
   function handleCapture(blob: Blob) {
     setCapturedBlob(blob);
@@ -96,6 +114,7 @@ export default function ScattaWizard() {
         notes: data.notes,
         pinLat: data.pinLat,
         pinLng: data.pinLng,
+        extractedPalette,
       });
 
       if (!result.success) {

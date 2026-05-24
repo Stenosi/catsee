@@ -40,6 +40,8 @@ export async function getUploadUrls(): Promise<GetUploadUrlsResult> {
 
 // ── Publish sighting ──────────────────────────────────────────────────────────
 
+const paletteColorSchema = z.object({ hex: z.string(), percentage: z.number() });
+
 const publishSchema = z.object({
   photoKey: z.string().min(1),
   thumbnailKey: z.string().min(1),
@@ -49,6 +51,7 @@ const publishSchema = z.object({
   notes: z.string().max(200).optional(),
   pinLat: z.number(),
   pinLng: z.number(),
+  extractedPalette: z.array(paletteColorSchema).optional(),
 });
 
 export type PublishSightingResult =
@@ -62,7 +65,7 @@ export async function publishSighting(data: z.infer<typeof publishSchema>): Prom
   const parsed = publishSchema.safeParse(data);
   if (!parsed.success) return { success: false, error: 'Dati non validi.' };
 
-  const { photoKey, thumbnailKey, catName, colors, furLength, notes, pinLat, pinLng } = parsed.data;
+  const { photoKey, thumbnailKey, catName, colors, furLength, notes, pinLat, pinLng, extractedPalette } = parsed.data;
 
   if (containsProfanity(catName)) return { success: false, error: 'Il nome contiene parole non ammesse.' };
   if (notes && containsProfanity(notes)) return { success: false, error: 'Le note contengono parole non ammesse.' };
@@ -77,7 +80,7 @@ export async function publishSighting(data: z.infer<typeof publishSchema>): Prom
     tagColors: colors,
     tagFur: furLength,
     note: notes?.trim() ?? null,
-    extractedPalette: [],
+    extractedPalette: extractedPalette ?? [],
     locationReal: makePoint(pinLng, pinLat) as unknown as { lat: number; lng: number },
     locationFuzzed: makePoint(fuzzed.lng, fuzzed.lat) as unknown as { lat: number; lng: number },
     aiVerified: false,
