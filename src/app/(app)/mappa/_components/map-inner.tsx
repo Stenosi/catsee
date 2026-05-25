@@ -152,7 +152,11 @@ export default function MapInner({ sightings }: Props) {
         zoomControl={false}
         attributionControl={false}
       >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        {/* dark mode: https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png */}
+        <TileLayer
+          url="https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        />
         <InitialPosition onLocated={handleLocated} />
         <CatMarkerCluster sightings={sightings} onPinClick={handlePinClick} />
         <ViewportEmptyChecker sightings={sightings} onEmpty={setIsEmpty} />
