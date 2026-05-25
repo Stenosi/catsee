@@ -1,7 +1,10 @@
 'use client';
 
 import { createPortal } from 'react-dom';
+import { useRef, useState } from 'react';
 import type { MapSighting } from '../actions';
+
+const CLOSE_THRESHOLD = 80;
 
 interface Props {
   sighting: MapSighting | null;
@@ -10,6 +13,31 @@ interface Props {
 
 export default function SightingSheet({ sighting, onClose }: Props) {
   const isOpen = sighting !== null;
+  const [dragY, setDragY] = useState(0);
+  const startYRef = useRef<number | null>(null);
+  const draggingRef = useRef(false);
+
+  function onPointerDown(e: React.PointerEvent) {
+    startYRef.current = e.clientY;
+    draggingRef.current = true;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  }
+
+  function onPointerMove(e: React.PointerEvent) {
+    if (!draggingRef.current || startYRef.current === null) return;
+    setDragY(Math.max(0, e.clientY - startYRef.current));
+  }
+
+  function onPointerUp() {
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
+    if (dragY >= CLOSE_THRESHOLD) onClose();
+    setDragY(0);
+    startYRef.current = null;
+  }
+
+  const panelTransform = isOpen ? `translateY(${dragY}px)` : 'translateY(100%)';
+  const panelTransition = draggingRef.current ? 'none' : 'transform 300ms ease-out';
 
   return createPortal(
     <>
@@ -17,7 +45,7 @@ export default function SightingSheet({ sighting, onClose }: Props) {
       <div
         className="fixed inset-0 z-1001 bg-black/40 transition-opacity duration-300"
         style={{
-          opacity: isOpen ? 1 : 0,
+          opacity: isOpen ? 1 - dragY / 200 : 0,
           pointerEvents: isOpen ? 'auto' : 'none',
         }}
         onClick={onClose}
@@ -25,11 +53,15 @@ export default function SightingSheet({ sighting, onClose }: Props) {
 
       {/* Panel */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-1002 bg-card rounded-t-2xl shadow-2xl transition-transform duration-300 ease-out"
-        style={{ transform: isOpen ? 'translateY(0)' : 'translateY(100%)' }}
+        className="fixed bottom-0 left-0 right-0 z-1002 bg-card rounded-t-2xl shadow-2xl"
+        style={{ transform: panelTransform, transition: panelTransition }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
       >
         {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1">
+        <div className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing">
           <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
         </div>
 
@@ -47,6 +79,7 @@ function SheetContent({ sighting }: { sighting: MapSighting }) {
 
   return (
     <div className="px-4 pt-2 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
+
       {/* Foto */}
       <div className="w-full aspect-4/3 rounded-xl overflow-hidden bg-muted mb-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
