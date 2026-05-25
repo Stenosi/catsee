@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { sightings, follows } from "@/db/schema";
-import { eq, and, isNull, count, desc } from "drizzle-orm";
+import { eq, and, isNull, count, desc, inArray } from "drizzle-orm";
+import { extractLat, extractLng } from "@/db/geo";
 import { requireOnboardedSession } from "@/lib/session";
 import ProfiloClient from "./_components/profilo-client";
 
@@ -10,7 +11,7 @@ export default async function ProfiloPage() {
   const session = await requireOnboardedSession();
   const userId = session.user.id;
 
-  const [user, [{ catCount }], [{ followerCount }], [{ followingCount }], posts] =
+  const [user, [{ catCount }], [{ followerCount }], [{ followingCount }], posts, mapSightings] =
     await Promise.all([
       db.query.users.findFirst({
         where: (u, { eq, isNull, and }) =>
@@ -50,6 +51,23 @@ export default async function ProfiloPage() {
         .where(and(eq(sightings.userId, userId), eq(sightings.moderationStatus, 'approved'), isNull(sightings.deletedAt)))
         .orderBy(desc(sightings.createdAt))
         .limit(60),
+      db
+        .select({
+          id: sightings.id,
+          lat: extractLat(sightings.locationReal),
+          lng: extractLng(sightings.locationReal),
+          thumbnailKey: sightings.photoThumbnailKey,
+          catNickname: sightings.catNickname,
+          moderationStatus: sightings.moderationStatus,
+        })
+        .from(sightings)
+        .where(and(
+          eq(sightings.userId, userId),
+          inArray(sightings.moderationStatus, ['approved', 'pending']),
+          isNull(sightings.deletedAt),
+        ))
+        .orderBy(desc(sightings.createdAt))
+        .limit(200),
     ])
 
   if (!user) { return null };
@@ -58,6 +76,15 @@ export default async function ProfiloPage() {
     id: p.id,
     thumbnailUrl: `${R2_PUBLIC_URL}/${p.thumbnailKey}`,
     catNickname: p.catNickname,
+  }));
+
+  const mapSightingsMapped = mapSightings.map((s) => ({
+    id: s.id,
+    lat: s.lat,
+    lng: s.lng,
+    thumbnailUrl: `${R2_PUBLIC_URL}/${s.thumbnailKey}`,
+    catNickname: s.catNickname,
+    pending: s.moderationStatus === 'pending',
   }));
 
   return (
@@ -70,6 +97,7 @@ export default async function ProfiloPage() {
       followerCount={followerCount}
       followingCount={followingCount}
       posts={postPreviews}
+      mapSightings={mapSightingsMapped}
     />
   );
 }

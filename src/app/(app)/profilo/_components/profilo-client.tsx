@@ -17,6 +17,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Cat, Pencil, Award, MapPin, Frown, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import ProfileMapView from './profile-map-view';
+import type { ProfileMapSighting } from './profile-map-inner';
 
 const TABS = ['post', 'mappa'] as const;
 type Tab = (typeof TABS)[number];
@@ -52,6 +54,7 @@ interface Props {
     followerCount: number;
     followingCount: number;
     posts: PostPreview[];
+    mapSightings: ProfileMapSighting[];
 }
 
 export default function ProfiloClient({
@@ -63,6 +66,7 @@ export default function ProfiloClient({
     followerCount,
     followingCount,
     posts,
+    mapSightings,
 }: Props) {
     const [status, setStatus] = useState<'loading' | 'loaded' | 'error' | 'idle'>(
         avatarUrl ? 'loading' : 'idle',
@@ -237,18 +241,23 @@ export default function ProfiloClient({
                         </TabsContent>
 
                         <TabsContent value="mappa" className="flex-1 mt-0">
-                            <Empty className="rounded-none h-full">
-                                <EmptyMedia>
-                                    <MapPin className="w-10 h-10 opacity-40" aria-hidden="true" />
-                                </EmptyMedia>
-                                <EmptyHeader>
-                                    <EmptyTitle>La tua mappa personale</EmptyTitle>
-                                    <EmptyDescription>
-                                        Presto potrai vedere tutti i gatti che hai avvistato sulla mappa,
-                                        con le coordinate precise visibili solo a te.
-                                    </EmptyDescription>
-                                </EmptyHeader>
-                            </Empty>
+                            {mapSightings.length === 0 ? (
+                                <Empty className="rounded-none h-full">
+                                    <EmptyMedia>
+                                        <MapPin className="w-10 h-10 opacity-40" aria-hidden="true" />
+                                    </EmptyMedia>
+                                    <EmptyHeader>
+                                        <EmptyTitle>Nessun avvistamento</EmptyTitle>
+                                        <EmptyDescription>
+                                            I tuoi gatti appariranno qui con le coordinate precise, visibili solo a te.
+                                        </EmptyDescription>
+                                    </EmptyHeader>
+                                </Empty>
+                            ) : (
+                                <div className="h-full">
+                                    <ProfileMapView sightings={mapSightings} />
+                                </div>
+                            )}
                         </TabsContent>
                     </div>
                 </Tabs>
