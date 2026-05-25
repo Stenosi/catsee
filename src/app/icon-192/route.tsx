@@ -9,7 +9,7 @@ export function GET() {
         width: 192,
         height: 192,
         borderRadius: 48,
-        background: 'oklch(0.705 0.213 47.604)',
+        background: '#f97316',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
