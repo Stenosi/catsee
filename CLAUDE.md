@@ -514,3 +514,21 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 - **FAB fuori da MapContainer:** il bottone visivo vive nel wrapper div. Il hook `MapFlyToBinder` (dentro `MapContainer`) scrive un `flyToRef` che il FAB esterno chiama. Evita problemi con i componenti react-leaflet che si aspettano un contesto Leaflet.
 - **`className: ''` su `L.divIcon`:** obbligatorio — senza di esso Leaflet aggiunge bordi bianchi ai marker custom.
 - **`(L as unknown as ...).markerClusterGroup`:** typescript cast necessario perché `@types/leaflet.markercluster` estende `L` come side-effect, non come tipo esplicito.
+
+## Aggiornamenti sessione 11 (2026-05-25)
+
+### Fix z-index navbar vs mappa Leaflet
+
+- **`relative` su `<nav>` e `<header>`:** senza `position` esplicita il `z-index` di Tailwind non crea uno stacking context e viene ignorato dal browser. Aggiunto `relative` a entrambi.
+- **`isolate` su `<main>`** (`src/app/(app)/layout.tsx`): crea uno stacking context che contiene tutti i z-index interni di Leaflet (fino a 600+), impedendo loro di uscire sopra navbar e header. Regola generale: qualsiasi pagina con Leaflet deve avere il suo container con `isolate`.
+- **`createPortal(…, document.body)` su `SightingSheet`:** il portal sposta il DOM del sheet fuori da `<main isolate>`, mettendolo nel root stacking context. Necessario per tutti i componenti `fixed` (modal, sheet, toast) che devono sovrapporsi alla navbar — se vivono dentro un elemento `isolate`, nessun z-index li farebbe uscire.
+
+### Bottom sheet — UX miglioramenti
+
+- **Swipe-to-close:** pointer events sul panel, `setPointerCapture` per catturare il move anche fuori dal panel, soglia 80px, snap-back se non raggiunta. Il backdrop si schiarisce proporzionalmente al drag (`opacity: 1 - dragY / 200`).
+- **`select-none` sul panel + `draggable={false}` sulle immagini:** previene la selezione di testo e il drag nativo del browser durante lo swipe.
+- **Profilo utente nel sheet:** avatar circolare 24px + username (senza @) in cima al blocco info. Avatar con fallback alle prime 2 lettere dell'username su sfondo `primary/20`. `avatarUrl` aggiunto alla query `fetchMapSightings` e al tipo `MapSighting`.
+
+### Navigazione
+
+- **Logo CatSee → `<Link href="/feed">`:** sostituisce il `<button onClick(router.push)>` precedente per avere prefetch automatico della route.
