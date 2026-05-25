@@ -473,3 +473,43 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 
 - **Desktop detection:** usare `navigator.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches` per distinguere touch (mobile/tablet) da desktop. Non usare user-agent.
 - **Loading screen pattern:** quando un'operazione pesante precede un form, usare il pattern `aiVerifyState === 'idle' || aiVerifyState === 'loading' ? <LoadingStep /> : <FormStep />` con fade-in sul mount del form via `motion-preset-fade`.
+
+## Aggiornamenti sessione 10 (2026-05-25)
+
+### Mappa pubblica `/mappa` — implementazione completa
+
+- **`src/app/(app)/mappa/actions.ts`** — Server Action pubblica `fetchMapSightings()`. Query sightings JOIN users, filtrata su `approved + public + deletedAt IS NULL`, LIMIT 500, ORDER BY createdAt DESC. `thumbnailUrl` costruito server-side (`${R2_PUBLIC_URL}/${photoThumbnailKey}`). Nessuna autenticazione richiesta.
+- **`src/app/(app)/mappa/page.tsx`** — Server Component async: chiama `fetchMapSightings()`, passa risultato a `<MapView>`. Wrapper `relative h-full w-full overflow-hidden`.
+- **`src/app/(app)/mappa/_components/map-view.tsx`** — Client Component con `next/dynamic ssr:false` wrapping `MapInner`. Loading fallback con testo "Caricamento mappa…".
+- **`src/app/(app)/mappa/_components/map-inner.tsx`** — Componente principale Leaflet:
+  - Import CSS in ordine: `leaflet.css` → `MarkerCluster.css` → `MarkerCluster.Default.css`
+  - `createCatPin()`: `L.divIcon` con `className: ''` (critico), img circolare 44×44px con bordo amber e box-shadow
+  - `CatMarkerCluster`: `useMap()` + `useEffect`, cluster via `(L as unknown as ...).markerClusterGroup`, cerchio amber con count, cleanup `map.removeLayer`
+  - `InitialPosition`: GPS flyTo al mount (una sola volta), notifica padre via `onLocated`
+  - `MapFlyToBinder`: espone `flyToRef` al padre per consentire il FAB di richiamare `map.flyTo` dall'esterno di `MapContainer`
+  - `ViewportEmptyChecker`: `useMapEvents({ moveend, zoomend })`, controlla se qualche sighting è nel bounds
+  - FAB recenter: fuori da `MapContainer` ma sovrapposto (`absolute bottom-20 right-4 z-900`), usa `flyToRef.current`
+  - Empty state pill: `absolute inset-x-0 top-4 z-900 pointer-events-none`
+- **`src/app/(app)/mappa/_components/sighting-sheet.tsx`** — Bottom sheet CSS custom:
+  - Backdrop `z-1001` con opacity transition
+  - Panel `z-1002` con `transform: translateY(0/100%)` transition 300ms
+  - Contenuto: foto 4:3, nickname, @username, data (Intl.DateTimeFormat it-IT), color pills, CTA disabilitato
+  - `pb-[calc(env(safe-area-inset-bottom)+1.5rem)]` per safe area
+
+### Roadmap aggiornata (sessione 10)
+
+```text
+6. ✅ Mappa pubblica con pin, clustering e bottom sheet preview
+```
+
+### Debiti tecnici aggiornati (sessione 10)
+
+- ~~**Redirect post-pubblicazione**~~ ✅ — redirect a `/feed` dopo publish.
+- **Desktop lock `/scatta`:** da aggiungere prima del lancio.
+- **Pannello admin moderazione:** i post in `pending` non hanno UI per essere approvati/rifiutati.
+
+### Pattern architetturali mappa
+
+- **FAB fuori da MapContainer:** il bottone visivo vive nel wrapper div. Il hook `MapFlyToBinder` (dentro `MapContainer`) scrive un `flyToRef` che il FAB esterno chiama. Evita problemi con i componenti react-leaflet che si aspettano un contesto Leaflet.
+- **`className: ''` su `L.divIcon`:** obbligatorio — senza di esso Leaflet aggiunge bordi bianchi ai marker custom.
+- **`(L as unknown as ...).markerClusterGroup`:** typescript cast necessario perché `@types/leaflet.markercluster` estende `L` come side-effect, non come tipo esplicito.
