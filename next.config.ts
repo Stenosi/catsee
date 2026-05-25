@@ -1,8 +1,11 @@
 import type { NextConfig } from "next";
+import withSerwist from "@serwist/next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   reactCompiler: true,
 };
 
-export default nextConfig;
+export default withSerwist({
+  swSrc: "src/sw.ts",
+  swDest: "public/sw.js",
+})(nextConfig);
