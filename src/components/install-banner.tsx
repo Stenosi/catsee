@@ -28,14 +28,12 @@ export default function InstallBanner() {
 
   return (
     <div
-      className="fixed bottom-[4.5rem] inset-x-0 z-900 flex justify-center px-4 transition-all duration-300"
+      className="fixed bottom-24 inset-x-0 z-900 flex justify-center px-4 transition-all duration-300"
       style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(12px)', pointerEvents: visible ? 'auto' : 'none' }}
     >
       <div className="w-full max-w-sm bg-card border border-border rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3">
         {/* Icona app */}
-        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
-          <span className="text-primary-foreground text-lg">🐱</span>
-        </div>
+        <img src="/icon-192" alt="CatSee" className="w-10 h-10 rounded-xl shrink-0" />
 
         {/* Testo */}
         <div className="flex-1 min-w-0">
