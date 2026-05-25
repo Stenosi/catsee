@@ -112,8 +112,14 @@ function CercaHeader() {
 }
 
 function LogoHeader() {
+  const router = useRouter();
   return (
-    <span className="text-xl font-bold text-primary">CatSee</span>
+    <button
+      onClick={() => router.push('/feed')}
+      className="text-xl font-bold text-primary active:opacity-70"
+    >
+      CatSee
+    </button>
   );
 }
 
