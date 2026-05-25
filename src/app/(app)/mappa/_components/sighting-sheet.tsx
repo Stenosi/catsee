@@ -1,5 +1,6 @@
 'use client';
 
+import { createPortal } from 'react-dom';
 import type { MapSighting } from '../actions';
 
 interface Props {
@@ -10,7 +11,7 @@ interface Props {
 export default function SightingSheet({ sighting, onClose }: Props) {
   const isOpen = sighting !== null;
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop */}
       <div
@@ -34,7 +35,8 @@ export default function SightingSheet({ sighting, onClose }: Props) {
 
         {sighting && <SheetContent sighting={sighting} />}
       </div>
-    </>
+    </>,
+    document.body,
   );
 }
 
