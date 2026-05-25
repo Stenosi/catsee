@@ -53,7 +53,7 @@ export default function SightingSheet({ sighting, onClose }: Props) {
 
       {/* Panel */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-1002 bg-card rounded-t-2xl shadow-2xl"
+        className="fixed bottom-0 left-0 right-0 z-1002 bg-card rounded-t-2xl shadow-2xl select-none"
         style={{ transform: panelTransform, transition: panelTransition }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -78,36 +78,41 @@ function SheetContent({ sighting }: { sighting: MapSighting }) {
   );
 
   return (
-    <div className="px-4 pt-2 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
+    <div className="flex flex-col gap-4 px-4 pt-2 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
 
-      {/* Foto */}
-      <div className="w-full aspect-4/3 rounded-xl overflow-hidden bg-muted mb-4">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={sighting.thumbnailUrl}
-          alt={sighting.catNickname}
-          className="w-full h-full object-cover"
-        />
-      </div>
-
-      {/* Info */}
-      <h2 className="text-lg font-bold text-foreground leading-tight">{sighting.catNickname}</h2>
-      <p className="text-sm text-muted-foreground mt-0.5">@{sighting.username}</p>
-      <p className="text-xs text-muted-foreground mt-1 mb-3">{dateFormatted}</p>
-
-      {/* Colori */}
-      {sighting.tagColors.length > 0 && (
-        <div className="flex gap-1.5 flex-wrap mb-4">
-          {sighting.tagColors.map((c) => (
-            <span
-              key={c}
-              className="px-2.5 py-0.5 rounded-full text-xs bg-muted text-muted-foreground capitalize"
-            >
-              {c}
-            </span>
-          ))}
+      <div className='flex gap-4'>
+        {/* Foto */}
+        <div className="w-1/3 aspect-square rounded-xl overflow-hidden bg-muted mb-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={sighting.thumbnailUrl}
+            alt={sighting.catNickname}
+            draggable={false}
+            className="w-full h-full object-cover"
+          />
         </div>
-      )}
+
+        <div>
+          {/* Info */}
+          <h2 className="text-lg font-bold text-foreground leading-tight">{sighting.catNickname}</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">@{sighting.username}</p>
+          <p className="text-xs text-muted-foreground mt-1 mb-3">{dateFormatted}</p>
+
+          {/* Colori */}
+          {sighting.tagColors.length > 0 && (
+            <div className="flex gap-1.5 flex-wrap mb-4">
+              {sighting.tagColors.map((c) => (
+                <span
+                  key={c}
+                  className="px-2.5 py-0.5 rounded-full text-xs bg-muted text-muted-foreground capitalize"
+                >
+                  {c}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* CTA placeholder */}
       <button
