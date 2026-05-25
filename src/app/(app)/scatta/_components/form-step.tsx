@@ -6,13 +6,14 @@ import ImageLightbox from '@/components/image-lightbox';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Loader2, MapPin, TriangleAlert } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Loader2, MapPin, TriangleAlert, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 import type { CapturedCoords } from './scatta-wizard';
+import type { AiVerifyState } from './use-ai-verify';
 
 const PositionMap = dynamic(() => import('./position-map'), {
   ssr: false,
@@ -51,9 +52,10 @@ interface Props {
   onPublish: (data: PostFormData) => void;
   publishing?: boolean;
   suggestedColors?: string[];
+  aiVerifyState?: AiVerifyState;
 }
 
-export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish, publishing = false, suggestedColors }: Props) {
+export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish, publishing = false, suggestedColors, aiVerifyState = 'idle' }: Props) {
   const FALLBACK_LAT = 41.9028;
   const FALLBACK_LNG = 12.4964;
 
@@ -131,11 +133,32 @@ export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish
             className="w-10 h-10 rounded-lg object-cover shrink-0 cursor-pointer active:opacity-80"
           />
           <span className="text-sm font-semibold text-foreground">Nuovo avvistamento</span>
+          <span className="ml-auto shrink-0">
+            {aiVerifyState === 'loading' && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                Verifica…
+              </span>
+            )}
+            {aiVerifyState === 'cat' && (
+              <span className="flex items-center gap-1 text-xs text-success">
+                <CheckCircle className="w-3.5 h-3.5" />
+                Gatto rilevato
+              </span>
+            )}
+            {(aiVerifyState === 'no-cat' || aiVerifyState === 'error') && (
+              <span className="flex items-center gap-1 text-xs text-warning">
+                <XCircle className="w-3.5 h-3.5" />
+                In revisione
+              </span>
+            )}
+          </span>
         </div>
 
         {/* Corpo scorrevole */}
         <form
           onSubmit={handleSubmit(onSubmit)}
+          id="post-form"
           className="flex-1 overflow-y-auto flex flex-col gap-5 px-4 py-5"
         >
 
@@ -289,8 +312,8 @@ export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish
 
             <p className="text-xs text-muted-foreground">
               {coords
-                ? 'Trascina il pin per aggiustare la posizione (max 50m).'
-                : 'Trascina il pin per impostare la posizione manualmente.'}
+                ? 'Muovi la mappa per regolare il punto (entro 50m dalla tua posizione).'
+                : 'Muovi la mappa per impostare la posizione manualmente.'}
             </p>
           </div>
 

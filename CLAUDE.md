@@ -414,3 +414,29 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 
 - **Causa:** Leaflet assegna z-index interni elevati ai propri pane (marker pane = 600, tooltip = 650). Il lightbox con `z-200` finiva sotto.
 - **Fix:** `z-1000` su `ImageLightbox` (sopra qualsiasi pane Leaflet).
+
+## Aggiornamenti sessione 8 (2026-05-25)
+
+### AI verify — TensorFlow.js + COCO-SSD
+
+- **`src/app/(app)/scatta/_components/use-ai-verify.ts`** — hook `useAiVerify(imageUrl, enabled)`. Carica `@tensorflow/tfjs` e `@tensorflow-models/coco-ssd` in lazy import (zero bundle cost finché l'utente non arriva al form step). Usa il base model `lite_mobilenet_v2` per bilanciare velocità e accuratezza. Soglia di confidenza: `score >= 0.35`. Restituisce `AiVerifyState: 'idle' | 'loading' | 'cat' | 'no-cat' | 'error'`.
+- **`ScattaWizard`** — il hook parte appena l'utente entra nello step form (`enabled: step === 'form'`), in parallelo all'estrazione palette. Il risultato `aiVerifyState` è passato a `FormStep` e usato in `handlePublish`.
+- **`FormStep` — indicatore top bar:** badge discreto accanto al titolo "Nuovo avvistamento": spinner "Verifica…" → "Gatto rilevato" (verde, `text-success`) o "In revisione" (ambra, `text-warning`). Non blocca la compilazione del form.
+- **`publishSighting` (server action):** accetta ora `aiVerified?: boolean`. Imposta `aiVerified: true` + `moderationStatus: 'approved'` se cat rilevato; `aiVerified: false` + `moderationStatus: 'pending'` altrimenti.
+- **Toast post-publish differenziato:** se `approved` → "Avvistamento pubblicato!"; se `pending` → "Avvistamento salvato — in attesa di approvazione." con descrizione estesa (duration 6s).
+
+### Bug fix — form id mancante
+
+- `<form>` in `FormStep` mancava di `id="post-form"`. Il bottone "Pubblica" aveva `form="post-form"` ma funzionava solo tramite l'`onClick` fallback. Aggiunto `id="post-form"` alla form element.
+
+### Debiti tecnici aggiornati
+
+- ~~**AI verify (TF.js + COCO-SSD)**~~ ✅ Implementato — vedi sessione 8.
+- ~~**Palette colori (node-vibrant)**~~ ✅ Implementato — vedi sessione 7b.
+- **Desktop lock `/scatta`:** da aggiungere prima del lancio.
+- **Redirect post-pubblicazione:** valutare se mandare a `/profilo` o al post/feed dopo publish (attualmente `/profilo` come placeholder MVP).
+
+### Convenzioni aggiornate
+
+- **`useAiVerify`:** quando serve verifica AI in un wizard, usare questo hook. Non caricare TF.js a livello di modulo — il lazy import nel hook garantisce che il bundle pesante arrivi solo quando necessario.
+- **`AiVerifyState`:** il tipo è esportato da `use-ai-verify.ts` e usato da `FormStep` per il badge UI. Se in futuro si aggiungono altri modelli o logica, modificare solo il hook senza toccare i componenti.

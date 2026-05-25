@@ -52,6 +52,7 @@ const publishSchema = z.object({
   pinLat: z.number(),
   pinLng: z.number(),
   extractedPalette: z.array(paletteColorSchema).optional(),
+  aiVerified: z.boolean().optional(),
 });
 
 export type PublishSightingResult =
@@ -65,12 +66,13 @@ export async function publishSighting(data: z.infer<typeof publishSchema>): Prom
   const parsed = publishSchema.safeParse(data);
   if (!parsed.success) return { success: false, error: 'Dati non validi.' };
 
-  const { photoKey, thumbnailKey, catName, colors, furLength, notes, pinLat, pinLng, extractedPalette } = parsed.data;
+  const { photoKey, thumbnailKey, catName, colors, furLength, notes, pinLat, pinLng, extractedPalette, aiVerified } = parsed.data;
 
   if (containsProfanity(catName)) return { success: false, error: 'Il nome contiene parole non ammesse.' };
   if (notes && containsProfanity(notes)) return { success: false, error: 'Le note contengono parole non ammesse.' };
 
   const fuzzed = fuzzCoordinates(pinLat, pinLng, 100);
+  const verified = aiVerified === true;
 
   await db.insert(sightings).values({
     userId,
@@ -83,8 +85,8 @@ export async function publishSighting(data: z.infer<typeof publishSchema>): Prom
     extractedPalette: extractedPalette ?? [],
     locationReal: makePoint(pinLng, pinLat) as unknown as { lat: number; lng: number },
     locationFuzzed: makePoint(fuzzed.lng, fuzzed.lat) as unknown as { lat: number; lng: number },
-    aiVerified: false,
-    moderationStatus: 'approved',
+    aiVerified: verified,
+    moderationStatus: verified ? 'approved' : 'pending',
     visibility: 'public',
   });
 

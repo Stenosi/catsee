@@ -9,6 +9,7 @@ import CameraStep from './camera-step';
 import PreviewStep from './preview-step';
 import FormStep, { type PostFormData } from './form-step';
 import { getUploadUrls, publishSighting } from '../actions';
+import { useAiVerify } from './use-ai-verify';
 import type { PaletteEntry } from '@/db/schema/sightings';
 
 type Step = 'camera' | 'preview' | 'form';
@@ -76,6 +77,8 @@ export default function ScattaWizard() {
   const [publishing, setPublishing] = useState(false);
   const [extractedPalette, setExtractedPalette] = useState<PaletteEntry[]>([]);
   const [suggestedColors, setSuggestedColors] = useState<string[]>([]);
+
+  const aiVerifyState = useAiVerify(capturedUrl, step === 'form');
 
   // GPS avviato subito, mentre l'utente è ancora sulla camera
   useEffect(() => {
@@ -154,6 +157,7 @@ export default function ScattaWizard() {
       }
 
       // 4. Salva nel DB
+      const aiVerified = aiVerifyState === 'cat';
       const result = await publishSighting({
         photoKey: urlResult.photoKey,
         thumbnailKey: urlResult.thumbnailKey,
@@ -164,6 +168,7 @@ export default function ScattaWizard() {
         pinLat: data.pinLat,
         pinLng: data.pinLng,
         extractedPalette,
+        aiVerified,
       });
 
       if (!result.success) {
@@ -173,7 +178,14 @@ export default function ScattaWizard() {
 
       // 5. Successo
       if (capturedUrl) URL.revokeObjectURL(capturedUrl);
-      toast.success('Avvistamento pubblicato!');
+      if (aiVerified) {
+        toast.success('Avvistamento pubblicato!');
+      } else {
+        toast.success('Avvistamento salvato — in attesa di approvazione.', {
+          description: 'Non abbiamo rilevato un gatto con certezza. Sarà visibile dopo la revisione.',
+          duration: 6000,
+        });
+      }
       router.replace('/profilo');
     } catch {
       toast.error('Qualcosa è andato storto. Riprova.');
@@ -201,6 +213,7 @@ export default function ScattaWizard() {
           onPublish={handlePublish}
           publishing={publishing}
           suggestedColors={suggestedColors}
+          aiVerifyState={aiVerifyState}
         />
       )}
     </div>
