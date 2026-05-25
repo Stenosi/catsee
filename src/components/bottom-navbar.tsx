@@ -23,7 +23,7 @@ export default function BottomNavbar() {
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
   return (
-    <nav className="shrink-0 z-40 bg-card border-t border-border pb-[env(safe-area-inset-bottom)]">
+    <nav className="shrink-0 relative z-40 bg-card border-t border-border pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-end h-12 px-2">
         {/* Mappa, Feed */}
         {tabs.slice(0, 2).map(({ href, label, Icon }) => (

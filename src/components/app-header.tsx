@@ -20,7 +20,7 @@ export default function AppHeader({ username }: { username: string | null }) {
   if (HIDDEN_PATHS.includes(pathname)) return null;
 
   return (
-    <header className="shrink-0 z-40 h-14 bg-card border-b border-border flex items-center px-4">
+    <header className="shrink-0 relative z-40 h-14 bg-card border-b border-border flex items-center px-4">
       <HeaderContent pathname={pathname} username={username} />
     </header>
   );
