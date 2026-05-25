@@ -18,11 +18,17 @@ const geistMono = Geist_Mono({
 
 export const viewport: Viewport = {
   viewportFit: "cover",
+  themeColor: "#f97316",
 };
 
 export const metadata: Metadata = {
   title: "CatSee",
   description: "Avvista i gatti del tuo quartiere",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "CatSee",
+  },
 };
 
 export default function RootLayout({
