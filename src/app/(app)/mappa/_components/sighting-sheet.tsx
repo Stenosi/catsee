@@ -92,8 +92,26 @@ function SheetContent({ sighting }: { sighting: MapSighting }) {
           />
         </div>
 
-        <div className="flex flex-col justify-between flex-1 min-w-0">
-          <div>
+        <div className="flex flex-col gap-5 my-1 flex-1 min-w-0">
+
+          {/* Profilo utente */}
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full overflow-hidden bg-muted shrink-0">
+              {sighting.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={sighting.avatarUrl} alt={sighting.username} draggable={false} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-primary/20 flex items-center justify-center">
+                  <span className="text-[10px] font-semibold text-primary uppercase">
+                    {sighting.username.slice(0, 2)}
+                  </span>
+                </div>
+              )}
+            </div>
+            <span className="text-sm text-muted-foreground truncate">{sighting.username}</span>
+          </div>
+
+          <div className='flex flex-col'>
             {/* Info */}
             <h2 className="text-lg font-bold text-foreground leading-tight">{sighting.catNickname}</h2>
             <p className="text-xs text-muted-foreground mt-1">{dateFormatted}</p>
@@ -111,23 +129,6 @@ function SheetContent({ sighting }: { sighting: MapSighting }) {
                 ))}
               </div>
             )}
-          </div>
-
-          {/* Profilo utente */}
-          <div className="flex items-center gap-2 mt-3">
-            <div className="w-6 h-6 rounded-full overflow-hidden bg-muted shrink-0">
-              {sighting.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={sighting.avatarUrl} alt={sighting.username} draggable={false} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-primary/20 flex items-center justify-center">
-                  <span className="text-[10px] font-semibold text-primary uppercase">
-                    {sighting.username.slice(0, 2)}
-                  </span>
-                </div>
-              )}
-            </div>
-            <span className="text-sm text-muted-foreground truncate">{sighting.username}</span>
           </div>
         </div>
       </div>
