@@ -8,7 +8,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex flex-col h-dvh overflow-hidden">
       <AppHeader username={session?.user?.username ?? null} />
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <main className="flex-1 overflow-y-auto isolate">{children}</main>
       <BottomNavbar />
     </div>
   );
