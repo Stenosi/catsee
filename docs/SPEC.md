@@ -189,6 +189,8 @@ Per garantire un ambiente safe e prevenire abusi:
 
 ### v1.1 — "Privacy & Polish" (subito dopo lancio)
 
+- **Pagina profilo pubblico `/profilo/[username]`:** route dinamica che mostra il profilo di qualsiasi utente (avatar, nickname, bio, griglia post approvati). Necessaria per linkare l'autore dal bottom sheet della mappa (avatar+username attualmente non cliccabili — il link è già pronto, manca la destinazione) e da qualsiasi altro punto dell'app che referenzia un utente.
+
 - **Profili privati (filosofia A):**
   - Profilo non visibile pubblicamente (mostra "questo profilo è privato").
   - Le foto restano sulla mappa pubblica come **anonime** (no @username, click sul pin non ricollega all'autore).

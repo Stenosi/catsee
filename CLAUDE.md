@@ -507,6 +507,7 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 - ~~**Redirect post-pubblicazione**~~ ✅ — redirect a `/feed` dopo publish.
 - **Desktop lock `/scatta`:** da aggiungere prima del lancio.
 - **Pannello admin moderazione:** i post in `pending` non hanno UI per essere approvati/rifiutati.
+- **Profilo pubblico `/profilo/[username]`:** il blocco avatar+username nel bottom sheet della mappa è già pronto visivamente ma non è cliccabile — manca la route destinazione. Da implementare in v1.1 insieme ai profili privati.
 
 ### Pattern architetturali mappa
 
