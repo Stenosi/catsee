@@ -192,7 +192,7 @@ export default function ScattaWizard() {
           duration: 6000,
         });
       }
-      router.replace('/profilo');
+      router.replace('/feed');
     } catch {
       toast.error('Qualcosa è andato storto. Riprova.');
     } finally {
