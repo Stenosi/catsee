@@ -119,12 +119,10 @@ export const SIGHTING_LIMITS = {
 export const TAG_COLORS = [
   'black',
   'white',
-  'tabby',
-  'orange',
-  'calico',
-  'tuxedo',
-  'siamese',
   'gray',
+  'orange',
+  'brown',
+  'tabby',
   'other',
 ] as const;
 

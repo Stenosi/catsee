@@ -6,7 +6,7 @@ import ImageLightbox from '@/components/image-lightbox';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, CheckCircle, Loader2, MapPin, TriangleAlert, XCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Loader2, MapPin, TriangleAlert, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -24,12 +24,10 @@ const CAT_COLORS = [
   { id: 'black', label: 'Nero', dot: '#1c1c1e' },
   { id: 'white', label: 'Bianco', dot: '#e5e5ea' },
   { id: 'gray', label: 'Grigio', dot: '#8e8e93' },
-  { id: 'orange', label: 'Rosso / Arancione', dot: '#ff9500' },
+  { id: 'orange', label: 'Arancione / Rosso', dot: '#ff9500' },
+  { id: 'brown', label: 'Marrone', dot: '#92400e' },
   { id: 'tabby', label: 'Tigrato', dot: '#a16207' },
-  { id: 'calico', label: 'Calico', dot: '#e879f9' },
-  { id: 'tuxedo', label: 'Smoking', dot: '#374151' },
-  { id: 'siamese', label: 'Siamese', dot: '#d4b483' },
-  { id: 'other', label: 'Altro', dot: '#6b7280' },
+  { id: 'other', label: 'Altro', dot: '#6b7280', dashed: true },
 ] as const;
 
 const schema = z.object({
@@ -53,9 +51,10 @@ interface Props {
   publishing?: boolean;
   suggestedColors?: string[];
   aiVerifyState?: AiVerifyState;
+  isDesktop?: boolean;
 }
 
-export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish, publishing = false, suggestedColors, aiVerifyState = 'idle' }: Props) {
+export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish, publishing = false, suggestedColors, aiVerifyState = 'idle', isDesktop = false }: Props) {
   const FALLBACK_LAT = 41.9028;
   const FALLBACK_LNG = 12.4964;
 
@@ -148,7 +147,7 @@ export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish
             )}
             {(aiVerifyState === 'no-cat' || aiVerifyState === 'error') && (
               <span className="flex items-center gap-1 text-xs text-warning">
-                <XCircle className="w-3.5 h-3.5" />
+                <AlertCircle className="w-3.5 h-3.5" />
                 In revisione
               </span>
             )}
@@ -189,7 +188,8 @@ export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish
               <span className="ml-1 text-xs font-normal text-muted-foreground">max 3</span>
             </label>
             <div className="flex flex-wrap gap-2">
-              {CAT_COLORS.map(({ id, label, dot }) => {
+              {CAT_COLORS.map(({ id, label, dot, ...rest }) => {
+                const dashed = 'dashed' in rest && rest.dashed;
                 const selected = selectedColors.includes(id);
                 const disabled = !selected && selectedColors.length >= 3;
                 return (
@@ -208,8 +208,11 @@ export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish
                     )}
                   >
                     <span
-                      className="w-2.5 h-2.5 rounded-full shrink-0 border border-black/10"
-                      style={{ background: dot }}
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={dashed
+                        ? { border: `1.5px dashed ${dot}`, background: 'transparent' }
+                        : { background: dot, border: '1px solid rgba(0,0,0,0.1)' }
+                      }
                     />
                     {label}
                   </button>
@@ -286,7 +289,7 @@ export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish
               Posizione
             </label>
 
-            {!coords && !geoError ? (
+            {!coords && !geoError && !isDesktop ? (
               <div className="h-48 rounded-xl bg-muted flex items-center justify-center gap-2 text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span className="text-sm">Ricerca posizione GPS…</span>
@@ -313,7 +316,9 @@ export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish
             <p className="text-xs text-muted-foreground">
               {coords
                 ? 'Muovi la mappa per regolare il punto (entro 50m dalla tua posizione).'
-                : 'Muovi la mappa per impostare la posizione manualmente.'}
+                : isDesktop
+                  ? 'Muovi la mappa per impostare la posizione (modalità desktop, GPS non disponibile).'
+                  : 'Muovi la mappa per impostare la posizione manualmente.'}
             </p>
           </div>
 

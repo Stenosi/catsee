@@ -1,8 +1,16 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import type { ObjectDetection } from '@tensorflow-models/coco-ssd';
 
 export type AiVerifyState = 'idle' | 'loading' | 'cat' | 'no-cat' | 'error';
+
+// Singleton: il modello viene scaricato una sola volta per sessione e riusato.
+let cachedModel: ObjectDetection | null = null;
+
+export function isModelCached() {
+  return cachedModel !== null;
+}
 
 export function useAiVerify(imageUrl: string | null, enabled: boolean) {
   const [state, setState] = useState<AiVerifyState>('idle');
@@ -17,13 +25,18 @@ export function useAiVerify(imageUrl: string | null, enabled: boolean) {
 
     async function run() {
       try {
-        const [tf, cocoSsd] = await Promise.all([
-          import('@tensorflow/tfjs'),
-          import('@tensorflow-models/coco-ssd'),
-        ]);
-        await tf.ready();
+        let model = cachedModel;
 
-        const model = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
+        if (!model) {
+          const [tf, cocoSsd] = await Promise.all([
+            import('@tensorflow/tfjs'),
+            import('@tensorflow-models/coco-ssd'),
+          ]);
+          await tf.ready();
+          model = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
+          cachedModel = model;
+        }
+
         if (cancelled) return;
 
         const img = new Image();

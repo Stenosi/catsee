@@ -10,6 +10,7 @@ import PreviewStep from './preview-step';
 import FormStep, { type PostFormData } from './form-step';
 import { getUploadUrls, publishSighting } from '../actions';
 import { useAiVerify } from './use-ai-verify';
+import AiLoadingStep from './ai-loading-step';
 import type { PaletteEntry } from '@/db/schema/sightings';
 
 type Step = 'camera' | 'preview' | 'form';
@@ -38,13 +39,11 @@ function matchToCatColor(hex: string): string | null {
   const [h, s, l] = hexToHsl(hex);
   if (l < 18) return 'black';
   if (l > 87) return 'white';
-  if (s < 14) return l < 45 ? 'tuxedo' : 'gray';
-  if (h >= 15 && h <= 55 && s >= 45) {
-    if (l < 45) return 'tabby';
-    if (l > 68) return 'siamese';
-    return 'orange';
+  if (s < 14) return 'gray';
+  if (h >= 15 && h <= 55) {
+    if (s >= 40 && l > 58) return 'orange';
+    if (s >= 20 && l >= 20) return 'brown';
   }
-  if (h >= 15 && h <= 60 && s >= 12 && l > 58) return 'siamese';
   return null;
 }
 
@@ -77,11 +76,18 @@ export default function ScattaWizard() {
   const [publishing, setPublishing] = useState(false);
   const [extractedPalette, setExtractedPalette] = useState<PaletteEntry[]>([]);
   const [suggestedColors, setSuggestedColors] = useState<string[]>([]);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   const aiVerifyState = useAiVerify(capturedUrl, step === 'form');
 
-  // GPS avviato subito, mentre l'utente è ancora sulla camera
+  // GPS avviato subito, mentre l'utente è ancora sulla camera.
+  // Su desktop (nessun touch point) saltiamo la geolocalizzazione.
   useEffect(() => {
+    const touchDevice = navigator.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches;
+    if (!touchDevice) {
+      setIsDesktop(true);
+      return;
+    }
     if (!navigator.geolocation) {
       setGeoError('GPS non supportato dal dispositivo');
       return;
@@ -205,16 +211,23 @@ export default function ScattaWizard() {
         />
       )}
       {step === 'form' && capturedUrl && (
-        <FormStep
-          imageUrl={capturedUrl}
-          coords={coords}
-          geoError={geoError}
-          onBack={handleRetry}
-          onPublish={handlePublish}
-          publishing={publishing}
-          suggestedColors={suggestedColors}
-          aiVerifyState={aiVerifyState}
-        />
+        aiVerifyState === 'idle' || aiVerifyState === 'loading'
+          ? <AiLoadingStep />
+          : (
+            <div className="motion-preset-fade motion-duration-400 absolute inset-0">
+              <FormStep
+                imageUrl={capturedUrl}
+                coords={coords}
+                geoError={geoError}
+                onBack={handleRetry}
+                onPublish={handlePublish}
+                publishing={publishing}
+                suggestedColors={suggestedColors}
+                aiVerifyState={aiVerifyState}
+                isDesktop={isDesktop}
+              />
+            </div>
+          )
       )}
     </div>
   );

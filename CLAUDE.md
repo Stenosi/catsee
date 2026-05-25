@@ -440,3 +440,36 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 
 - **`useAiVerify`:** quando serve verifica AI in un wizard, usare questo hook. Non caricare TF.js a livello di modulo — il lazy import nel hook garantisce che il bundle pesante arrivi solo quando necessario.
 - **`AiVerifyState`:** il tipo è esportato da `use-ai-verify.ts` e usato da `FormStep` per il badge UI. Se in futuro si aggiungono altri modelli o logica, modificare solo il hook senza toccare i componenti.
+
+## Aggiornamenti sessione 9 (2026-05-25)
+
+### Loading screen AI verify
+
+- **`src/app/(app)/scatta/_components/ai-loading-step.tsx`** — schermata di attesa fullscreen mostrata mentre COCO-SSD carica. Sfondo `bg-background` (coerente con il form step che segue). Icona `PawPrint` (lucide-react) in `text-primary` con doppio cerchio `bg-primary/8` e `bg-primary/15` in pulsazione sfasata (`motion-preset-pulse`, durate 2200ms / 1400ms). Container icona esplicito `w-32 h-32` per evitare che i cerchi `absolute` invadano il gap verso il testo. Testo rotante ogni 1700ms con fade opacity 300ms, frasi solo cat-related.
+- **Comportamento:** la loading screen appare ogni volta che si entra nello step form (`aiVerifyState === 'idle' || aiVerifyState === 'loading'`). Quando l'AI termina, `FormStep` fa mount con `motion-preset-fade motion-duration-400`.
+- **Singleton modello:** in `use-ai-verify.ts`, variabile module-level `cachedModel: ObjectDetection | null`. Dal secondo avvistamento della stessa sessione il modello è già in memoria → il download non si ripete, solo l'inferenza (~200-300ms).
+
+### Colori gatto — semplificazione
+
+- **`TAG_COLORS` (schema)** e **`CAT_COLORS` (UI)** allineati alla nuova lista: `black`, `white`, `gray`, `orange`, `brown`, `tabby`, `other`. Rimossi `calico`, `tuxedo`, `siamese` (categorie miste pattern/razza non intuitive per utente casual).
+- **Filosofia:** bicolore e tricolore emergono dalla selezione multipla (max 3 colori), non servono tag dedicati.
+- **`matchToCatColor` semplificato:** acromatici → `gray`; tonalità calde chiare (`s>=40, l>58`) → `orange`; tonalità calde scure (`s>=20, l>=20`) → `brown`. `tabby` e `other` solo selezione manuale, non auto-suggeriti dalla palette.
+- **Nessuna migration DB:** `tag_colors` è `text[]` libero, non un enum PostgreSQL vincolato.
+- **Dot "Altro":** pallino con `border: 1.5px dashed #6b7280` e sfondo trasparente invece di fill solido. Implementato con flag `dashed: true` nell'array `CAT_COLORS` e stile inline condizionale.
+
+### Desktop detection — skip GPS
+
+- **`ScattaWizard`:** all'avvio, controlla `navigator.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches`. Se nessun touch point (desktop) → `setIsDesktop(true)` e skip totale della geolocalizzazione.
+- **`FormStep`:** riceve `isDesktop?: boolean`. Se `true`, salta lo spinner "Ricerca posizione GPS…" e carica la mappa immediatamente sul fallback (Roma). Testo descrittivo sotto la mappa adattato ("modalità desktop, GPS non disponibile").
+
+### Debiti tecnici aggiornati
+
+- **Desktop lock `/scatta`:** da aggiungere prima del lancio (la route è accessibile da desktop).
+- **Redirect post-pubblicazione:** valutare se mandare a `/profilo` o al post/feed (attualmente `/profilo`).
+- **Loading screen al secondo scatto:** con modello già in cache JS, la schermata appare per ~200-300ms (solo inferenza). Accettabile per ora.
+- **Pannello admin moderazione:** i post in `pending` non hanno UI per essere approvati/rifiutati.
+
+### Convenzioni aggiornate
+
+- **Desktop detection:** usare `navigator.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches` per distinguere touch (mobile/tablet) da desktop. Non usare user-agent.
+- **Loading screen pattern:** quando un'operazione pesante precede un form, usare il pattern `aiVerifyState === 'idle' || aiVerifyState === 'loading' ? <LoadingStep /> : <FormStep />` con fade-in sul mount del form via `motion-preset-fade`.
