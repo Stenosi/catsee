@@ -170,13 +170,14 @@ export default function MapInner({ sightings }: Props) {
         </button>
       </div>
 
-      {isEmpty && (
-        <div className="absolute inset-x-0 top-4 flex justify-center z-900 pointer-events-none">
-          <div className="bg-card/90 backdrop-blur-sm rounded-full px-4 py-2 shadow">
-            <p className="text-sm text-muted-foreground">Nessun gatto in quest&apos;area</p>
-          </div>
+      <div
+        className="absolute inset-x-0 top-4 flex justify-center z-900 pointer-events-none transition-opacity duration-300"
+        style={{ opacity: isEmpty ? 1 : 0 }}
+      >
+        <div className="bg-card/90 backdrop-blur-sm rounded-full px-4 py-2 shadow">
+          <p className="text-sm text-muted-foreground">Nessun gatto in quest&apos;area</p>
         </div>
-      )}
+      </div>
 
       <SightingSheet sighting={selectedSighting} onClose={() => setSelectedSighting(null)} />
     </div>
