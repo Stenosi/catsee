@@ -18,6 +18,7 @@ export type MapSighting = {
   tagColors: string[];
   createdAt: Date;
   username: string;
+  avatarUrl: string | null;
 };
 
 export type FetchMapSightingsResult =
@@ -36,6 +37,7 @@ export async function fetchMapSightings(): Promise<FetchMapSightingsResult> {
         tagColors: sightings.tagColors,
         createdAt: sightings.createdAt,
         username: users.username,
+        avatarUrl: users.avatarUrl,
       })
       .from(sightings)
       .innerJoin(users, eq(sightings.userId, users.id))
