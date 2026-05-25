@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import { Settings, ChevronLeft, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -112,14 +113,10 @@ function CercaHeader() {
 }
 
 function LogoHeader() {
-  const router = useRouter();
   return (
-    <button
-      onClick={() => router.push('/feed')}
-      className="text-xl font-bold text-primary active:opacity-70"
-    >
+    <Link href="/feed" className="text-xl font-bold text-primary active:opacity-70">
       CatSee
-    </button>
+    </Link>
   );
 }
 
