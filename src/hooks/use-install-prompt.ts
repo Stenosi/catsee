@@ -20,10 +20,14 @@ export function useInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
-    // Già installata come PWA → non mostrare nulla
+    // Già installata come PWA → nessuna azione
     if (window.matchMedia('(display-mode: standalone)').matches) return;
-    // Già dismissata in precedenza
-    if (localStorage.getItem(DISMISSED_KEY)) return;
+
+    // Già dismissata in precedenza → segnalalo (utile per la pagina impostazioni)
+    if (localStorage.getItem(DISMISSED_KEY)) {
+      setState('hidden');
+      return;
+    }
 
     // Rileva iOS
     const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
