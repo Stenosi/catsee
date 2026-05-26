@@ -57,5 +57,18 @@ export function useInstallPrompt() {
     setState('hidden');
   }
 
-  return { state, install, dismiss };
+  function reset() {
+    localStorage.removeItem(DISMISSED_KEY);
+    if (deferredPrompt) {
+      // Prompt ancora in memoria (stessa sessione) → torna subito installabile
+      setState('android');
+    } else {
+      const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      if (isIos) setState('ios');
+      // Android senza prompt: stato rimane 'hidden', il chiamante mostra
+      // un messaggio "ricarica la pagina"
+    }
+  }
+
+  return { state, install, dismiss, reset };
 }
