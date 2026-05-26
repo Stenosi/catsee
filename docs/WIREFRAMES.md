@@ -450,6 +450,8 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 
 ### 2.1 Feed
 
+> ⚠️ **Da rivedere:** la visualizzazione attuale delle card post (`feed-post-card.tsx`) non è soddisfacente — layout e gerarchia visiva vanno riprogettati prima del lancio.
+
 **Scopo:** visione temporale dei contenuti, con tre modalità in tab.
 
 **Layout:**
@@ -741,6 +743,8 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 **Comportamenti:** tap su riga → 3.2 profilo. Bottone segui inline.
 
 ### 3.4 Cerca (tab navbar — MVP: solo utenti)
+
+> ⚠️ **Da rivedere:** sia la griglia esplora (post random) sia i risultati "Gatti" nella ricerca (`cerca-client.tsx`) non sono soddisfacenti visivamente — vanno riprogettati prima del lancio.
 
 **Scopo:** trovare utenti per username/nickname. Accessibile direttamente dalla voce "Cerca" nella bottom navbar — non più come sub-page dell'header.
 

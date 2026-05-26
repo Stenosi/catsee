@@ -73,6 +73,7 @@ export default function ProfiloClient({
     );
     const [avatarLightbox, setAvatarLightbox] = useState(false);
     const [tab, setTab] = useState<Tab>('post');
+
     const touchStartX = useRef<number | null>(null);
     const touchStartY = useRef<number | null>(null);
 
@@ -83,6 +84,7 @@ export default function ProfiloClient({
 
     function handleTouchEnd(e: React.TouchEvent) {
         if (touchStartX.current === null || touchStartY.current === null) return;
+        if (tab === 'mappa') return;
         const deltaX = e.changedTouches[0].clientX - touchStartX.current;
         const deltaY = e.changedTouches[0].clientY - touchStartY.current;
         touchStartX.current = null;
@@ -157,15 +159,21 @@ export default function ProfiloClient({
                                 </Badge>
                             </div>
 
-                            <dl className="flex gap-4 text-xs font-medium">
-                                <div className="flex flex-col items-center -space-y-1">
+                            <dl className="flex gap-10 text-xs font-medium">
+                                <Link
+                                    href="/profilo/follow?tab=follower"
+                                    className="flex flex-col items-center -space-y-1 active:opacity-60 transition-opacity"
+                                >
                                     <dd className="text-foreground">{formattedFollowers}</dd>
                                     <dt className="text-muted-foreground">follower</dt>
-                                </div>
-                                <div className="flex flex-col items-center -space-y-1">
+                                </Link>
+                                <Link
+                                    href="/profilo/follow?tab=seguiti"
+                                    className="flex flex-col items-center -space-y-1 active:opacity-60 transition-opacity"
+                                >
                                     <dd className="text-foreground">{formattedFollowing}</dd>
                                     <dt className="text-muted-foreground">seguiti</dt>
-                                </div>
+                                </Link>
                             </dl>
 
                         </div>
@@ -232,9 +240,9 @@ export default function ProfiloClient({
                             ) : (
                                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-px">
                                     {posts.map((post) => (
-                                        <div key={post.id} className="aspect-square overflow-hidden">
+                                        <Link key={post.id} href={`/post/${post.id}`} className="aspect-square overflow-hidden block">
                                             <ThumbImage src={post.thumbnailUrl} alt={post.catNickname} />
-                                        </div>
+                                        </Link>
                                     ))}
                                 </div>
                             )}

@@ -2,6 +2,7 @@
 
 import { createPortal } from 'react-dom';
 import { useRef, useState } from 'react';
+import Link from 'next/link';
 import type { MapSighting } from '../actions';
 
 const CLOSE_THRESHOLD = 80;
@@ -133,13 +134,13 @@ function SheetContent({ sighting }: { sighting: MapSighting }) {
         </div>
       </div>
 
-      {/* CTA placeholder */}
-      <button
-        disabled
-        className="w-full h-11 rounded-full bg-primary/40 text-primary-foreground text-sm font-medium cursor-not-allowed"
+      {/* CTA */}
+      <Link
+        href={`/post/${sighting.id}`}
+        className="flex items-center justify-center w-full h-11 rounded-full bg-primary text-primary-foreground text-sm font-medium active:opacity-80 transition-opacity"
       >
-        Vedi dettaglio (prossimamente)
-      </button>
+        Vedi dettaglio
+      </Link>
     </div>
   );
 }

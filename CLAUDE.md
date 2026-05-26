@@ -511,6 +511,7 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 - **Tile layer dark mode:** light mode usa `Stadia.AlidadeSmooth`, dark mode dovrà usare `Stadia.AlidadeSmoothDark` (`https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png`). Il commento è già nel codice in `map-inner.tsx` e `profile-map-inner.tsx`.
 - **Pin cliccabili → dettaglio post:** nella mappa profilo il tap su un pin mostra un toast "prossimamente". Da collegare a `/post/[id]` (route non ancora implementata) quando sarà disponibile.
 - **Logo CatSee:** attualmente si usa l'icona Lucide `Cat` su sfondo amber come placeholder in tutte le icone PWA (favicon, apple-icon, manifest 192/512). Va sostituito con un logo vettoriale definitivo prima del lancio. Il logo deve essere quadrato con ~10-15% padding interno; esportare PNG 192×192, 512×512 (anche maskable), 180×180, 32×32. Verificare il maskable su maskable.app/editor. Quando pronto, sostituire i file `src/app/icon.tsx`, `src/app/apple-icon.tsx`, `src/app/icon-192/route.tsx`, `src/app/icon-512/route.tsx`.
+- **UX card post in `/feed` e `/cerca`:** la visualizzazione attuale delle card dei post non convince — va riprogettata. Sia il layout della card in `/feed` (`feed-post-card.tsx`) sia la griglia esplora e i risultati gatti in `/cerca` (`cerca-client.tsx`) sono da rivedere prima del lancio. Vedi anche `docs/WIREFRAMES.md` §2.1 e §3.4.
 
 ### Pattern architetturali mappa
 

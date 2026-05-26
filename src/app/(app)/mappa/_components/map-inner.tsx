@@ -164,7 +164,7 @@ export default function MapInner({ sightings }: Props) {
       </MapContainer>
 
       {/* FAB outside MapContainer, but still overlays it */}
-      <div className="absolute bottom-20 right-4 z-900 pointer-events-auto">
+      <div className="absolute bottom-4 right-4 z-900 pointer-events-auto">
         <button
           onClick={() => flyToRef.current?.(userPosition)}
           aria-label="Torna alla mia posizione"

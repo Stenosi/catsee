@@ -1,8 +1,12 @@
-export default function CercaPage() {
+import { Suspense } from 'react';
+import { fetchExploreGrid } from './actions';
+import CercaClient from './_components/cerca-client';
+
+export default async function CercaPage() {
+  const exploreItems = await fetchExploreGrid();
   return (
-    <div className="flex flex-col flex-1 items-center justify-center h-full text-muted-foreground">
-      <span className="text-4xl">🔍</span>
-      <p className="text-sm">Cerca — in arrivo</p>
-    </div>
+    <Suspense>
+      <CercaClient exploreItems={exploreItems} />
+    </Suspense>
   );
 }
