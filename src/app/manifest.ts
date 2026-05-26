@@ -8,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: '/mappa',
     display: 'standalone',
     orientation: 'portrait',
-    background_color: '#ffffff',
-    theme_color: '#f97316', // amber primary approssimato
+    background_color: '#fff0e9',
+    theme_color: '#fff0e9',
     icons: [
       {
         src: '/icon-192',
