@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const viewport: Viewport = {
   viewportFit: "cover",
-  themeColor: "#f97316",
+  themeColor: "#fff0e8",
 };
 
 export const metadata: Metadata = {
@@ -41,7 +41,7 @@ export default function RootLayout({
       lang="it"
       className={`${jakartaSans.variable} ${geistMono.variable} antialiased`}
     >
-      <body className="min-h-full">
+      <body className="h-full overflow-hidden">
         {children}
         <Toaster position="top-center" richColors />
       </body>

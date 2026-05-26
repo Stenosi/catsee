@@ -181,6 +181,7 @@
 
   html {
     @apply font-sans bg-card;
+    height: 100%;
   }
 
   button:not(:disabled),
