@@ -182,6 +182,11 @@
   html {
     @apply font-sans bg-card;
     height: 100%;
+    outline: none;
+  }
+
+  body {
+    outline: none;
   }
 
   button:not(:disabled),

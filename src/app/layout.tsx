@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
+import ThemeColorSync from "@/components/theme-color-sync";
 import "./globals.css";
 
 const jakartaSans = Plus_Jakarta_Sans({
@@ -44,6 +45,7 @@ export default function RootLayout({
       <body className="h-full overflow-hidden">
         {children}
         <Toaster position="top-center" richColors />
+        <ThemeColorSync />
       </body>
     </html>
   );
