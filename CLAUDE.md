@@ -536,3 +536,39 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 ### Navigazione
 
 - **Logo CatSee → `<Link href="/feed">`:** sostituisce il `<button onClick(router.push)>` precedente per avere prefetch automatico della route.
+
+## Aggiornamenti sessione 12 (2026-05-26)
+
+### Nuove pagine di navigazione
+
+- **`/post/[id]`** — dettaglio avvistamento: foto hero, autore, nome gatto, tag colori, reazioni emoji con `useOptimistic` per toggle istantaneo senza attendere la server action.
+- **`/profilo/[username]`** — profilo pubblico: stessa struttura del profilo proprio ma con bottone Segui/Seguito (`useOptimistic`), visibile solo se autenticati e non è il proprio profilo.
+- **`/feed`** — feed following-only (rimossi tab Esplora/Vicini). Se non autenticato → CTA login; se autenticato ma senza seguiti → CTA cerca utenti.
+- **`/cerca`** — griglia esplora (90 post random) + ricerca unificata con tab Utenti/Gatti swipabili. Ordine: utenti per follower count, post per reazione count (subquery correlate DB-side). Griglia stabile in sessione via `sessionStorage`. UX Option B: risultati precedenti visibili durante il refetch, spinner nella search bar al posto della lente.
+- **`/profilo/follow`** — pagina dedicata follower/seguiti con tab swipabili, ordinati per data di follow DESC, filtrabili via search bar nell'header.
+
+### Pattern adottati (sessione 12)
+
+- **`useOptimistic` per reazioni e follow:** stato locale speculativo aggiornato prima della server action. Il reducer gestisce add/remove/switch in un unico posto.
+- **Custom DOM events per cross-component state:** `search-loading` e `search-clear` collegano `AppHeader` (CercaHeader) a `CercaClient` senza global store né prop drilling.
+- **URL come stato condiviso tra header e pagina:** `AppHeader` scrive `?q=` con `router.replace`; la pagina legge `useSearchParams()`. Usato sia in `/cerca` che in `/profilo/follow`.
+- **`setPointerCapture` solo sull'handle:** nei bottom sheet con drag, catturare gli eventi pointer solo sulla maniglia (non sull'intero panel) evita di bloccare i tap sui link figli.
+- **`mounted` state per `createPortal`:** `useState(false)` + `useEffect(() => setMounted(true))` + early return — pattern obbligatorio per portals che accedono a `document.body` (SSR-safe).
+- **Filtro client-side nelle liste caricate:** quando una lista è già in memoria (follower/seguiti), filtrare con JS invece di fare round-trip al server. Query param `?q=` aggiornata dall'header, letta con `useSearchParams()` nel component.
+- **`Suspense` obbligatorio su `useSearchParams`:** ogni Client Component che chiama `useSearchParams()` deve essere wrappato in `<Suspense>` nel Server Component padre.
+- **Ordine check in `HeaderContent`:** le route esatte (es. `/profilo/follow`) vanno controllate PRIMA dei prefix match (es. `/profilo/`) altrimenti vengono intercettate dal prefix.
+
+### Roadmap aggiornata (sessione 12)
+
+```text
+8. ✅ Feed (solo Seguiti — Esplora rimandato)
+9. ✅ Reazioni emoji + Follow/Unfollow
+```
+
+### Debiti tecnici aperti (sessione 12)
+
+- **UX card post in `/feed` e `/cerca`:** layout e gerarchia visiva da riprogettare — segnalato dall'utente. Vedi `docs/WIREFRAMES.md` §2.1 e §3.4.
+- **`follows-sheet.tsx`:** file rimasto nel repo ma non più usato (sostituito da `/profilo/follow`). Da rimuovere in pulizia futura.
+- **Desktop lock `/scatta`:** da aggiungere prima del lancio.
+- **Pannello admin moderazione:** post in `pending` senza UI di approvazione/rifiuto.
+- **Profilo pubblico `/profilo/[username]` dalla mappa:** blocco avatar nel sighting sheet non ancora cliccabile — manca integrazione con la route.
