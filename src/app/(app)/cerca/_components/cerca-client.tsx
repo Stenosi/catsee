@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useTransition, useEffect } from 'react';
+import { useTabSwipe } from '@/hooks/use-tab-swipe';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Cat, Users } from 'lucide-react';
@@ -119,8 +120,7 @@ export default function CercaClient({ exploreItems }: Props) {
   const [tab, setTab] = useState<Tab>('utenti');
   const [, startTransition] = useTransition();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const touchStartX = useRef<number | null>(null);
-  const touchStartY = useRef<number | null>(null);
+  const { handleTouchStart, handleTouchEnd } = useTabSwipe(tab, setTab, TABS);
 
   // Stabilizza l'ordine della griglia per tutta la sessione
   useEffect(() => {
@@ -175,23 +175,6 @@ export default function CercaClient({ exploreItems }: Props) {
       });
     }, DEBOUNCE_MS);
   }, [query]);
-
-  function handleTouchStart(e: React.TouchEvent) {
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-  }
-
-  function handleTouchEnd(e: React.TouchEvent) {
-    if (touchStartX.current === null || touchStartY.current === null) return;
-    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
-    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
-    touchStartX.current = null;
-    touchStartY.current = null;
-    if (Math.abs(deltaX) < 50 || Math.abs(deltaX) < Math.abs(deltaY)) return;
-    const i = TABS.indexOf(tab);
-    if (deltaX < 0 && i < TABS.length - 1) setTab(TABS[i + 1]);
-    if (deltaX > 0 && i > 0) setTab(TABS[i - 1]);
-  }
 
   const showResults = query.trim().length > 0;
 

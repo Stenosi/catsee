@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
+import { useTabSwipe } from '@/hooks/use-tab-swipe';
 import ImageLightbox from '@/components/image-lightbox';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -73,26 +74,11 @@ export default function ProfiloClient({
     );
     const [avatarLightbox, setAvatarLightbox] = useState(false);
     const [tab, setTab] = useState<Tab>('post');
-
-    const touchStartX = useRef<number | null>(null);
-    const touchStartY = useRef<number | null>(null);
-
-    function handleTouchStart(e: React.TouchEvent) {
-        touchStartX.current = e.touches[0].clientX;
-        touchStartY.current = e.touches[0].clientY;
-    }
-
+    const { handleTouchStart, handleTouchEnd: swipeEnd } = useTabSwipe(tab, setTab, TABS);
+    // Leaflet cattura i touch sulla mappa — disabilitiamo lo swipe quando siamo su quella tab
     function handleTouchEnd(e: React.TouchEvent) {
-        if (touchStartX.current === null || touchStartY.current === null) return;
         if (tab === 'mappa') return;
-        const deltaX = e.changedTouches[0].clientX - touchStartX.current;
-        const deltaY = e.changedTouches[0].clientY - touchStartY.current;
-        touchStartX.current = null;
-        touchStartY.current = null;
-        if (Math.abs(deltaX) < 50 || Math.abs(deltaX) < Math.abs(deltaY)) return;
-        const i = TABS.indexOf(tab);
-        if (deltaX < 0 && i < TABS.length - 1) setTab(TABS[i + 1]);
-        if (deltaX > 0 && i > 0) setTab(TABS[i - 1]);
+        swipeEnd(e);
     }
 
     const formattedFollowers = followerCount.toLocaleString('it-IT');

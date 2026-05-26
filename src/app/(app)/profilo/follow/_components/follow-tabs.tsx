@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useTabSwipe } from '@/hooks/use-tab-swipe';
 import Link from 'next/link';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
@@ -55,28 +56,10 @@ export default function FollowTabs({ defaultTab, followers, following }: Props) 
   const [tab, setTab] = useState<Tab>(defaultTab);
   const searchParams = useSearchParams();
   const query = searchParams.get('q') ?? '';
-  const touchStartX = useRef<number | null>(null);
-  const touchStartY = useRef<number | null>(null);
+  const { handleTouchStart, handleTouchEnd } = useTabSwipe(tab, setTab, TABS);
 
   const filteredFollowers = filterUsers(followers, query);
   const filteredFollowing = filterUsers(following, query);
-
-  function handleTouchStart(e: React.TouchEvent) {
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-  }
-
-  function handleTouchEnd(e: React.TouchEvent) {
-    if (touchStartX.current === null || touchStartY.current === null) return;
-    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
-    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
-    touchStartX.current = null;
-    touchStartY.current = null;
-    if (Math.abs(deltaX) < 50 || Math.abs(deltaX) < Math.abs(deltaY)) return;
-    const i = TABS.indexOf(tab);
-    if (deltaX < 0 && i < TABS.length - 1) setTab(TABS[i + 1]);
-    if (deltaX > 0 && i > 0) setTab(TABS[i - 1]);
-  }
 
   return (
     <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="flex flex-col h-full gap-0">
