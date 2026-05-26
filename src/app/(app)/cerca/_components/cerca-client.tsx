@@ -4,11 +4,11 @@ import { useState, useRef, useTransition, useEffect } from 'react';
 import { useTabSwipe } from '@/hooks/use-tab-swipe';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Cat, Users } from 'lucide-react';
+import { Cat, Users, RefreshCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { search, type ExploreThumb, type UserResult, type SightingResult } from '../actions';
+import { search, fetchExploreGrid, type ExploreThumb, type UserResult, type SightingResult } from '../actions';
 
 const DEBOUNCE_MS = 350;
 const EXPLORE_SESSION_KEY = 'explore_order_v1';
@@ -122,6 +122,76 @@ export default function CercaClient({ exploreItems }: Props) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { handleTouchStart, handleTouchEnd } = useTabSwipe(tab, setTab, TABS);
 
+  // Pull-to-refresh
+  const [pullProgress, setPullProgress] = useState(0); // 0–1+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const pullProgressRef = useRef(0);
+  const isRefreshingRef = useRef(false);
+  const hasVibratedRef = useRef(false);
+  const PULL_THRESHOLD = 80;
+
+  useEffect(() => {
+    const el: HTMLDivElement = scrollRef.current!;
+    if (!el) return;
+    let startY: number | null = null;
+
+    function onTouchStart(e: TouchEvent) {
+      if (el.scrollTop > 0 || isRefreshingRef.current) return;
+      startY = e.touches[0].clientY;
+      hasVibratedRef.current = false;
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      if (startY === null) return;
+      const deltaY = e.touches[0].clientY - startY;
+      if (deltaY <= 0) { startY = null; pullProgressRef.current = 0; setPullProgress(0); return; }
+      const progress = Math.min(deltaY / PULL_THRESHOLD, 1.4);
+      pullProgressRef.current = progress;
+      setPullProgress(progress);
+      if (progress >= 1 && !hasVibratedRef.current) {
+        hasVibratedRef.current = true;
+        navigator.vibrate?.(40);
+      }
+      if (deltaY > 8) e.preventDefault();
+    }
+
+    function onTouchEnd() {
+      if (startY === null) return;
+      startY = null;
+      if (pullProgressRef.current >= 1 && !isRefreshingRef.current) {
+        isRefreshingRef.current = true;
+        setIsRefreshing(true);
+        setPullProgress(0);
+        pullProgressRef.current = 0;
+        sessionStorage.removeItem(EXPLORE_SESSION_KEY);
+        setDisplayItems(null);
+        fetchExploreGrid().then((items) => {
+          sessionStorage.setItem(EXPLORE_SESSION_KEY, JSON.stringify(items.map((i) => i.id)));
+          setDisplayItems(items);
+          isRefreshingRef.current = false;
+          setIsRefreshing(false);
+        });
+      } else {
+        setPullProgress(0);
+        pullProgressRef.current = 0;
+      }
+      hasVibratedRef.current = false;
+    }
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+    el.addEventListener('touchcancel', onTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+      el.removeEventListener('touchcancel', onTouchEnd);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Stabilizza l'ordine della griglia per tutta la sessione
   useEffect(() => {
     const saved = sessionStorage.getItem(EXPLORE_SESSION_KEY);
@@ -179,9 +249,32 @@ export default function CercaClient({ exploreItems }: Props) {
   const showResults = query.trim().length > 0;
 
   if (!showResults) {
+    const indicatorY = isRefreshing ? 12 : Math.min(pullProgress, 1) * 56 - 44;
+    const indicatorOpacity = isRefreshing ? 1 : Math.min(pullProgress * 1.5, 1);
+    const iconRotation = pullProgress * 360;
+    const showIndicator = pullProgress > 0 || isRefreshing;
+
     return (
-      <div className="flex-1 overflow-y-auto">
-        {displayItems === null ? <ThumbSkeleton count={30} /> : <ThumbGrid items={displayItems} />}
+      <div className="flex-1 relative overflow-hidden">
+        {showIndicator && (
+          <div
+            className="absolute left-1/2 z-10 flex items-center justify-center w-10 h-10 rounded-full bg-card border border-border shadow-md pointer-events-none"
+            style={{
+              top: 0,
+              transform: `translateX(-50%) translateY(${indicatorY}px)`,
+              opacity: indicatorOpacity,
+              transition: pullProgress === 0 ? 'transform 300ms ease-out, opacity 300ms ease-out' : 'none',
+            }}
+          >
+            <RefreshCw
+              className={cn('w-5 h-5 text-primary', isRefreshing && 'animate-spin')}
+              style={isRefreshing ? undefined : { transform: `rotate(${iconRotation}deg)` }}
+            />
+          </div>
+        )}
+        <div ref={scrollRef} className="h-full overflow-y-auto">
+          {displayItems === null ? <ThumbSkeleton count={30} /> : <ThumbGrid items={displayItems} />}
+        </div>
       </div>
     );
   }
