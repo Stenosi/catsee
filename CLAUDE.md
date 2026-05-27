@@ -509,7 +509,7 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 - **Pannello admin moderazione:** i post in `pending` non hanno UI per essere approvati/rifiutati.
 - **Profilo pubblico `/profilo/[username]`:** il blocco avatar+username nel bottom sheet della mappa è già pronto visivamente ma non è cliccabile — manca la route destinazione. Da implementare in v1.1 insieme ai profili privati.
 - **Tile layer dark mode:** light mode usa `Stadia.AlidadeSmooth`, dark mode dovrà usare `Stadia.AlidadeSmoothDark` (`https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png`). Il commento è già nel codice in `map-inner.tsx` e `profile-map-inner.tsx`.
-- **Pin cliccabili → dettaglio post:** nella mappa profilo il tap su un pin mostra un toast "prossimamente". Da collegare a `/post/[id]` (route non ancora implementata) quando sarà disponibile.
+- ~~**Pin cliccabili → dettaglio post**~~ ✅ — `router.push('/post/[id]')` nel click handler del marker Leaflet.
 - **Logo CatSee:** attualmente si usa l'icona Lucide `Cat` su sfondo amber come placeholder in tutte le icone PWA (favicon, apple-icon, manifest 192/512). Va sostituito con un logo vettoriale definitivo prima del lancio. Il logo deve essere quadrato con ~10-15% padding interno; esportare PNG 192×192, 512×512 (anche maskable), 180×180, 32×32. Verificare il maskable su maskable.app/editor. Quando pronto, sostituire i file `src/app/icon.tsx`, `src/app/apple-icon.tsx`, `src/app/icon-192/route.tsx`, `src/app/icon-512/route.tsx`.
 - **UX card post in `/feed` e `/cerca`:** la visualizzazione attuale delle card dei post non convince — va riprogettata. Sia il layout della card in `/feed` (`feed-post-card.tsx`) sia la griglia esplora e i risultati gatti in `/cerca` (`cerca-client.tsx`) sono da rivedere prima del lancio. Vedi anche `docs/WIREFRAMES.md` §2.1 e §3.4.
 
@@ -568,7 +568,30 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 ### Debiti tecnici aperti (sessione 12)
 
 - **UX card post in `/feed` e `/cerca`:** layout e gerarchia visiva da riprogettare — segnalato dall'utente. Vedi `docs/WIREFRAMES.md` §2.1 e §3.4.
+- **Swipe tab in `/cerca` non funziona su aree vuote (KB-004):** lo stesso hook `useTabSwipe` funziona in `/profilo` e `/profilo/follow` ma non in `/cerca` quando la lista risultati è corta/vuota. Causa non chiarita — vedi `docs/KNOWN_BUGS.md` KB-004 per dettagli e tentativi falliti.
+- **Navigazione post in-context (v1.1b):** da `/profilo/[username]` e dai risultati "Gatti" in `/cerca`, il tap su un post aprirà una lista scorrevole in-context (stile Instagram) invece della pagina isolata `/post/[id]`. Rinviato a quando il volume di post lo rende utile. Vedi `docs/SPEC.md` §5 v1.1b per dettagli e contesti esclusi.
 - **`follows-sheet.tsx`:** file rimasto nel repo ma non più usato (sostituito da `/profilo/follow`). Da rimuovere in pulizia futura.
 - **Desktop lock `/scatta`:** da aggiungere prima del lancio.
 - **Pannello admin moderazione:** post in `pending` senza UI di approvazione/rifiuto.
 - **Profilo pubblico `/profilo/[username]` dalla mappa:** blocco avatar nel sighting sheet non ancora cliccabile — manca integrazione con la route.
+
+## Aggiornamenti sessione 13 (2026-05-27)
+
+### Performance navigazione — punti 1 e 2
+
+#### Punto 1 — `React.cache` su `auth()`
+
+- **`src/lib/session.ts`:** `auth()` wrappata in `React.cache` tramite costante `getCachedAuth`. Tutte e tre le funzioni (`getSession`, `requireSession`, `requireOnboardedSession`) usano ora la versione cachata. Il risultato: se layout e page chiamano entrambi una di queste funzioni nella stessa request, `auth()` colpisce il DB una sola volta invece di due. La cache è per-request (non globale) — ogni nuova navigazione riparte da zero come ci si aspetta.
+
+#### Punto 2 — `loading.tsx` per le route principali
+
+- **`src/app/(app)/feed/loading.tsx`:** 3 `FeedPostCard` fake (avatar circle + foto aspect-[4/3] + titolo + note + color pills).
+- **`src/app/(app)/cerca/loading.tsx`:** griglia 3 colonne, 12 celle `aspect-square` — specchia lo stato di default della pagina (esplora).
+- **`src/app/(app)/profilo/loading.tsx`:** avatar 80px + nickname + badge + stats follower/seguiti + 2 bottoni + tab bar + griglia 9 celle.
+- **`src/app/(app)/mappa/loading.tsx`:** `bg-muted` full-height con testo "Caricamento mappa…" — identico al fallback `dynamic()` già esistente in `map-view.tsx` per transizione seamless.
+
+Con i `loading.tsx`, Next.js App Router mostra istantaneamente header + navbar + skeleton mentre il Server Component carica i dati. La navigazione percepita diventa immediata.
+
+### Debiti tecnici aperti (sessione 13)
+
+- **Performance punto 3 — Separare `getSession` dal layout con `Suspense`:** il layout `(app)/layout.tsx` è ancora `async` e blocca l'intera prima render su `await getSession()`. L'intervento consiste nel rendere il layout non-async, estrarre `AppHeader` in un Server Component async separato (`AppHeaderServer`) wrappato in `<Suspense fallback={<HeaderSkeleton />}>`, così i `children` (incluso il `loading.tsx`) diventano visibili senza attendere la sessione.
