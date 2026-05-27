@@ -96,7 +96,11 @@ function SheetContent({ sighting }: { sighting: MapSighting }) {
         <div className="flex flex-col gap-5 my-1 flex-1 min-w-0">
 
           {/* Profilo utente */}
-          <div className="flex items-center gap-2">
+          <Link
+            href={`/profilo/${sighting.username}`}
+            className="flex items-center gap-2 active:opacity-70"
+            draggable={false}
+          >
             <div className="w-6 h-6 rounded-full overflow-hidden bg-muted shrink-0">
               {sighting.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -110,7 +114,7 @@ function SheetContent({ sighting }: { sighting: MapSighting }) {
               )}
             </div>
             <span className="text-sm text-muted-foreground truncate">{sighting.username}</span>
-          </div>
+          </Link>
 
           <div className='flex flex-col'>
             {/* Info */}
