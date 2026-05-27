@@ -1,16 +1,17 @@
 import { Suspense } from "react";
-import { getSession } from "@/lib/session";
-import AppHeader from "@/components/app-header";
+import AppHeaderServer from "@/components/app-header-server";
 import BottomNavbar from "@/components/bottom-navbar";
 import InstallBanner from "@/components/install-banner";
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const session = await getSession();
+function HeaderSkeleton() {
+  return <div className="shrink-0 h-14 bg-card border-b border-border" />;
+}
 
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <Suspense>
-        <AppHeader username={session?.user?.username ?? null} />
+      <Suspense fallback={<HeaderSkeleton />}>
+        <AppHeaderServer />
       </Suspense>
       <main className="flex-1 overflow-y-auto isolate">{children}</main>
       <BottomNavbar />
