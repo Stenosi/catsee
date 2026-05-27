@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useTabSwipe } from '@/hooks/use-tab-swipe';
+import { usePersistedTab } from '@/lib/use-persisted-tab';
 import ImageLightbox from '@/components/image-lightbox';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -73,7 +74,7 @@ export default function ProfiloClient({
         avatarUrl ? 'loading' : 'idle',
     );
     const [avatarLightbox, setAvatarLightbox] = useState(false);
-    const [tab, setTab] = useState<Tab>('post');
+    const [tab, setTab] = usePersistedTab('tab:/profilo', 'post', TABS);
     const { handleTouchStart, handleTouchEnd: swipeEnd } = useTabSwipe(tab, setTab, TABS);
     // Leaflet cattura i touch sulla mappa — disabilitiamo lo swipe quando siamo su quella tab
     function handleTouchEnd(e: React.TouchEvent) {

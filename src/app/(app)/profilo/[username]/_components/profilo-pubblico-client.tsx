@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useRef, useOptimistic, useTransition } from 'react';
+import { usePersistedTab } from '@/lib/use-persisted-tab';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -86,7 +87,7 @@ export default function ProfiloPubblicoClient({
     avatarUrl ? 'loading' : 'idle',
   );
   const [avatarLightbox, setAvatarLightbox] = useState(false);
-  const [tab, setTab] = useState<Tab>('post');
+  const [tab, setTab] = usePersistedTab(`tab:/profilo/${username}`, 'post', TABS);
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
   const [, startTransition] = useTransition();
