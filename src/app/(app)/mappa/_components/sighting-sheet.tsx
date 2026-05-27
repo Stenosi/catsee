@@ -6,6 +6,7 @@ import Link from 'next/link';
 import type { MapSighting } from '../actions';
 
 const CLOSE_THRESHOLD = 80;
+const DRAG_INTENT_THRESHOLD = 6; // px di movimento verticale prima di confermare il drag
 
 interface Props {
   sighting: MapSighting | null;
@@ -16,23 +17,30 @@ export default function SightingSheet({ sighting, onClose }: Props) {
   const isOpen = sighting !== null;
   const [dragY, setDragY] = useState(0);
   const startYRef = useRef<number | null>(null);
-  const draggingRef = useRef(false);
+  const draggingRef = useRef(false); // true = drag confermato (pointer catturato)
 
   function onPointerDown(e: React.PointerEvent) {
     startYRef.current = e.clientY;
-    draggingRef.current = true;
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    draggingRef.current = false;
+    // setPointerCapture rimandato a onPointerMove: si cattura solo quando
+    // il movimento supera la soglia, così i tap sui link arrivano normalmente.
   }
 
   function onPointerMove(e: React.PointerEvent) {
-    if (!draggingRef.current || startYRef.current === null) return;
-    setDragY(Math.max(0, e.clientY - startYRef.current));
+    if (startYRef.current === null) return;
+    const deltaY = e.clientY - startYRef.current;
+    if (!draggingRef.current) {
+      if (deltaY < DRAG_INTENT_THRESHOLD) return;
+      // Soglia superata: è un drag — cattura il pointer e blocca i click
+      draggingRef.current = true;
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    }
+    setDragY(Math.max(0, deltaY));
   }
 
   function onPointerUp() {
-    if (!draggingRef.current) return;
+    if (draggingRef.current && dragY >= CLOSE_THRESHOLD) onClose();
     draggingRef.current = false;
-    if (dragY >= CLOSE_THRESHOLD) onClose();
     setDragY(0);
     startYRef.current = null;
   }
@@ -56,15 +64,13 @@ export default function SightingSheet({ sighting, onClose }: Props) {
       <div
         className="fixed bottom-0 left-0 right-0 z-1002 bg-card rounded-t-2xl shadow-2xl select-none"
         style={{ transform: panelTransform, transition: panelTransition }}
+        onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        {/* Drag handle — unico punto di cattura del pointer */}
-        <div
-          className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing"
-          onPointerDown={onPointerDown}
-        >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing">
           <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
         </div>
 
