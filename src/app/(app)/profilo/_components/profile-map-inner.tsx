@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 const CLOCK_BADGE = `
@@ -59,6 +60,7 @@ interface MarkersProps {
 
 function Markers({ sightings }: MarkersProps) {
   const map = useMap();
+  const router = useRouter();
 
   useEffect(() => {
     const markers: L.Marker[] = [];
@@ -68,7 +70,13 @@ function Markers({ sightings }: MarkersProps) {
         icon: createProfilePin(s.thumbnailUrl, s.pending),
       });
       marker.on('click', () => {
-        toast.info('Dettaglio post — prossimamente');
+        if (s.pending) {
+          toast.info('Post in attesa di approvazione', {
+            description: 'Questo avvistamento sarà visibile a tutti una volta approvato.',
+          });
+        } else {
+          router.push(`/post/${s.id}`);
+        }
       });
       marker.addTo(map);
       markers.push(marker);

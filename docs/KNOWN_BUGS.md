@@ -97,3 +97,40 @@ Race condition tra il WebSocket HMR (che arriva con latenza extra dovuta al port
 ### Soluzione adottata
 
 Usare **Vercel** per il testing mobile: deploy automatico da branch `main` su GitHub, URL HTTPS stabile, HMR non coinvolto (si ricarica manualmente dopo ogni deploy). Per lo sviluppo quotidiano si usa il desktop dove l'HMR funziona perfettamente.
+
+---
+
+## KB-004 — Swipe orizzontale tra tab non funziona su aree vuote in `/cerca`
+
+**Schermata:** `/cerca` (tab Utenti / Gatti durante la ricerca)
+**Priorità:** media (UX degradata su mobile)
+**Ambiente:** mobile (iOS e Android); desktop non rilevante
+**Stato:** ⚠️ APERTO
+
+### Descrizione
+
+Nelle tab risultati di `/cerca` (Utenti / Gatti), lo swipe orizzontale funziona solo quando il dito parte da un elemento della lista. Se la lista è corta o vuota, toccare l'area vuota sotto i risultati e swipare non produce nessun cambio di tab.
+
+Lo stesso pattern (`useTabSwipe` hook + handler React `onTouchStart`/`onTouchEnd`) funziona correttamente in `/profilo` (tab Post / Mappa) e `/profilo/follow` (tab Follower / Seguiti), dove le aree vuote rispondono allo swipe senza problemi.
+
+### Cause investigate (KB-004)
+
+- **React synthetic events su aree vuote**: i touch event sintetici di React non vengono ricevuti su aree senza contenuto in certi layout flex, nonostante il container abbia `flex-1` e copra visivamente lo spazio.
+- **`overflow-hidden` / `overflow-y-auto` nidificati**: la struttura `Tabs > div > TabsContent[overflow-y-auto]` potrebbe interferire con la propagazione degli eventi toccando aree vuote.
+- **`TabsPrimitive.Root` di base-ui**: non forwarda i touch event handler passati come prop React — verificato sperimentalmente.
+- **`addEventListener` nativo via ref**: tentato come alternativa ai synthetic events; non ha risolto il problema (rimosso nel revert a `de91e80`).
+
+### Tentativi falliti (KB-004)
+
+1. Spostare `onTouchStart`/`onTouchEnd` sul `<Tabs>` root → ignorati (base-ui non li forwarda).
+2. Wrappare `<Tabs>` in un `<div>` plain con i handler → non ha risolto su aree vuote.
+3. Riscrivere `useTabSwipe` con `addEventListener` nativo via `useEffect` + ref → non ha risolto; rollbackato.
+
+### Differenza con `/profilo` e `/profilo/follow`
+
+Non ancora chiarita. Probabilmente legata alla struttura del layout padre o a classi CSS differenti sul container swipeable. Da investigare confrontando il DOM dei due casi.
+
+### Prossimi passi (KB-004)
+
+- Confrontare il layout DOM renderizzato di `/cerca` vs `/profilo/follow` su DevTools mobile.
+- Valutare una libreria dedicata al gesture detection (es. `@use-gesture/react`) come soluzione definitiva.

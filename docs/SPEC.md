@@ -197,6 +197,15 @@ Per garantire un ambiente safe e prevenire abusi:
   - Le foto **diventano riconducibili al profilo solo per i follower approvati** o se il profilo torna pubblico.
   - Default per nuovi utenti: pubblico.
 
+### v1.1b — "Post Browsing contestuale"
+
+- **Navigazione post in-context stile Instagram:** invece di aprire `/post/[id]` come pagina isolata, mostrare una lista scorrevole di post con il post selezionato già visibile. L'utente può scorrere verso il post precedente/successivo senza tornare alla pagina di provenienza.
+  - **Contesti pianificati:**
+    - **Griglia profilo** (proprio e altrui) — sfogliare i post di un utente in sequenza.
+    - **Risultati ricerca "Gatti"** — sfogliare i risultati trovati senza tornare alla lista.
+  - **Contesti esclusi (navigazione puntuale resta):** mappa pubblica, mappa del profilo, feed, link diretto/condivisione.
+  - **Motivo del rinvio:** richiede virtual scroll, gestione posizione e prefetch non banali. Priorità bassa in MVP dove le griglie hanno pochi post. Da rivalutare quando il volume di contenuti rende la navigazione sequenziale rilevante.
+
 ### v1.2 — "Discovery"
 
 - **Filtri mappa avanzati:** per "miei like", raggio km da posizione corrente, orario diurno/notturno, pelo corto/lungo, combinazioni multiple.

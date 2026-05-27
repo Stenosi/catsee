@@ -53,18 +53,23 @@ export async function GET(request: Request) {
   });
 
   // Costruisce la URL di redirect dalla request
-  const { protocol, host } = new URL(request.url);
+  const requestUrl = new URL(request.url);
+  const { protocol, host } = requestUrl;
   const redirectUrl = `${protocol}//${host}/mappa`;
 
   const response = NextResponse.redirect(redirectUrl);
 
-  // Setta lo stesso cookie che usa Auth.js per le sessioni database
-  response.cookies.set('authjs.session-token', sessionToken, {
+  // Auth.js usa __Secure-authjs.session-token su HTTPS, authjs.session-token su HTTP.
+  // Dobbiamo usare lo stesso nome altrimenti il middleware non trova la sessione.
+  const isHttps = requestUrl.protocol === 'https:';
+  const cookieName = isHttps ? '__Secure-authjs.session-token' : 'authjs.session-token';
+
+  response.cookies.set(cookieName, sessionToken, {
     expires,
     httpOnly: true,
     sameSite: 'lax',
     path: '/',
-    // secure: false in dev (HTTP localhost), Auth.js lo gestisce automaticamente
+    secure: isHttps,
   });
 
   return response;
