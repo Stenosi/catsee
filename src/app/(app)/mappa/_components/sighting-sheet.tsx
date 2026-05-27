@@ -56,13 +56,15 @@ export default function SightingSheet({ sighting, onClose }: Props) {
       <div
         className="fixed bottom-0 left-0 right-0 z-1002 bg-card rounded-t-2xl shadow-2xl select-none"
         style={{ transform: panelTransform, transition: panelTransition }}
-        onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing">
+        {/* Drag handle — unico punto di cattura del pointer */}
+        <div
+          className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing"
+          onPointerDown={onPointerDown}
+        >
           <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
         </div>
 
