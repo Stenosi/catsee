@@ -197,6 +197,16 @@ Per garantire un ambiente safe e prevenire abusi:
   - Le foto **diventano riconducibili al profilo solo per i follower approvati** o se il profilo torna pubblico.
   - Default per nuovi utenti: pubblico.
 
+### v1.1b — "Upload non-live"
+
+- **Upload immagine dalla galleria** come alternativa allo scatto live. L'utente carica una foto esistente invece di scattarla al momento.
+  - **Geolocalizzazione manuale:** nessun vincolo GPS — la mappa è libera, il pin può essere posizionato ovunque nel mondo senza restrizione al raggio 50m.
+  - **Badge visivo "non live":** i post pubblicati con questo flusso mostrano un indicatore distintivo (es. icona o etichetta) nella card del feed, nella griglia del profilo e nella pagina di dettaglio. Comunica onestà verso la community: la foto non è stata scattata sul momento.
+  - **Nessuna verifica AI obbligatoria:** il flusso può passare direttamente in `moderationStatus: 'pending'` (revisione manuale) oppure usare lo stesso hook `useAiVerify` come per lo scatto live.
+  - **Anti-cheating:** i post non-live non contribuiscono agli streak giornalieri e non danno XP bonus "primo avvistamento". I contatori badge si aggiornano normalmente.
+  - **UX:** nel wizard `/scatta`, aggiungere un'opzione "Carica dalla galleria" accanto al viewfinder. Il flusso successivo (preview → form) è identico allo scatto live, tranne che per la mappa libera e il badge non-live.
+  - **Motivazione:** utenti che incontrano un gatto ma non hanno l'app aperta in quel momento; fotografi che hanno già scattato con la fotocamera nativa.
+
 ### v1.1b — "Post Browsing contestuale"
 
 - **Navigazione post in-context stile Instagram:** invece di aprire `/post/[id]` come pagina isolata, mostrare una lista scorrevole di post con il post selezionato già visibile. L'utente può scorrere verso il post precedente/successivo senza tornare alla pagina di provenienza.

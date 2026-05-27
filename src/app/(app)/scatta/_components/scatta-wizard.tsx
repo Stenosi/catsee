@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import imageCompression from 'browser-image-compression';
 import { Vibrant } from 'node-vibrant/browser';
@@ -77,17 +79,20 @@ export default function ScattaWizard() {
   const [extractedPalette, setExtractedPalette] = useState<PaletteEntry[]>([]);
   const [suggestedColors, setSuggestedColors] = useState<string[]>([]);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [deviceChecked, setDeviceChecked] = useState(false);
 
   const aiVerifyState = useAiVerify(capturedUrl, step === 'form');
 
   // GPS avviato subito, mentre l'utente è ancora sulla camera.
-  // Su desktop (nessun touch point) saltiamo la geolocalizzazione.
+  // Su desktop (nessun touch point) mostriamo la schermata di blocco.
   useEffect(() => {
     const touchDevice = navigator.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches;
     if (!touchDevice) {
       setIsDesktop(true);
+      setDeviceChecked(true);
       return;
     }
+    setDeviceChecked(true);
     if (!navigator.geolocation) {
       setGeoError('GPS non supportato dal dispositivo');
       return;
@@ -198,6 +203,30 @@ export default function ScattaWizard() {
     } finally {
       setPublishing(false);
     }
+  }
+
+  if (!deviceChecked) return <div className="fixed inset-0 bg-black z-50" />;
+
+  if (isDesktop) {
+    return (
+      <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center gap-6 px-8 text-center">
+        <div className="flex items-center justify-center w-20 h-20 rounded-full bg-muted">
+          <Camera className="w-9 h-9 text-muted-foreground" strokeWidth={1.5} />
+        </div>
+        <div className="flex flex-col gap-2">
+          <h1 className="text-xl font-semibold text-foreground">Funzione solo mobile</h1>
+          <p className="text-sm text-muted-foreground">
+            Per scattare una foto devi usare CatSee dal tuo smartphone.
+          </p>
+        </div>
+        <Link
+          href="/mappa"
+          className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+        >
+          Torna alla mappa
+        </Link>
+      </div>
+    );
   }
 
   return (

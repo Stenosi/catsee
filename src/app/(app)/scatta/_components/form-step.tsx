@@ -302,7 +302,7 @@ export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish
                     <AlertDescription className="text-xs">{geoError}</AlertDescription>
                   </Alert>
                 )}
-                <div className="h-48 rounded-xl overflow-hidden border border-border">
+                <div className="h-48 rounded-xl overflow-hidden border border-border isolate">
                   <PositionMap
                     originLat={coords?.lat ?? FALLBACK_LAT}
                     originLng={coords?.lng ?? FALLBACK_LNG}
