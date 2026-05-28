@@ -6,7 +6,7 @@ import { users } from '@/db/schema/users';
 import { follows } from '@/db/schema/follows';
 import { reactions } from '@/db/schema/reactions';
 import { R2_PUBLIC_URL } from '@/lib/r2';
-import { eq, and, isNull, desc, inArray, sql } from 'drizzle-orm';
+import { eq, and, isNull, desc, inArray, sql, gt } from 'drizzle-orm';
 import { getSession } from '@/lib/session';
 
 export type FeedPost = {
@@ -88,7 +88,7 @@ const BASE_SELECT = {
   avatarUrl: users.avatarUrl,
 } as const;
 
-export async function fetchFollowingFeed(): Promise<FeedPost[]> {
+export async function fetchFollowingFeed(after?: Date): Promise<FeedPost[]> {
   const session = await getSession();
   if (!session?.user?.id) return [];
 
@@ -113,10 +113,11 @@ export async function fetchFollowingFeed(): Promise<FeedPost[]> {
         eq(sightings.moderationStatus, 'approved'),
         eq(sightings.visibility, 'public'),
         isNull(sightings.deletedAt),
+        after ? gt(sightings.createdAt, after) : undefined,
       ),
     )
     .orderBy(desc(sightings.createdAt))
-    .limit(LIMIT);
+    .limit(after ? 20 : LIMIT);
 
   return buildFeedPosts(rows);
 }

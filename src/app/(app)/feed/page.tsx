@@ -11,7 +11,7 @@ import {
 import { Users, Heart } from 'lucide-react';
 import { getSession } from '@/lib/session';
 import { fetchFollowingFeed } from './actions';
-import FeedPostCard from './_components/feed-post-card';
+import FeedClient from './_components/feed-client';
 
 export default async function FeedPage() {
   const session = await getSession();
@@ -57,11 +57,5 @@ export default async function FeedPage() {
     );
   }
 
-  return (
-    <div className="flex flex-col">
-      {posts.map((post) => (
-        <FeedPostCard key={post.id} post={post} />
-      ))}
-    </div>
-  );
+  return <FeedClient initialPosts={posts} />;
 }
