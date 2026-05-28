@@ -4,7 +4,8 @@ import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { r2, R2_BUCKET, R2_PUBLIC_URL } from '@/lib/r2';
 import { db } from '@/db';
-import { sightings } from '@/db/schema';
+import { sightings, users } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import { makePoint, fuzzCoordinates } from '@/db/geo';
 import { requireOnboardedSession } from '@/lib/session';
 import { containsProfanity } from '@/lib/obscenity';
@@ -71,7 +72,15 @@ export async function publishSighting(data: z.infer<typeof publishSchema>): Prom
   if (containsProfanity(catName)) return { success: false, error: 'Il nome contiene parole non ammesse.' };
   if (notes && containsProfanity(notes)) return { success: false, error: 'Le note contengono parole non ammesse.' };
 
-  const fuzzed = fuzzCoordinates(pinLat, pinLng, 100);
+  const userRow = await db
+    .select({ settings: users.settings })
+    .from(users)
+    .where(eq(users.id, userId))
+    .then((r) => r[0]);
+
+  const settings = userRow?.settings;
+  const fuzzRadius = settings?.preciseLocation ? 0 : settings?.highPrivacy ? 300 : 150;
+  const fuzzed = fuzzCoordinates(pinLat, pinLng, fuzzRadius);
   const verified = aiVerified === true;
 
   await db.insert(sightings).values({

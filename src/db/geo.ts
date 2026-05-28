@@ -91,7 +91,7 @@ export function distanceMeters(
 export function fuzzCoordinates(
   lat: number,
   lng: number,
-  radiusMeters: number = 100,
+  radiusMeters: number = 150,
 ): { lat: number; lng: number } {
   // Random angle 0-2π
   const angle = Math.random() * 2 * Math.PI;

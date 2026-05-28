@@ -27,12 +27,15 @@ export const userRoleEnum = pgEnum('user_role', ['user', 'admin']);
  * senza migrazioni.
  */
 export type UserSettings = {
-  /** Se `true`, le coordinate dei post sono pubblicate esatte. Default false. */
+  /** Se `true`, le coordinate dei post sono pubblicate esatte (0m fuzzing). Default false. */
   preciseLocation: boolean;
+  /** Se `true`, fuzzing aumentato a 300m invece dei 150m di default. Ignorato se preciseLocation=true. */
+  highPrivacy: boolean;
 };
 
 const DEFAULT_USER_SETTINGS: UserSettings = {
   preciseLocation: false,
+  highPrivacy: false,
 };
 
 // ============================================================================
