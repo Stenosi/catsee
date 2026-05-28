@@ -1,4 +1,4 @@
-# CatSee — Briefing per Claude Code
+# CatSee - Briefing per Claude Code
 
 Questo file è il punto d'ingresso per chi (umano o AI) inizia a lavorare sul progetto. Contiene il **contesto essenziale** del prodotto e link ai documenti dettagliati.
 
@@ -11,11 +11,13 @@ Questo file è il punto d'ingresso per chi (umano o AI) inizia a lavorare sul pr
 CatSee è una **PWA** (Progressive Web App) per amanti dei gatti. L'utente, durante una passeggiata, scatta una foto di un gatto randagio direttamente dall'app (stile BeReal, no upload da galleria), la geolocalizza e la pubblica su una **mappa globale** condivisa con la community.
 
 **Anime del prodotto:**
-1. **Diario personale** — tieni traccia dei gatti che incontri.
-2. **Social leggero** — segui altri utenti, reagisci con emoji.
-3. **Gamification onesta** — badge, streak, contatori con anti-cheating.
+
+1. **Diario personale** - tieni traccia dei gatti che incontri.
+2. **Social leggero** - segui altri utenti, reagisci con emoji.
+3. **Gamification onesta** - badge, streak, contatori con anti-cheating.
 
 **Tre principi non negoziabili:**
+
 - **Privacy-first.** Coordinate vere mai esposte, fuzzing entro 150m di default (configurabile a 0m o 300m dalle impostazioni).
 - **Autenticità.** Foto solo da fotocamera live in-app, no upload da galleria.
 - **Wholesome social.** No DM, no commenti testuali liberi (solo emoji), no algoritmi di engagement.
@@ -102,33 +104,38 @@ catsee/
 ## Decisioni architetturali importanti
 
 ### Privacy coordinate
+
 Salvare sempre `locationReal` (vero) e `locationFuzzed` (offset random) nel DB. Le API pubbliche espongono SOLO `locationFuzzed`. Il raggio di fuzzing dipende dalle preferenze dell'utente (salvate in `users.settings`):
+
 - `preciseLocation: true` → 0m (nessun fuzzing)
 - `highPrivacy: true` → 300m
 - default → 150m
 
-Le coordinate vere sono visibili solo all'autore nella sua mappa privata. Il fuzzing viene applicato **al momento della pubblicazione** — le preferenze future non modificano i sighting già salvati.
+Le coordinate vere sono visibili solo all'autore nella sua mappa privata. Il fuzzing viene applicato **al momento della pubblicazione** - le preferenze future non modificano i sighting già salvati.
 
 ### Encryption
+
 Nessuna application-level encryption. Affidiamo a Neon la encryption-at-rest (automatica, gratuita). La protezione della privacy viene dal fuzzing, non dalla crittografia.
 
 ### Pulizia file R2
+
 Niente DELETE sincroni. Quando un file diventa orfano (avatar sostituito, post eliminato, ecc.), aggiungiamo una riga a `r2_cleanup_queue` con stato `pending`. Un cron job notturno (Vercel Cron) processa la coda con retry automatici, max 5 tentativi.
 
 ### Camera
+
 Non usiamo la camera di sistema (salverebbe in galleria). Usiamo `navigator.mediaDevices.getUserMedia()` per il feed video in-app + canvas per la cattura del frame. Garantisce l'autenticità BeReal-style.
 
 **Analisi approccio attuale vs fotocamera nativa / galleria** (decisione aperta, da rivalutare prima del lancio):
 
 | | `getUserMedia` (attuale) | `<input capture>` / galleria |
 |---|---|---|
-| Qualità foto | ⚠️ Peggiore — niente HDR, night mode, ISP nativo | ✅ Massima — usa il sistema operativo |
+| Qualità foto | ⚠️ Peggiore - niente HDR, night mode, ISP nativo | ✅ Massima - usa il sistema operativo |
 | Zoom | ✅ Hardware su Android via `applyConstraints` | ✅ Zoom ottico nativo su tutti i device |
 | Zoom su iOS | ❌ Non disponibile (`getCapabilities().zoom` non esposto) | ✅ Nativo |
-| Autenticità | ✅ Garantita — feed video live, impossibile caricare da galleria | ❌ Non garantibile — `capture` ignorato su Android |
-| Salvataggio in galleria | ✅ Zero — il frame viene catturato su canvas | ❌ L'OS può salvare la foto in galleria |
-| EXIF strippato | ✅ Automatico — canvas non copia metadati | ❌ Va strippato esplicitamente lato server |
-| Controllo UI | ✅ Totale — preview, AI verify in tempo reale | ❌ Interfaccia dell'OS, non personalizzabile |
+| Autenticità | ✅ Garantita - feed video live, impossibile caricare da galleria | ❌ Non garantibile - `capture` ignorato su Android |
+| Salvataggio in galleria | ✅ Zero - il frame viene catturato su canvas | ❌ L'OS può salvare la foto in galleria |
+| EXIF strippato | ✅ Automatico - canvas non copia metadati | ❌ Va strippato esplicitamente lato server |
+| Controllo UI | ✅ Totale - preview, AI verify in tempo reale | ❌ Interfaccia dell'OS, non personalizzabile |
 | Permessi | ✅ Solo fotocamera | ⚠️ Fotocamera + galleria (se upload abilitato) |
 
 **Si può distinguere scatto live da upload galleria?** No, in modo affidabile. I metadati EXIF (`DateTimeOriginal`, `DateTimeDigitized`) sono facilmente falsificabili e spesso strippati prima della condivisione. L'unica protezione è il **design del prodotto**: i post non-live hanno un badge visivo e non contribuiscono a streak/XP. L'onestà è affidata alla community, non a una verifica tecnica.
@@ -136,9 +143,11 @@ Non usiamo la camera di sistema (salverebbe in galleria). Usiamo `navigator.medi
 **Conclusione provvisoria:** l'approccio `getUserMedia` rimane quello corretto per i post "live" (principio di autenticità). L'upload da galleria, quando implementato (v1.1b), userà un flusso separato con badge non-live esplicito e senza vincoli GPS. I due flussi coesistono.
 
 ### AI verifica
+
 Verifica "is-a-cat" via TensorFlow.js + COCO-SSD client-side. Zero costi, zero latenza server, foto non viaggia mai per essere validata. Se fallisce, post va in moderazione admin.
 
 ### Soft delete + GDPR
+
 Eliminazione account → 1) `deletedAt = now()`, 2) anonimizzazione email/username, 3) job cleanup file R2, 4) hard delete dopo 30 giorni.
 
 ## Anti-pattern da evitare
@@ -210,14 +219,14 @@ Decisioni prese durante il setup iniziale, non ancora documentate altrove:
 
 - **Schema DB:** completo e pushato su Neon con PostGIS attivo. Tabelle operative: `users`, `sightings`, `reactions`, `follows`, `badges`, `user_badges`, `reports`, `r2_cleanup_queue` + tabelle Auth.js (`accounts`, `sessions`, `verificationTokens`, `authenticators`).
 - **Auth.js v5 (beta):** installato con `DrizzleAdapter`. Magic link (Resend) e Google OAuth pronti come passo successivo.
-- **shadcn/ui:** installato con stile **base-nova** (stile di default dell'init corrente — usa `@base-ui/react` come primitive invece di Radix UI). CSS variables in formato **OKLCH**. File di config: `components.json`.
+- **shadcn/ui:** installato con stile **base-nova** (stile di default dell'init corrente - usa `@base-ui/react` come primitive invece di Radix UI). CSS variables in formato **OKLCH**. File di config: `components.json`.
 - **Palette colori:** "Ginger Cat" (ambra arancio caldo). Definita in `src/app/globals.css` con variabili OKLCH per light e dark mode. Token custom aggiuntivi: `--warning`, `--warning-foreground`, `--success`, `--success-foreground` (non standard shadcn, esposti come `bg-warning`, `bg-success` via `@theme inline`).
 - **Font:** **Plus Jakarta Sans** (variable font, pesi 400/500/600/700) via `next/font/google`. CSS variable: `--font-sans`. Font mono: Geist Mono (`--font-geist-mono`) per snippet di codice.
 - **Sonner:** usato al posto del componente `Toast` deprecato di shadcn/ui.
 - **React Compiler:** abilitato in `next.config.ts`.
 - **AGENTS.md:** presente nella root con best practice Next.js aggiornate.
 - **Database:** PostgreSQL 17 su Neon, regione Europa.
-- **Pulizia R2:** strategia confermata — coda `r2_cleanup_queue` + cron job notturno Vercel, niente delete sincroni.
+- **Pulizia R2:** strategia confermata - coda `r2_cleanup_queue` + cron job notturno Vercel, niente delete sincroni.
 
 ## Aggiornamenti sessione 3 (2026-05-17)
 
@@ -225,18 +234,18 @@ Decisioni prese durante il setup iniziale, non ancora documentate altrove:
 
 - **`src/auth.ts`:** Auth.js v5 con `DrizzleAdapter` wrappato. Override di `createUser` per iniettare `username` temp e `onboardingCompleted: false` (il nostro schema ha `username/nickname NOT NULL`, l'adapter di default non li conosce). Session callback arricchisce la sessione con `id`, `username`, `nickname`, `role`, `onboardingCompleted`.
 - **`src/proxy.ts`:** sostituisce `middleware.ts` (rinomina richiesta da Next.js 16). Protegge le route: non autenticato → `/login`; autenticato ma non onboarded → `/onboarding`; route pubbliche: `/`, `/mappa`, `/login`, `/api/auth`.
-- **Provider:** solo Resend (magic link). Google OAuth rimandato a post-lancio — setup troppo lento in sviluppo.
+- **Provider:** solo Resend (magic link). Google OAuth rimandato a post-lancio - setup troppo lento in sviluppo.
 - **`/api/auth/dev-login`:** endpoint dev-only che crea sessione Auth.js reale senza email. Configura `DEV_USER_EMAIL` in `.env`. **Invisibile in produzione** (`NODE_ENV !== 'development'` → 404).
 - **Schema:** aggiunte colonne `email_verified` (timestamp, nullable) e `onboarding_completed` (boolean, default false) a `users`. Pushato su Neon.
 
 ### Onboarding
 
 - **`src/app/(auth)/onboarding/page.tsx`:** 2 step (username → nickname). Validazione live username con debounce 400ms (server action `checkUsername`). Controllo disponibilità, formato, parole riservate, obscenity (libreria `obscenity` con dataset inglese).
-- **Pagine auth** nel route group `(auth)` — layout senza AppHeader/BottomNavbar.
+- **Pagine auth** nel route group `(auth)` - layout senza AppHeader/BottomNavbar.
 
 ### Convenzioni stabilite
 
-- **`src/lib/session.ts`:** helper `getSession()`, `requireSession()`, `requireOnboardedSession()` da usare in tutti i Server Components e Server Actions che richiedono autenticazione. **Non usare `auth()` direttamente nei componenti** — usa questi helper.
+- **`src/lib/session.ts`:** helper `getSession()`, `requireSession()`, `requireOnboardedSession()` da usare in tutti i Server Components e Server Actions che richiedono autenticazione. **Non usare `auth()` direttamente nei componenti** - usa questi helper.
 - **Input styled manualmente:** il progetto non ha ancora un componente `<Input>` shadcn. Fino a che non viene installato, usare `<input className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ...">` (stesso stile del componente shadcn).
 - **Route group `(auth)`:** tutte le schermate senza navbar (login, onboarding, future schermate fullscreen) vanno qui.
 
@@ -244,9 +253,9 @@ Decisioni prese durante il setup iniziale, non ancora documentate altrove:
 
 ### Layout shell completato
 
-- **`src/app/(app)/layout.tsx`:** shell `h-dvh overflow-hidden flex flex-col` con `AppHeader` (`shrink-0`) + `<main className="flex-1 overflow-y-auto">` + `BottomNavbar` (`shrink-0`). Niente `sticky` — non necessario quando il parent non scrolla.
+- **`src/app/(app)/layout.tsx`:** shell `h-dvh overflow-hidden flex flex-col` con `AppHeader` (`shrink-0`) + `<main className="flex-1 overflow-y-auto">` + `BottomNavbar` (`shrink-0`). Niente `sticky` - non necessario quando il parent non scrolla.
 - **`src/app/page.tsx`:** redirect verso `/mappa`.
-- **Pagine placeholder:** `mappa`, `feed`, `scatta`, `cerca` — tutte con contenuto minimo.
+- **Pagine placeholder:** `mappa`, `feed`, `scatta`, `cerca` - tutte con contenuto minimo.
 
 ### Bottom navbar
 
@@ -257,14 +266,14 @@ Decisioni prese durante il setup iniziale, non ancora documentate altrove:
 ### Gesture bar / safe area
 
 - `viewport` export in `src/app/layout.tsx` con `viewportFit: "cover"`.
-- `html { @apply bg-card; }` in `globals.css` — l'elemento `html` riempie le aree fuori dal contenuto (gesture bar in basso, status bar in alto) con il colore della navbar.
+- `html { @apply bg-card; }` in `globals.css` - l'elemento `html` riempie le aree fuori dal contenuto (gesture bar in basso, status bar in alto) con il colore della navbar.
 
 ### App header
 
 - Variante per route: logo su mappa/feed, titolo + settings su profilo, searchbar su cerca.
 - Nascosto su `/scatta`.
 
-### Tabs shadcn — fix visivi
+### Tabs shadcn - fix visivi
 
 - `src/components/ui/tabs.tsx`: `after:bottom-[-5px]` → `after:bottom-0` (indicatore a filo), `after:bg-foreground` → `after:bg-primary`.
 - Rimosso shadow da tutti i `TabsTrigger` (non solo quando attivi).
@@ -291,12 +300,12 @@ Il dev server Next.js **non funziona via IP di rete locale** su mobile: il WebSo
 
 ## Aggiornamenti sessione 5 (2026-05-21)
 
-### Route pubbliche — layout (app)
+### Route pubbliche - layout (app)
 
-- **`(app)/layout.tsx`** ora usa `getSession()` invece di `requireOnboardedSession()`. Il layout non redirige più gli utenti non autenticati — `/mappa` è accessibile come spettatore. Le singole pagine che richiedono auth (es. `/profilo`) chiamano `requireOnboardedSession()` nella loro page.
+- **`(app)/layout.tsx`** ora usa `getSession()` invece di `requireOnboardedSession()`. Il layout non redirige più gli utenti non autenticati - `/mappa` è accessibile come spettatore. Le singole pagine che richiedono auth (es. `/profilo`) chiamano `requireOnboardedSession()` nella loro page.
 - **`AppHeader`** accetta `username: string | null` per supportare utenti non loggati.
 
-### Onboarding — restyling step 1 e 2
+### Onboarding - restyling step 1 e 2
 
 - Sottotesto username: "Il tuo nome univoco su CatSee. Nessun altro può averlo."
 - Hint box sostituito con componente `Alert` (shadcn) + lista puntata dei vincoli. Installato `src/components/ui/alert.tsx`.
@@ -304,14 +313,14 @@ Il dev server Next.js **non funziona via IP di rete locale** su mobile: il WebSo
 
 ### Modifica profilo
 
-- **`src/app/(app)/profilo/modifica/page.tsx`** — Server Component: carica utente dal DB, calcola `usernameLockedDays` server-side.
-- **`src/app/(app)/profilo/modifica/_components/modifica-client.tsx`** — Client Component: `react-hook-form` + Zod, avatar placeholder con overlay fotocamera, nickname/bio/username con validazione, username locked con `Alert` + giorni rimanenti, bottone salva abilitato solo se `isDirty`.
-- **`src/app/(app)/profilo/modifica/actions.ts`** — Server Action `saveProfile`: valida tutti i campi, check lock 30gg, profanity su nickname+bio+username, unicità username, `revalidatePath`, redirect a `/profilo` al successo.
+- **`src/app/(app)/profilo/modifica/page.tsx`** - Server Component: carica utente dal DB, calcola `usernameLockedDays` server-side.
+- **`src/app/(app)/profilo/modifica/_components/modifica-client.tsx`** - Client Component: `react-hook-form` + Zod, avatar placeholder con overlay fotocamera, nickname/bio/username con validazione, username locked con `Alert` + giorni rimanenti, bottone salva abilitato solo se `isDirty`.
+- **`src/app/(app)/profilo/modifica/actions.ts`** - Server Action `saveProfile`: valida tutti i campi, check lock 30gg, profanity su nickname+bio+username, unicità username, `revalidatePath`, redirect a `/profilo` al successo.
 - **Sonner** installato (`pnpm add sonner`). `<Toaster position="top-center" richColors />` aggiunto al root layout. Usare `toast.success()` / `toast.error()` per feedback mutazioni.
 
 ### Pagina badge
 
-- **`src/app/(app)/profilo/badge/page.tsx`** — Server Component puro (no interazioni).
+- **`src/app/(app)/profilo/badge/page.tsx`** - Server Component puro (no interazioni).
 - Badge raggruppati per categoria, flex wrap con `basis-[40%]` per riempire le righe incomplete.
 - Badge con `target > 1` non ancora sbloccati: emoji con fill dal basso via `clip-path: inset(X% 0 -20% 0)` (layer colorato su layer grayscale), barra `Progress` h-1.5 con counter `X/Y` a destra, descrizione sotto. Il `-20%` sul bottom compensa il padding sotto la baseline delle emoji.
 - Barra totale in cima: "Badge sbloccati X/Y" con `Progress`.
@@ -322,18 +331,18 @@ Il dev server Next.js **non funziona via IP di rete locale** su mobile: il WebSo
 - Aggiunto campo `target: integer` nullable. `null` = badge booleano (no barra). Pushato su Neon.
 - Seed aggiornato con target: milestone (1/5/10/50), pantera (5), streak/time/special (`null`). Descrizioni riscritte all'imperativo.
 
-### Obscenity — fix leetspeak italiano
+### Obscenity - fix leetspeak italiano
 
 - `src/lib/obscenity.ts` riscritto con **due matcher separati**: inglese con `englishRecommendedTransformers`, italiano con soli `resolveLeetSpeakTransformer` + `toAsciiLowerCaseTransformer` + `skipNonAlphabeticTransformer`. Il motivo: i transformer inglesi includono una whitelist che rompe il matching delle parole italiane se i dataset vengono uniti. Ora "c4zzo", "P3ne" ecc. vengono bloccati.
 - **Regola:** aggiungere `containsProfanity()` a OGNI campo testuale libero nelle Server Actions. Vedi KB-003 in `docs/KNOWN_BUGS.md` per la checklist.
 
 ### Convenzioni aggiornate
 
-- **`<Input>` shadcn** ora installato — non usare più stili manuali inline per i campi testo.
+- **`<Input>` shadcn** ora installato - non usare più stili manuali inline per i campi testo.
 - **`<Alert>` shadcn** per box informativi (sostituisce i `<div>` con emoji 💡).
 - **`<Progress>` shadcn** per barre di avanzamento.
 - **Sonner `toast`** per feedback post-mutazione (successo/errore).
-- **Avatar upload** rimandato a quando si implementa il flow scatto — stessa infrastruttura R2. Il bottone "Cambia foto" è già presente visivamente in modifica profilo.
+- **Avatar upload** rimandato a quando si implementa il flow scatto - stessa infrastruttura R2. Il bottone "Cambia foto" è già presente visivamente in modifica profilo.
 
 ## Aggiornamenti sessione 4 (2026-05-18)
 
@@ -347,36 +356,36 @@ Il dev server Next.js **non funziona via IP di rete locale** su mobile: il WebSo
 
 ### Convenzioni aggiuntive
 
-- **Dati sessione in Client Components dell'header:** passare come prop dal layout Server Component, non usare `useSession()` — evita di aggiungere `SessionProvider`. Rivalutare se altri componenti client avranno bisogno della sessione in futuro.
+- **Dati sessione in Client Components dell'header:** passare come prop dal layout Server Component, non usare `useSession()` - evita di aggiungere `SessionProvider`. Rivalutare se altri componenti client avranno bisogno della sessione in futuro.
 - **Conteggio avvistamenti:** usa solo `moderationStatus = 'approved'` e `deletedAt IS NULL` per il badge pubblico sul profilo.
 
 ## Aggiornamenti sessione 6 (2026-05-23)
 
 ### Flow scatto completato (Fasi A–D)
 
-- **`src/lib/r2.ts`** — client S3 per Cloudflare R2. Usa `@aws-sdk/client-s3` (già in `package.json`). Credenziali via env: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL`.
-- **`src/app/(app)/scatta/actions.ts`** — due server actions:
+- **`src/lib/r2.ts`** - client S3 per Cloudflare R2. Usa `@aws-sdk/client-s3` (già in `package.json`). Credenziali via env: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL`.
+- **`src/app/(app)/scatta/actions.ts`** - due server actions:
   - `getUploadUrls()`: genera due presigned PUT URL (foto originale + thumbnail, scadenza 5 min)
   - `publishSighting()`: valida, calcola fuzzed coords con `fuzzCoordinates()`, inserisce in DB con `makePoint()` per entrambe le geography column
 - **Upload pattern:** presigned URL → PUT diretto da browser a R2, zero payload su server Next.js. `browser-image-compression` per thumbnail 400px lato client.
 - **GPS fallback desktop:** se GPS non disponibile, mappa centrata su Roma (41.9028, 12.4964), pin libero senza restrizione 50m. `PositionMap` accetta `restrictToOrigin?: boolean` (default `true`). In produzione il flusso da desktop sarà disabilitato del tutto.
-- **`tag_colors` allineamento:** il form usava `'grey'`, lo schema DB usa `'gray'` — allineati su `'gray'`.
+- **`tag_colors` allineamento:** il form usava `'grey'`, lo schema DB usa `'gray'` - allineati su `'gray'`.
 - **Camera stream:** aggiunto listener `visibilitychange` in `CameraStep` per fermare lo stream immediatamente quando la pagina va in background (previene spia fotocamera accesa dopo navigazione).
 
 ### Avatar upload con crop
 
-- **`avatar-crop-modal.tsx`** — modal fullscreen con `react-easy-crop` (già installato). Crop circolare 1:1, canvas resize a 400×400 JPEG. Pattern `onConfirm(blob)` / `onCancel()`.
+- **`avatar-crop-modal.tsx`** - modal fullscreen con `react-easy-crop` (già installato). Crop circolare 1:1, canvas resize a 400×400 JPEG. Pattern `onConfirm(blob)` / `onCancel()`.
 - **`modifica/actions.ts`** aggiunte: `getAvatarUploadUrl()` (key fisso `avatars/{userId}.jpg`) e `saveAvatarUrl()` (update `users.avatar_url` + enqueue vecchio file in `r2_cleanup_queue`).
 - **`ModificaClient`:** file input nascosto triggerato dal tap sull'avatar, spinner Loader2 sull'overlay fotocamera durante upload, aggiornamento ottimistico del preview post-upload.
 
-### Profilo — griglia post
+### Profilo - griglia post
 
 - **`profilo/page.tsx`:** query aggiuntiva per ultimi 60 sighting approvati; URL thumbnail costruiti server-side (`${R2_PUBLIC_URL}/${key}`).
 - **`ProfiloClient`:** griglia 3 colonne `aspect-square` stile Instagram. `ThumbImage` (componente interno) mostra `Skeleton` durante il caricamento poi fade-in `opacity`.
 
 ### Componenti aggiornati
 
-- **`ImageLightbox`:** prop `circle?: boolean` — quando `true` mostra l'immagine come cerchio 64×64 (ideale per preview foto profilo). Default `false` (rettangolo `rounded-lg`).
+- **`ImageLightbox`:** prop `circle?: boolean` - quando `true` mostra l'immagine come cerchio 64×64 (ideale per preview foto profilo). Default `false` (rettangolo `rounded-lg`).
 - **`alert.tsx`:** variante `destructive` usa `bg-destructive/10` invece di `bg-card` per maggiore visibilità.
 
 ### Roadmap aggiornata
@@ -387,13 +396,13 @@ Il dev server Next.js **non funziona via IP di rete locale** su mobile: il WebSo
 5e. ✅ Griglia post nel profilo (thumbnail da R2)
 ```
 
-### Avatar — rimozione foto profilo
+### Avatar - rimozione foto profilo
 
 - **`removeAvatar` server action** in `modifica/actions.ts`: imposta `avatar_url = null` + accoda il vecchio file in `r2_cleanup_queue`.
 - **UI:** bottone `Button variant="destructive" size="sm"` visibile solo se esiste una foto, avvolto in `AlertDialog` di conferma prima di procedere.
-- **`AlertDialog` shadcn** installato (`src/components/ui/alert-dialog.tsx`). Usa `@base-ui/react/alert-dialog` — non supporta `asChild`, usare il pattern `render={<Button ... />}` sul `AlertDialogTrigger` (vedi come `AlertDialogCancel` usa lo stesso pattern).
+- **`AlertDialog` shadcn** installato (`src/components/ui/alert-dialog.tsx`). Usa `@base-ui/react/alert-dialog` - non supporta `asChild`, usare il pattern `render={<Button ... />}` sul `AlertDialogTrigger` (vedi come `AlertDialogCancel` usa lo stesso pattern).
 
-### Bug risolto — upload avatar su Vercel
+### Bug risolto - upload avatar su Vercel
 
 L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. **Causa:** le variabili d'ambiente R2 (`R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL`) erano presenti solo nel `.env` locale e non erano state aggiunte alle Environment Variables di Vercel. **Soluzione:** aggiungere tutte e 5 le variabili in Vercel → Settings → Environment Variables.
 
@@ -402,8 +411,8 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 - **AI verify (TF.js + COCO-SSD):** saltato per ora, tutti i post vanno in `approved` direttamente. Da implementare in Fase B.
 - **Palette colori (node-vibrant):** `extractedPalette` salvato come array vuoto `[]`. Da popolare lato client al momento della pubblicazione.
 - **Desktop lock `/scatta`:** in produzione questa route dovrà essere inaccessibile da desktop (o mostrare un messaggio). Da aggiungere prima del lancio.
-- ~~**Cron job R2 cleanup**~~ ✅ Risolto — vedi sessione 7b.
-- ~~**`getAvatarUploadUrl` key fissa**~~ ✅ Risolto — vedi sessione 7b.
+- ~~**Cron job R2 cleanup**~~ ✅ Risolto - vedi sessione 7b.
+- ~~**`getAvatarUploadUrl` key fissa**~~ ✅ Risolto - vedi sessione 7b.
 
 ### Convenzioni aggiornate
 
@@ -415,64 +424,64 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 
 ### Pagina impostazioni
 
-- **`src/app/(app)/impostazioni/page.tsx`** — Client Component minimale con bottone logout. `AppHeader` già mostra back-arrow su questa route via `BACK_HEADERS`.
-- **`src/app/(app)/impostazioni/actions.ts`** — Server Action `signOutAction` che chiama `signOut()` di Auth.js e redirige a `/login`.
+- **`src/app/(app)/impostazioni/page.tsx`** - Client Component minimale con bottone logout. `AppHeader` già mostra back-arrow su questa route via `BACK_HEADERS`.
+- **`src/app/(app)/impostazioni/actions.ts`** - Server Action `signOutAction` che chiama `signOut()` di Auth.js e redirige a `/login`.
 - **ProfiloHeader** collegato: tap sull'icona ⚙️ fa `router.push('/impostazioni')`.
 
-### Badge — animazione unlock
+### Badge - animazione unlock
 
-- **`src/app/(app)/profilo/badge/_components/badges-client.tsx`** — Client Component che riceve i badge dal Server Component (`badge/page.tsx`) e gestisce l'animazione confetti al primo render dei badge sbloccati (via `canvas-confetti`).
+- **`src/app/(app)/profilo/badge/_components/badges-client.tsx`** - Client Component che riceve i badge dal Server Component (`badge/page.tsx`) e gestisce l'animazione confetti al primo render dei badge sbloccati (via `canvas-confetti`).
 - **`tailwindcss-motion`** installato per animazioni CSS badge.
 - **Pattern Server/Client split badge:** `page.tsx` fa le query DB e passa dati come props; `BadgesClient` gestisce animazioni e interazioni.
-- **`scripts/dev-unlock-badge.ts`** — script dev-only per sbloccare badge manualmente via CLI (`pnpm tsx scripts/dev-unlock-badge.ts <userId> <badgeSlug>`). Non è parte del prodotto.
+- **`scripts/dev-unlock-badge.ts`** - script dev-only per sbloccare badge manualmente via CLI (`pnpm tsx scripts/dev-unlock-badge.ts <userId> <badgeSlug>`). Non è parte del prodotto.
 
-### Mappa posizione in /scatta — UX fixed-center pin
+### Mappa posizione in /scatta - UX fixed-center pin
 
 - **Pattern adottato:** niente più `<Marker>` draggable. Il pin SVG è un overlay CSS fisso al centro del container (`absolute inset-0 flex items-center justify-center`, `paddingBottom: 36` per ancorare la punta). L'utente sposta la mappa sotto il pin (stile Google Maps / Uber).
 - **`CenterTracker`** (componente interno): usa `useMapEvents({ moveend })` per leggere il centro della mappa. Se `restrictToOrigin=true` e il centro supera i 50m dall'origine GPS, fa `map.panTo(snapped, { animate: true })` per riportare la mappa nel raggio.
 - **Props rimosse:** `PositionMap` non accetta più `pinLat`/`pinLng` (il pin è sempre al centro, le coordinate vengono aggiornate via `onChange` a ogni `moveend`).
 - **Scroll wheel zoom:** abilitato solo su `mouseenter` del container, disabilitato su `mouseleave` (tramite `ScrollWheelOnHover`). Nessun bottone zoom UI.
 
-### Bug fix — ImageLightbox sopra la mappa Leaflet
+### Bug fix - ImageLightbox sopra la mappa Leaflet
 
 - **Causa:** Leaflet assegna z-index interni elevati ai propri pane (marker pane = 600, tooltip = 650). Il lightbox con `z-200` finiva sotto.
 - **Fix:** `z-1000` su `ImageLightbox` (sopra qualsiasi pane Leaflet).
 
 ## Aggiornamenti sessione 8 (2026-05-25)
 
-### AI verify — TensorFlow.js + COCO-SSD
+### AI verify - TensorFlow.js + COCO-SSD
 
-- **`src/app/(app)/scatta/_components/use-ai-verify.ts`** — hook `useAiVerify(imageUrl, enabled)`. Carica `@tensorflow/tfjs` e `@tensorflow-models/coco-ssd` in lazy import (zero bundle cost finché l'utente non arriva al form step). Usa il base model `lite_mobilenet_v2` per bilanciare velocità e accuratezza. Soglia di confidenza: `score >= 0.35`. Restituisce `AiVerifyState: 'idle' | 'loading' | 'cat' | 'no-cat' | 'error'`.
-- **`ScattaWizard`** — il hook parte appena l'utente entra nello step form (`enabled: step === 'form'`), in parallelo all'estrazione palette. Il risultato `aiVerifyState` è passato a `FormStep` e usato in `handlePublish`.
-- **`FormStep` — indicatore top bar:** badge discreto accanto al titolo "Nuovo avvistamento": spinner "Verifica…" → "Gatto rilevato" (verde, `text-success`) o "In revisione" (ambra, `text-warning`). Non blocca la compilazione del form.
+- **`src/app/(app)/scatta/_components/use-ai-verify.ts`** - hook `useAiVerify(imageUrl, enabled)`. Carica `@tensorflow/tfjs` e `@tensorflow-models/coco-ssd` in lazy import (zero bundle cost finché l'utente non arriva al form step). Usa il base model `lite_mobilenet_v2` per bilanciare velocità e accuratezza. Soglia di confidenza: `score >= 0.35`. Restituisce `AiVerifyState: 'idle' | 'loading' | 'cat' | 'no-cat' | 'error'`.
+- **`ScattaWizard`** - il hook parte appena l'utente entra nello step form (`enabled: step === 'form'`), in parallelo all'estrazione palette. Il risultato `aiVerifyState` è passato a `FormStep` e usato in `handlePublish`.
+- **`FormStep` - indicatore top bar:** badge discreto accanto al titolo "Nuovo avvistamento": spinner "Verifica…" → "Gatto rilevato" (verde, `text-success`) o "In revisione" (ambra, `text-warning`). Non blocca la compilazione del form.
 - **`publishSighting` (server action):** accetta ora `aiVerified?: boolean`. Imposta `aiVerified: true` + `moderationStatus: 'approved'` se cat rilevato; `aiVerified: false` + `moderationStatus: 'pending'` altrimenti.
-- **Toast post-publish differenziato:** se `approved` → "Avvistamento pubblicato!"; se `pending` → "Avvistamento salvato — in attesa di approvazione." con descrizione estesa (duration 6s).
+- **Toast post-publish differenziato:** se `approved` → "Avvistamento pubblicato!"; se `pending` → "Avvistamento salvato - in attesa di approvazione." con descrizione estesa (duration 6s).
 
-### Bug fix — form id mancante
+### Bug fix - form id mancante
 
 - `<form>` in `FormStep` mancava di `id="post-form"`. Il bottone "Pubblica" aveva `form="post-form"` ma funzionava solo tramite l'`onClick` fallback. Aggiunto `id="post-form"` alla form element.
 
 ### Debiti tecnici aggiornati
 
-- ~~**AI verify (TF.js + COCO-SSD)**~~ ✅ Implementato — vedi sessione 8.
-- ~~**Palette colori (node-vibrant)**~~ ✅ Implementato — vedi sessione 7b.
+- ~~**AI verify (TF.js + COCO-SSD)**~~ ✅ Implementato - vedi sessione 8.
+- ~~**Palette colori (node-vibrant)**~~ ✅ Implementato - vedi sessione 7b.
 - **Desktop lock `/scatta`:** da aggiungere prima del lancio.
 - **Redirect post-pubblicazione:** valutare se mandare a `/profilo` o al post/feed dopo publish (attualmente `/profilo` come placeholder MVP).
 
 ### Convenzioni aggiornate
 
-- **`useAiVerify`:** quando serve verifica AI in un wizard, usare questo hook. Non caricare TF.js a livello di modulo — il lazy import nel hook garantisce che il bundle pesante arrivi solo quando necessario.
+- **`useAiVerify`:** quando serve verifica AI in un wizard, usare questo hook. Non caricare TF.js a livello di modulo - il lazy import nel hook garantisce che il bundle pesante arrivi solo quando necessario.
 - **`AiVerifyState`:** il tipo è esportato da `use-ai-verify.ts` e usato da `FormStep` per il badge UI. Se in futuro si aggiungono altri modelli o logica, modificare solo il hook senza toccare i componenti.
 
 ## Aggiornamenti sessione 9 (2026-05-25)
 
 ### Loading screen AI verify
 
-- **`src/app/(app)/scatta/_components/ai-loading-step.tsx`** — schermata di attesa fullscreen mostrata mentre COCO-SSD carica. Sfondo `bg-background` (coerente con il form step che segue). Icona `PawPrint` (lucide-react) in `text-primary` con doppio cerchio `bg-primary/8` e `bg-primary/15` in pulsazione sfasata (`motion-preset-pulse`, durate 2200ms / 1400ms). Container icona esplicito `w-32 h-32` per evitare che i cerchi `absolute` invadano il gap verso il testo. Testo rotante ogni 1700ms con fade opacity 300ms, frasi solo cat-related.
+- **`src/app/(app)/scatta/_components/ai-loading-step.tsx`** - schermata di attesa fullscreen mostrata mentre COCO-SSD carica. Sfondo `bg-background` (coerente con il form step che segue). Icona `PawPrint` (lucide-react) in `text-primary` con doppio cerchio `bg-primary/8` e `bg-primary/15` in pulsazione sfasata (`motion-preset-pulse`, durate 2200ms / 1400ms). Container icona esplicito `w-32 h-32` per evitare che i cerchi `absolute` invadano il gap verso il testo. Testo rotante ogni 1700ms con fade opacity 300ms, frasi solo cat-related.
 - **Comportamento:** la loading screen appare ogni volta che si entra nello step form (`aiVerifyState === 'idle' || aiVerifyState === 'loading'`). Quando l'AI termina, `FormStep` fa mount con `motion-preset-fade motion-duration-400`.
 - **Singleton modello:** in `use-ai-verify.ts`, variabile module-level `cachedModel: ObjectDetection | null`. Dal secondo avvistamento della stessa sessione il modello è già in memoria → il download non si ripete, solo l'inferenza (~200-300ms).
 
-### Colori gatto — semplificazione
+### Colori gatto - semplificazione
 
 - **`TAG_COLORS` (schema)** e **`CAT_COLORS` (UI)** allineati alla nuova lista: `black`, `white`, `gray`, `orange`, `brown`, `tabby`, `other`. Rimossi `calico`, `tuxedo`, `siamese` (categorie miste pattern/razza non intuitive per utente casual).
 - **Filosofia:** bicolore e tricolore emergono dalla selezione multipla (max 3 colori), non servono tag dedicati.
@@ -480,7 +489,7 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 - **Nessuna migration DB:** `tag_colors` è `text[]` libero, non un enum PostgreSQL vincolato.
 - **Dot "Altro":** pallino con `border: 1.5px dashed #6b7280` e sfondo trasparente invece di fill solido. Implementato con flag `dashed: true` nell'array `CAT_COLORS` e stile inline condizionale.
 
-### Desktop detection — skip GPS
+### Desktop detection - skip GPS
 
 - **`ScattaWizard`:** all'avvio, controlla `navigator.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches`. Se nessun touch point (desktop) → `setIsDesktop(true)` e skip totale della geolocalizzazione.
 - **`FormStep`:** riceve `isDesktop?: boolean`. Se `true`, salta lo spinner "Ricerca posizione GPS…" e carica la mappa immediatamente sul fallback (Roma). Testo descrittivo sotto la mappa adattato ("modalità desktop, GPS non disponibile").
@@ -499,12 +508,12 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 
 ## Aggiornamenti sessione 10 (2026-05-25)
 
-### Mappa pubblica `/mappa` — implementazione completa
+### Mappa pubblica `/mappa` - implementazione completa
 
-- **`src/app/(app)/mappa/actions.ts`** — Server Action pubblica `fetchMapSightings()`. Query sightings JOIN users, filtrata su `approved + public + deletedAt IS NULL`, LIMIT 500, ORDER BY createdAt DESC. `thumbnailUrl` costruito server-side (`${R2_PUBLIC_URL}/${photoThumbnailKey}`). Nessuna autenticazione richiesta.
-- **`src/app/(app)/mappa/page.tsx`** — Server Component async: chiama `fetchMapSightings()`, passa risultato a `<MapView>`. Wrapper `relative h-full w-full overflow-hidden`.
-- **`src/app/(app)/mappa/_components/map-view.tsx`** — Client Component con `next/dynamic ssr:false` wrapping `MapInner`. Loading fallback con testo "Caricamento mappa…".
-- **`src/app/(app)/mappa/_components/map-inner.tsx`** — Componente principale Leaflet:
+- **`src/app/(app)/mappa/actions.ts`** - Server Action pubblica `fetchMapSightings()`. Query sightings JOIN users, filtrata su `approved + public + deletedAt IS NULL`, LIMIT 500, ORDER BY createdAt DESC. `thumbnailUrl` costruito server-side (`${R2_PUBLIC_URL}/${photoThumbnailKey}`). Nessuna autenticazione richiesta.
+- **`src/app/(app)/mappa/page.tsx`** - Server Component async: chiama `fetchMapSightings()`, passa risultato a `<MapView>`. Wrapper `relative h-full w-full overflow-hidden`.
+- **`src/app/(app)/mappa/_components/map-view.tsx`** - Client Component con `next/dynamic ssr:false` wrapping `MapInner`. Loading fallback con testo "Caricamento mappa…".
+- **`src/app/(app)/mappa/_components/map-inner.tsx`** - Componente principale Leaflet:
   - Import CSS in ordine: `leaflet.css` → `MarkerCluster.css` → `MarkerCluster.Default.css`
   - `createCatPin()`: `L.divIcon` con `className: ''` (critico), img circolare 44×44px con bordo amber e box-shadow
   - `CatMarkerCluster`: `useMap()` + `useEffect`, cluster via `(L as unknown as ...).markerClusterGroup`, cerchio amber con count, cleanup `map.removeLayer`
@@ -513,7 +522,7 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
   - `ViewportEmptyChecker`: `useMapEvents({ moveend, zoomend })`, controlla se qualche sighting è nel bounds
   - FAB recenter: fuori da `MapContainer` ma sovrapposto (`absolute bottom-20 right-4 z-900`), usa `flyToRef.current`
   - Empty state pill: `absolute inset-x-0 top-4 z-900 pointer-events-none`
-- **`src/app/(app)/mappa/_components/sighting-sheet.tsx`** — Bottom sheet CSS custom:
+- **`src/app/(app)/mappa/_components/sighting-sheet.tsx`** - Bottom sheet CSS custom:
   - Backdrop `z-1001` con opacity transition
   - Panel `z-1002` con `transform: translateY(0/100%)` transition 300ms
   - Contenuto: foto 4:3, nickname, @username, data (Intl.DateTimeFormat it-IT), color pills, CTA disabilitato
@@ -527,19 +536,19 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 
 ### Debiti tecnici aggiornati (sessione 10)
 
-- ~~**Redirect post-pubblicazione**~~ ✅ — redirect a `/feed` dopo publish.
+- ~~**Redirect post-pubblicazione**~~ ✅ - redirect a `/feed` dopo publish.
 - **Desktop lock `/scatta`:** da aggiungere prima del lancio.
 - **Pannello admin moderazione:** i post in `pending` non hanno UI per essere approvati/rifiutati.
-- **Profilo pubblico `/profilo/[username]`:** il blocco avatar+username nel bottom sheet della mappa è già pronto visivamente ma non è cliccabile — manca la route destinazione. Da implementare in v1.1 insieme ai profili privati.
+- **Profilo pubblico `/profilo/[username]`:** il blocco avatar+username nel bottom sheet della mappa è già pronto visivamente ma non è cliccabile - manca la route destinazione. Da implementare in v1.1 insieme ai profili privati.
 - **Tile layer dark mode:** light mode usa `Stadia.AlidadeSmooth`, dark mode dovrà usare `Stadia.AlidadeSmoothDark` (`https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png`). Il commento è già nel codice in `map-inner.tsx` e `profile-map-inner.tsx`.
-- ~~**Pin cliccabili → dettaglio post**~~ ✅ — `router.push('/post/[id]')` nel click handler del marker Leaflet.
+- ~~**Pin cliccabili → dettaglio post**~~ ✅ - `router.push('/post/[id]')` nel click handler del marker Leaflet.
 - **Logo CatSee:** attualmente si usa l'icona Lucide `Cat` su sfondo amber come placeholder in tutte le icone PWA (favicon, apple-icon, manifest 192/512). Va sostituito con un logo vettoriale definitivo prima del lancio. Il logo deve essere quadrato con ~10-15% padding interno; esportare PNG 192×192, 512×512 (anche maskable), 180×180, 32×32. Verificare il maskable su maskable.app/editor. Quando pronto, sostituire i file `src/app/icon.tsx`, `src/app/apple-icon.tsx`, `src/app/icon-192/route.tsx`, `src/app/icon-512/route.tsx`.
-- **UX card post in `/feed` e `/cerca`:** la visualizzazione attuale delle card dei post non convince — va riprogettata. Sia il layout della card in `/feed` (`feed-post-card.tsx`) sia la griglia esplora e i risultati gatti in `/cerca` (`cerca-client.tsx`) sono da rivedere prima del lancio. Vedi anche `docs/WIREFRAMES.md` §2.1 e §3.4.
+- **UX card post in `/feed` e `/cerca`:** la visualizzazione attuale delle card dei post non convince - va riprogettata. Sia il layout della card in `/feed` (`feed-post-card.tsx`) sia la griglia esplora e i risultati gatti in `/cerca` (`cerca-client.tsx`) sono da rivedere prima del lancio. Vedi anche `docs/WIREFRAMES.md` §2.1 e §3.4.
 
 ### Pattern architetturali mappa
 
 - **FAB fuori da MapContainer:** il bottone visivo vive nel wrapper div. Il hook `MapFlyToBinder` (dentro `MapContainer`) scrive un `flyToRef` che il FAB esterno chiama. Evita problemi con i componenti react-leaflet che si aspettano un contesto Leaflet.
-- **`className: ''` su `L.divIcon`:** obbligatorio — senza di esso Leaflet aggiunge bordi bianchi ai marker custom.
+- **`className: ''` su `L.divIcon`:** obbligatorio - senza di esso Leaflet aggiunge bordi bianchi ai marker custom.
 - **`(L as unknown as ...).markerClusterGroup`:** typescript cast necessario perché `@types/leaflet.markercluster` estende `L` come side-effect, non come tipo esplicito.
 
 ## Aggiornamenti sessione 11 (2026-05-25)
@@ -548,9 +557,9 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 
 - **`relative` su `<nav>` e `<header>`:** senza `position` esplicita il `z-index` di Tailwind non crea uno stacking context e viene ignorato dal browser. Aggiunto `relative` a entrambi.
 - **`isolate` su `<main>`** (`src/app/(app)/layout.tsx`): crea uno stacking context che contiene tutti i z-index interni di Leaflet (fino a 600+), impedendo loro di uscire sopra navbar e header. Regola generale: qualsiasi pagina con Leaflet deve avere il suo container con `isolate`.
-- **`createPortal(…, document.body)` su `SightingSheet`:** il portal sposta il DOM del sheet fuori da `<main isolate>`, mettendolo nel root stacking context. Necessario per tutti i componenti `fixed` (modal, sheet, toast) che devono sovrapporsi alla navbar — se vivono dentro un elemento `isolate`, nessun z-index li farebbe uscire.
+- **`createPortal(…, document.body)` su `SightingSheet`:** il portal sposta il DOM del sheet fuori da `<main isolate>`, mettendolo nel root stacking context. Necessario per tutti i componenti `fixed` (modal, sheet, toast) che devono sovrapporsi alla navbar - se vivono dentro un elemento `isolate`, nessun z-index li farebbe uscire.
 
-### Bottom sheet — UX miglioramenti
+### Bottom sheet - UX miglioramenti
 
 - **Swipe-to-close:** pointer events sul panel, `setPointerCapture` per catturare il move anche fuori dal panel, soglia 80px, snap-back se non raggiunta. Il backdrop si schiarisce proporzionalmente al drag (`opacity: 1 - dragY / 200`).
 - **`select-none` sul panel + `draggable={false}` sulle immagini:** previene la selezione di testo e il drag nativo del browser durante lo swipe.
@@ -564,11 +573,11 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 
 ### Nuove pagine di navigazione
 
-- **`/post/[id]`** — dettaglio avvistamento: foto hero, autore, nome gatto, tag colori, reazioni emoji con `useOptimistic` per toggle istantaneo senza attendere la server action.
-- **`/profilo/[username]`** — profilo pubblico: stessa struttura del profilo proprio ma con bottone Segui/Seguito (`useOptimistic`), visibile solo se autenticati e non è il proprio profilo.
-- **`/feed`** — feed following-only (rimossi tab Esplora/Vicini). Se non autenticato → CTA login; se autenticato ma senza seguiti → CTA cerca utenti.
-- **`/cerca`** — griglia esplora (90 post random) + ricerca unificata con tab Utenti/Gatti swipabili. Ordine: utenti per follower count, post per reazione count (subquery correlate DB-side). Griglia stabile in sessione via `sessionStorage`. UX Option B: risultati precedenti visibili durante il refetch, spinner nella search bar al posto della lente.
-- **`/profilo/follow`** — pagina dedicata follower/seguiti con tab swipabili, ordinati per data di follow DESC, filtrabili via search bar nell'header.
+- **`/post/[id]`** - dettaglio avvistamento: foto hero, autore, nome gatto, tag colori, reazioni emoji con `useOptimistic` per toggle istantaneo senza attendere la server action.
+- **`/profilo/[username]`** - profilo pubblico: stessa struttura del profilo proprio ma con bottone Segui/Seguito (`useOptimistic`), visibile solo se autenticati e non è il proprio profilo.
+- **`/feed`** - feed following-only (rimossi tab Esplora/Vicini). Se non autenticato → CTA login; se autenticato ma senza seguiti → CTA cerca utenti.
+- **`/cerca`** - griglia esplora (90 post random) + ricerca unificata con tab Utenti/Gatti swipabili. Ordine: utenti per follower count, post per reazione count (subquery correlate DB-side). Griglia stabile in sessione via `sessionStorage`. UX Option B: risultati precedenti visibili durante il refetch, spinner nella search bar al posto della lente.
+- **`/profilo/follow`** - pagina dedicata follower/seguiti con tab swipabili, ordinati per data di follow DESC, filtrabili via search bar nell'header.
 
 ### Pattern adottati (sessione 12)
 
@@ -576,7 +585,7 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 - **Custom DOM events per cross-component state:** `search-loading` e `search-clear` collegano `AppHeader` (CercaHeader) a `CercaClient` senza global store né prop drilling.
 - **URL come stato condiviso tra header e pagina:** `AppHeader` scrive `?q=` con `router.replace`; la pagina legge `useSearchParams()`. Usato sia in `/cerca` che in `/profilo/follow`.
 - **`setPointerCapture` solo sull'handle:** nei bottom sheet con drag, catturare gli eventi pointer solo sulla maniglia (non sull'intero panel) evita di bloccare i tap sui link figli.
-- **`mounted` state per `createPortal`:** `useState(false)` + `useEffect(() => setMounted(true))` + early return — pattern obbligatorio per portals che accedono a `document.body` (SSR-safe).
+- **`mounted` state per `createPortal`:** `useState(false)` + `useEffect(() => setMounted(true))` + early return - pattern obbligatorio per portals che accedono a `document.body` (SSR-safe).
 - **Filtro client-side nelle liste caricate:** quando una lista è già in memoria (follower/seguiti), filtrare con JS invece di fare round-trip al server. Query param `?q=` aggiornata dall'header, letta con `useSearchParams()` nel component.
 - **`Suspense` obbligatorio su `useSearchParams`:** ogni Client Component che chiama `useSearchParams()` deve essere wrappato in `<Suspense>` nel Server Component padre.
 - **Ordine check in `HeaderContent`:** le route esatte (es. `/profilo/follow`) vanno controllate PRIMA dei prefix match (es. `/profilo/`) altrimenti vengono intercettate dal prefix.
@@ -584,48 +593,48 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 ### Roadmap aggiornata (sessione 12)
 
 ```text
-8. ✅ Feed (solo Seguiti — Esplora rimandato)
+8. ✅ Feed (solo Seguiti - Esplora rimandato)
 9. ✅ Reazioni emoji + Follow/Unfollow
 ```
 
 ### Debiti tecnici aperti (sessione 12)
 
-- **UX card post in `/feed` e `/cerca`:** layout e gerarchia visiva da riprogettare — segnalato dall'utente. Vedi `docs/WIREFRAMES.md` §2.1 e §3.4.
-- **Swipe tab in `/cerca` non funziona su aree vuote (KB-004):** lo stesso hook `useTabSwipe` funziona in `/profilo` e `/profilo/follow` ma non in `/cerca` quando la lista risultati è corta/vuota. Causa non chiarita — vedi `docs/KNOWN_BUGS.md` KB-004 per dettagli e tentativi falliti.
+- **UX card post in `/feed` e `/cerca`:** layout e gerarchia visiva da riprogettare - segnalato dall'utente. Vedi `docs/WIREFRAMES.md` §2.1 e §3.4.
+- **Swipe tab in `/cerca` non funziona su aree vuote (KB-004):** lo stesso hook `useTabSwipe` funziona in `/profilo` e `/profilo/follow` ma non in `/cerca` quando la lista risultati è corta/vuota. Causa non chiarita - vedi `docs/KNOWN_BUGS.md` KB-004 per dettagli e tentativi falliti.
 - **Navigazione post in-context (v1.1b):** da `/profilo/[username]` e dai risultati "Gatti" in `/cerca`, il tap su un post aprirà una lista scorrevole in-context (stile Instagram) invece della pagina isolata `/post/[id]`. Rinviato a quando il volume di post lo rende utile. Vedi `docs/SPEC.md` §5 v1.1b per dettagli e contesti esclusi.
 - **`follows-sheet.tsx`:** file rimasto nel repo ma non più usato (sostituito da `/profilo/follow`). Da rimuovere in pulizia futura.
 - **Desktop lock `/scatta`:** da aggiungere prima del lancio.
 - **Pannello admin moderazione:** post in `pending` senza UI di approvazione/rifiuto.
-- **Profilo pubblico `/profilo/[username]` dalla mappa:** blocco avatar nel sighting sheet non ancora cliccabile — manca integrazione con la route.
+- **Profilo pubblico `/profilo/[username]` dalla mappa:** blocco avatar nel sighting sheet non ancora cliccabile - manca integrazione con la route.
 
 ## Aggiornamenti sessione 13 (2026-05-27)
 
-### Performance navigazione — punti 1 e 2
+### Performance navigazione - punti 1 e 2
 
-#### Punto 1 — `React.cache` su `auth()`
+#### Punto 1 - `React.cache` su `auth()`
 
-- **`src/lib/session.ts`:** `auth()` wrappata in `React.cache` tramite costante `getCachedAuth`. Tutte e tre le funzioni (`getSession`, `requireSession`, `requireOnboardedSession`) usano ora la versione cachata. Il risultato: se layout e page chiamano entrambi una di queste funzioni nella stessa request, `auth()` colpisce il DB una sola volta invece di due. La cache è per-request (non globale) — ogni nuova navigazione riparte da zero come ci si aspetta.
+- **`src/lib/session.ts`:** `auth()` wrappata in `React.cache` tramite costante `getCachedAuth`. Tutte e tre le funzioni (`getSession`, `requireSession`, `requireOnboardedSession`) usano ora la versione cachata. Il risultato: se layout e page chiamano entrambi una di queste funzioni nella stessa request, `auth()` colpisce il DB una sola volta invece di due. La cache è per-request (non globale) - ogni nuova navigazione riparte da zero come ci si aspetta.
 
-#### Punto 2 — `loading.tsx` per le route principali
+#### Punto 2 - `loading.tsx` per le route principali
 
 - **`src/app/(app)/feed/loading.tsx`:** 3 `FeedPostCard` fake (avatar circle + foto aspect-[4/3] + titolo + note + color pills).
-- **`src/app/(app)/cerca/loading.tsx`:** griglia 3 colonne, 12 celle `aspect-square` — specchia lo stato di default della pagina (esplora).
+- **`src/app/(app)/cerca/loading.tsx`:** griglia 3 colonne, 12 celle `aspect-square` - specchia lo stato di default della pagina (esplora).
 - **`src/app/(app)/profilo/loading.tsx`:** avatar 80px + nickname + badge + stats follower/seguiti + 2 bottoni + tab bar + griglia 9 celle.
-- **`src/app/(app)/mappa/loading.tsx`:** `bg-muted` full-height con testo "Caricamento mappa…" — identico al fallback `dynamic()` già esistente in `map-view.tsx` per transizione seamless.
+- **`src/app/(app)/mappa/loading.tsx`:** `bg-muted` full-height con testo "Caricamento mappa…" - identico al fallback `dynamic()` già esistente in `map-view.tsx` per transizione seamless.
 
 Con i `loading.tsx`, Next.js App Router mostra istantaneamente header + navbar + skeleton mentre il Server Component carica i dati. La navigazione percepita diventa immediata.
 
 ### Debiti tecnici aperti (sessione 13)
 
-- **Performance punto 3 — Separare `getSession` dal layout con `Suspense`:** il layout `(app)/layout.tsx` è ancora `async` e blocca l'intera prima render su `await getSession()`. L'intervento consiste nel rendere il layout non-async, estrarre `AppHeader` in un Server Component async separato (`AppHeaderServer`) wrappato in `<Suspense fallback={<HeaderSkeleton />}>`, così i `children` (incluso il `loading.tsx`) diventano visibili senza attendere la sessione.
+- **Performance punto 3 - Separare `getSession` dal layout con `Suspense`:** il layout `(app)/layout.tsx` è ancora `async` e blocca l'intera prima render su `await getSession()`. L'intervento consiste nel rendere il layout non-async, estrarre `AppHeader` in un Server Component async separato (`AppHeaderServer`) wrappato in `<Suspense fallback={<HeaderSkeleton />}>`, così i `children` (incluso il `loading.tsx`) diventano visibili senza attendere la sessione.
 
 ## Aggiornamenti sessione 14 (2026-05-29)
 
-### Impostazioni — refactoring completo
+### Impostazioni - refactoring completo
 
 - **`src/app/(app)/impostazioni/page.tsx`** convertito a Server Component: carica `settings` e `username` dal DB, passa come props a `ImpostazioniClient`.
 - **`src/app/(app)/impostazioni/_components/impostazioni-client.tsx`** (nuovo): Client Component con UI completa impostazioni.
-  - **Privacy RadioGroup** (3 opzioni mutualmente esclusive): Posizione precisa (0m) / Standard (150m, default) / Privacy rafforzata (300m). UI ottimistica con `useOptimistic` + committed state pattern — revert automatico in caso di errore.
+  - **Privacy RadioGroup** (3 opzioni mutualmente esclusive): Posizione precisa (0m) / Standard (150m, default) / Privacy rafforzata (300m). UI ottimistica con `useOptimistic` + committed state pattern - revert automatico in caso di errore.
   - **Elimina account**: `AlertDialog` controllato, `<Input>` per digitare `@username`, bottone conferma disabilitato finché il testo non corrisponde esattamente. Soft delete + anonimizzazione + `signOut`.
   - **ButtonGroup verticale** con entrambi i bottoni destructive (Esci + trigger Elimina account).
 - **`src/app/(app)/impostazioni/actions.ts`** aggiornate:
@@ -634,13 +643,13 @@ Con i `loading.tsx`, Next.js App Router mostra istantaneamente header + navbar +
   - `deleteAccount(usernameConfirm)`: verifica match username, soft delete, anonimizzazione, `signOut`.
 - **`src/components/ui/switch.tsx`** e **`src/components/ui/radio-group.tsx`** installati via shadcn.
 
-### Privacy fuzzing — 3 livelli
+### Privacy fuzzing - 3 livelli
 
 - **`src/db/schema/users.ts`**: `UserSettings` esteso con `highPrivacy: boolean` (default `false`).
 - **`src/db/geo.ts`**: `fuzzCoordinates()` default radius alzato da 100m a **150m**.
-- **`src/app/(app)/scatta/actions.ts`**: `publishSighting` legge `users.settings` e applica il raggio corretto: `preciseLocation=true` → 0m, `highPrivacy=true` → 300m, default → 150m. Il fuzzing è statico al momento della pubblicazione — le preferenze future non modificano sighting già salvati.
+- **`src/app/(app)/scatta/actions.ts`**: `publishSighting` legge `users.settings` e applica il raggio corretto: `preciseLocation=true` → 0m, `highPrivacy=true` → 300m, default → 150m. Il fuzzing è statico al momento della pubblicazione - le preferenze future non modificano sighting già salvati.
 
-### Feed — pull-to-refresh
+### Feed - pull-to-refresh
 
 - **`src/app/(app)/feed/_components/feed-client.tsx`** (nuovo): Client Component che gestisce la lista post + pull-to-refresh.
   - Pattern touch events identico a `/cerca`: `touchstart/touchmove/touchend` su `scrollRef`.
@@ -650,16 +659,102 @@ Con i `loading.tsx`, Next.js App Router mostra istantaneamente header + navbar +
 - **`src/app/(app)/feed/actions.ts`**: aggiunto parametro `after?: Date` a `fetchFollowingFeed`, con `gt(sightings.createdAt, after)` e `limit(after ? 20 : LIMIT)`.
 - **`src/app/(app)/feed/page.tsx`**: aggiornato per usare `<FeedClient initialPosts={posts} />`.
 
-### Fix Google OAuth — account linking
+### Fix Google OAuth - account linking
 
-- **`src/auth.ts`**: `Google({ allowDangerousEmailAccountLinking: true })` — necessario per collegare account creati via `dev-login` (senza OAuth) al provider Google al primo login. Senza questa opzione Auth.js tenta `createUser` con email già esistente → constraint violation.
+- **`src/auth.ts`**: `Google({ allowDangerousEmailAccountLinking: true })` - necessario per collegare account creati via `dev-login` (senza OAuth) al provider Google al primo login. Senza questa opzione Auth.js tenta `createUser` con email già esistente → constraint violation.
+
+### Onboarding - espansione a 5 step
+
+- **`src/app/(auth)/onboarding/page.tsx`** riscritto con 5 step: username → nickname → avatar → privacy → GPS primer.
+- **`src/app/(auth)/onboarding/actions.ts`**: `completeOnboarding` sostituita da `saveUsernameNickname` — salva username+nickname+`onboardingCompleted=true` e restituisce `{ success: true }` senza redirect. Il redirect a `/mappa` avviene lato client alla fine del wizard (step GPS).
+- **Step 3 - Avatar** (opzionale, "Salta" disponibile): reusa `getAvatarUploadUrl` + `saveAvatarUrl` + `AvatarCropModal` da `profilo/modifica`. Funziona perché `onboardingCompleted` viene settato a `true` nel passo precedente.
+- **Step 4 - Privacy**: RadioGroup con 3 opzioni (Standard/Privacy rafforzata/Posizione precisa). Chiama `savePrivacyLevel` da `impostazioni/actions.ts`. Default: Standard.
+- **Step 5 - GPS primer**: schermata informativa con icona `MapPin`, bottone che triggera `navigator.geolocation.getCurrentPosition()`, feedback visivo per granted/denied, "Decidi dopo" come fallback.
+- **Progress indicator**: aggiornato da 2 a 5 pallini con linee animate.
 
 ### Debiti tecnici aperti (sessione 14)
 
-- **Live constraint checklist onboarding:** i vincoli di username/nickname nell'`Alert` devono mostrarsi come checklist con ✓/✗ aggiornati in tempo reale mentre l'utente digita (invece di lista statica).
-- **Revisione onboarding:** valutare quali impostazioni utili esporre già in fase di onboarding (es. livello privacy fuzzing).
 - **Dashboard Admin** (`/admin`): moderazione post pending, segnalazioni, gestione utenti.
 - **Badge engine:** `checkAndAwardBadges(userId, trigger)` per assegnazione automatica badge.
 - **Sondaggi:** tabelle DB (`polls`, `poll_votes`) + card nel feed + UI creazione admin.
-- **Notifiche Push:** service worker, VAPID, tabella `push_subscriptions`, libreria `web-push`.
+- **Notifiche Push:** service worker, VAPID, tabella `push_subscriptions`, libreria `web-push` — vedi piano dettagliato in sezione successiva.
+- **PWA install prompt:** da aggiungere in onboarding step dedicato — vedi piano dettagliato in sezione successiva.
 - **Performance punto 3** (da sessione 13): separare `getSession` dal layout con `Suspense`.
+
+## Piano: Notifiche Push (da implementare)
+
+### Infrastruttura necessaria
+
+**Nuova tabella `push_subscriptions`:**
+```
+id uuid PK
+userId → users.id (onDelete cascade)
+endpoint text NOT NULL UNIQUE
+p256dh text NOT NULL
+auth text NOT NULL
+userAgent text
+active boolean DEFAULT true
+createdAt timestamp
+```
+
+**Flusso registrazione:**
+1. Client chiede permesso notifiche (`Notification.requestPermission()`).
+2. Client chiama `registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: VAPID_PUBLIC_KEY })`.
+3. Server Action `savePushSubscription(subscription)` salva nel DB.
+
+**Flusso invio:**
+1. Trigger (follow, reaction, approval, streak) chiama `sendPushNotification(userId, { title, body, url })`.
+2. Legge subscription attive dell'utente dal DB.
+3. Usa `web-push.sendNotification()`. Se 410 (scaduta): `active = false`.
+
+**Tipi di notifica:**
+| Tipo | Trigger | Tono |
+|---|---|---|
+| `new_follower` | Qualcuno ti segue | "@username ha iniziato a seguirti" |
+| `new_reaction` | Reazione al tuo post | "Il tuo gatto ha ricevuto una reazione!" |
+| `sighting_approved` | Post approvato dalla moderazione | "Il tuo avvistamento è stato approvato ✅" |
+| `streak_reminder` | Streak ≥ 1g e non hai postato oggi (inviata ~20:00) | "Ehi! Non perdere la tua streak 🔥" |
+
+**Service Worker** (`public/sw.js`):
+- `push` → `showNotification(title, { body, icon, data: { url } })`
+- `notificationclick` → `clients.openWindow(event.notification.data.url)`
+
+**Libreria:** `web-push`. Generare VAPID keys: `npx web-push generate-vapid-keys`. Salvare in `.env`: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_CONTACT_EMAIL`.
+
+**Toggle preferenze** in `/impostazioni` (da aggiungere a `UserSettings`):
+```typescript
+notifications: {
+  followers: boolean;
+  reactions: boolean;
+  approved: boolean;
+  streakReminder: boolean;
+}
+```
+
+**File da creare/modificare:**
+- `public/sw.js`
+- `src/hooks/use-push-notifications.ts`
+- `src/lib/push.ts`
+- `src/db/schema/push-subscriptions.ts`
+- `src/app/(app)/impostazioni/actions.ts` — `savePushSubscription()`
+- Trigger in: actions follow, reaction, approval
+- `src/app/layout.tsx` — registrazione SW al mount
+- Onboarding: aggiungere step notifiche dopo GPS primer
+
+## Piano: PWA Install Prompt (da implementare)
+
+**Dove:** step dedicato nell'onboarding, dopo il GPS primer (step 6 quando aggiunto).
+
+**Comportamento:**
+- Rileva se l'app è già installata: `window.matchMedia('(display-mode: standalone)').matches`
+- Se già installata: salta il passo
+- Se non installata: mostra schermata con benefici (notifiche, accesso rapido, no browser chrome)
+- Bottone "Installa CatSee": chiama `deferredPrompt.prompt()` (evento `beforeinstallprompt` catturato e memorizzato)
+- Se browser non supporta (iOS Safari < 16.4 o Firefox): mostra istruzioni manuali "Aggiungi a schermata Home"
+- "Salta": procede comunque
+
+**File da creare/modificare:**
+- `src/hooks/use-pwa-install.ts` — hook che gestisce `beforeinstallprompt`
+- `src/app/(app)/impostazioni/page.tsx` — già presente bottone install, da connettere al hook
+- `src/app/layout.tsx` — cattura `beforeinstallprompt` globalmente
+- Onboarding: aggiungere step install dopo notifiche

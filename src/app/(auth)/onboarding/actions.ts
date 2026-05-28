@@ -54,8 +54,10 @@ export async function checkUsername(
   return { available: !existing };
 }
 
-/** Completa l'onboarding: salva username + nickname e segna onboardingCompleted. */
-export async function completeOnboarding(formData: FormData) {
+/** Salva username + nickname e segna onboardingCompleted. Non fa redirect — il wizard continua lato client. */
+export async function saveUsernameNickname(
+  formData: FormData,
+): Promise<{ success: true } | { error: string }> {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
 
@@ -63,24 +65,17 @@ export async function completeOnboarding(formData: FormData) {
   const nickname = (formData.get('nickname') as string)?.trim();
 
   const usernameResult = usernameSchema.safeParse(username);
-  if (!usernameResult.success) {
-    return { error: usernameResult.error.issues[0].message };
-  }
+  if (!usernameResult.success) return { error: usernameResult.error.issues[0].message };
 
   const nicknameResult = nicknameSchema.safeParse(nickname);
-  if (!nicknameResult.success) {
-    return { error: nicknameResult.error.issues[0].message };
-  }
+  if (!nicknameResult.success) return { error: nicknameResult.error.issues[0].message };
 
-  if (RESERVED_USERNAMES.has(username.toLowerCase())) {
-    return { error: 'Questo username è riservato.' };
-  }
+  if (RESERVED_USERNAMES.has(username.toLowerCase())) return { error: 'Questo username è riservato.' };
 
   if (containsProfanity(username) || containsProfanity(nickname)) {
     return { error: 'Il testo contiene parole non ammesse.' };
   }
 
-  // Verifica unicità username (escludiamo l'utente corrente che potrebbe avere un temp username uguale)
   const conflict = await db.query.users.findFirst({
     where: (u) => and(eq(u.username, username), ne(u.id, session.user.id)),
     columns: { id: true },
@@ -89,13 +84,8 @@ export async function completeOnboarding(formData: FormData) {
 
   await db
     .update(users)
-    .set({
-      username,
-      nickname,
-      usernameUpdatedAt: new Date(),
-      onboardingCompleted: true,
-    })
+    .set({ username, nickname, usernameUpdatedAt: new Date(), onboardingCompleted: true })
     .where(eq(users.id, session.user.id));
 
-  redirect('/mappa');
+  return { success: true };
 }
