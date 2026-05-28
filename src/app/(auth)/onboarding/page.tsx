@@ -189,6 +189,7 @@ export default function OnboardingPage() {
             <div className={cn(
               'relative z-10 w-2 h-2 rounded-full shrink-0 transition-colors duration-200',
               stepIndex >= i ? 'bg-primary' : 'bg-muted',
+              stepIndex >= i && i > 0 ? 'delay-300' : 'delay-0',
             )} />
           </div>
         ))}
