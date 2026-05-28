@@ -16,7 +16,7 @@ CatSee è una **PWA** (Progressive Web App) per amanti dei gatti. L'utente, dura
 3. **Gamification onesta** — badge, streak, contatori con anti-cheating.
 
 **Tre principi non negoziabili:**
-- **Privacy-first.** Coordinate vere mai esposte, fuzzing entro 100m di default.
+- **Privacy-first.** Coordinate vere mai esposte, fuzzing entro 150m di default (configurabile a 0m o 300m dalle impostazioni).
 - **Autenticità.** Foto solo da fotocamera live in-app, no upload da galleria.
 - **Wholesome social.** No DM, no commenti testuali liberi (solo emoji), no algoritmi di engagement.
 
@@ -102,7 +102,12 @@ catsee/
 ## Decisioni architetturali importanti
 
 ### Privacy coordinate
-Salvare sempre `locationReal` (vero) e `locationFuzzed` (offset random ~100m) nel DB. Le API pubbliche espongono SOLO `locationFuzzed` (a meno che l'utente abbia opt-in `preciseLocation: true`). Le coordinate vere sono visibili solo all'autore nella sua mappa privata.
+Salvare sempre `locationReal` (vero) e `locationFuzzed` (offset random) nel DB. Le API pubbliche espongono SOLO `locationFuzzed`. Il raggio di fuzzing dipende dalle preferenze dell'utente (salvate in `users.settings`):
+- `preciseLocation: true` → 0m (nessun fuzzing)
+- `highPrivacy: true` → 300m
+- default → 150m
+
+Le coordinate vere sono visibili solo all'autore nella sua mappa privata. Il fuzzing viene applicato **al momento della pubblicazione** — le preferenze future non modificano i sighting già salvati.
 
 ### Encryption
 Nessuna application-level encryption. Affidiamo a Neon la encryption-at-rest (automatica, gratuita). La protezione della privacy viene dal fuzzing, non dalla crittografia.
@@ -171,20 +176,21 @@ pnpm lint             # ESLint
 L'ordine di sviluppo che ha più senso (non rigido):
 
 1. ✅ Setup repo, schema DB, dipendenze
-2. ✅ Auth.js + magic link (Resend) — Google OAuth rimandato a dopo il lancio
+2. ✅ Auth.js + Google OAuth (magic link Resend ancora presente ma secondario)
 3. ✅ Onboarding (username + nickname)
 4. ✅ Layout di base + bottom navbar
 5. ✅ Profilo proprio (read-only base)
 5b. ✅ Modifica profilo (nickname, bio, username con lock 30gg)
 5c. ✅ Pagina badge (catalogo + progresso + emoji fill)
-6. ⬜ Mappa pubblica con pin
-7. ⬜ Flow scatto: camera → AI verify → palette → form → save
-8. ⬜ Feed (Seguiti / Esplora / Vicini)
-9. ⬜ Reazioni emoji + Follow/Unfollow
-10. ⬜ Sistema badge + unlock animations
+6. ✅ Mappa pubblica con pin, clustering e bottom sheet preview
+7. ✅ Flow scatto: camera → AI verify → palette → form → R2 upload → DB save
+8. ✅ Feed seguiti (Esplora e Vicini rimandati a v1.1)
+9. ✅ Reazioni emoji + Follow/Unfollow
+10. ✅ Sistema badge + unlock animations (badge engine automatico da fare)
 11. ⬜ Moderazione (segnalazioni, pannello admin)
+11b. ✅ Impostazioni: privacy fuzzing (3 livelli), elimina account
 12. ⬜ PWA manifest + service worker + install prompt
-13. ⬜ Job cron R2 cleanup
+13. ✅ Job cron R2 cleanup
 14. ⬜ Privacy policy + ToS + GDPR consent
 15. ⬜ Beta launch
 
@@ -612,3 +618,48 @@ Con i `loading.tsx`, Next.js App Router mostra istantaneamente header + navbar +
 ### Debiti tecnici aperti (sessione 13)
 
 - **Performance punto 3 — Separare `getSession` dal layout con `Suspense`:** il layout `(app)/layout.tsx` è ancora `async` e blocca l'intera prima render su `await getSession()`. L'intervento consiste nel rendere il layout non-async, estrarre `AppHeader` in un Server Component async separato (`AppHeaderServer`) wrappato in `<Suspense fallback={<HeaderSkeleton />}>`, così i `children` (incluso il `loading.tsx`) diventano visibili senza attendere la sessione.
+
+## Aggiornamenti sessione 14 (2026-05-29)
+
+### Impostazioni — refactoring completo
+
+- **`src/app/(app)/impostazioni/page.tsx`** convertito a Server Component: carica `settings` e `username` dal DB, passa come props a `ImpostazioniClient`.
+- **`src/app/(app)/impostazioni/_components/impostazioni-client.tsx`** (nuovo): Client Component con UI completa impostazioni.
+  - **Privacy RadioGroup** (3 opzioni mutualmente esclusive): Posizione precisa (0m) / Standard (150m, default) / Privacy rafforzata (300m). UI ottimistica con `useOptimistic` + committed state pattern — revert automatico in caso di errore.
+  - **Elimina account**: `AlertDialog` controllato, `<Input>` per digitare `@username`, bottone conferma disabilitato finché il testo non corrisponde esattamente. Soft delete + anonimizzazione + `signOut`.
+  - **ButtonGroup verticale** con entrambi i bottoni destructive (Esci + trigger Elimina account).
+- **`src/app/(app)/impostazioni/actions.ts`** aggiornate:
+  - `savePrivacyLevel(level: 'standard' | 'high' | 'precise')`: aggiorna atomicamente `preciseLocation` e `highPrivacy` in `users.settings`.
+  - `saveSetting(key, value)`: aggiorna un singolo campo di `UserSettings`.
+  - `deleteAccount(usernameConfirm)`: verifica match username, soft delete, anonimizzazione, `signOut`.
+- **`src/components/ui/switch.tsx`** e **`src/components/ui/radio-group.tsx`** installati via shadcn.
+
+### Privacy fuzzing — 3 livelli
+
+- **`src/db/schema/users.ts`**: `UserSettings` esteso con `highPrivacy: boolean` (default `false`).
+- **`src/db/geo.ts`**: `fuzzCoordinates()` default radius alzato da 100m a **150m**.
+- **`src/app/(app)/scatta/actions.ts`**: `publishSighting` legge `users.settings` e applica il raggio corretto: `preciseLocation=true` → 0m, `highPrivacy=true` → 300m, default → 150m. Il fuzzing è statico al momento della pubblicazione — le preferenze future non modificano sighting già salvati.
+
+### Feed — pull-to-refresh
+
+- **`src/app/(app)/feed/_components/feed-client.tsx`** (nuovo): Client Component che gestisce la lista post + pull-to-refresh.
+  - Pattern touch events identico a `/cerca`: `touchstart/touchmove/touchend` su `scrollRef`.
+  - Al refresh: `fetchFollowingFeed(after: posts[0].createdAt)` → prepend incrementale (non ricarica tutto).
+  - Deduplicazione ID-based via `Set` per gestire il disallineamento di precisione timestamp JS vs PostgreSQL (microsec vs ms).
+  - Indicatore visivo: cerchio con `RefreshCw` che ruota proporzionalmente al pull progress, poi spinning durante il fetch.
+- **`src/app/(app)/feed/actions.ts`**: aggiunto parametro `after?: Date` a `fetchFollowingFeed`, con `gt(sightings.createdAt, after)` e `limit(after ? 20 : LIMIT)`.
+- **`src/app/(app)/feed/page.tsx`**: aggiornato per usare `<FeedClient initialPosts={posts} />`.
+
+### Fix Google OAuth — account linking
+
+- **`src/auth.ts`**: `Google({ allowDangerousEmailAccountLinking: true })` — necessario per collegare account creati via `dev-login` (senza OAuth) al provider Google al primo login. Senza questa opzione Auth.js tenta `createUser` con email già esistente → constraint violation.
+
+### Debiti tecnici aperti (sessione 14)
+
+- **Live constraint checklist onboarding:** i vincoli di username/nickname nell'`Alert` devono mostrarsi come checklist con ✓/✗ aggiornati in tempo reale mentre l'utente digita (invece di lista statica).
+- **Revisione onboarding:** valutare quali impostazioni utili esporre già in fase di onboarding (es. livello privacy fuzzing).
+- **Dashboard Admin** (`/admin`): moderazione post pending, segnalazioni, gestione utenti.
+- **Badge engine:** `checkAndAwardBadges(userId, trigger)` per assegnazione automatica badge.
+- **Sondaggi:** tabelle DB (`polls`, `poll_votes`) + card nel feed + UI creazione admin.
+- **Notifiche Push:** service worker, VAPID, tabella `push_subscriptions`, libreria `web-push`.
+- **Performance punto 3** (da sessione 13): separare `getSession` dal layout con `Suspense`.

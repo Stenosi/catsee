@@ -90,8 +90,12 @@ Tutte le tabelle "primarie" (users, sightings) hanno `deletedAt`. Le query devon
 
 ### Coordinate
 - `locationReal`: coordinate vere, mai esposte via API.
-- `locationFuzzed`: offset random ~100m, esposte pubblicamente.
-- Calcolo del fuzzing: `fuzzCoordinates()` in `geo.ts`, lato applicazione (più trasparente).
+- `locationFuzzed`: offset random calcolato al momento della pubblicazione in base a `users.settings`:
+  - `preciseLocation: true` → 0m (nessun offset)
+  - `highPrivacy: true` → ~300m
+  - default → ~150m
+- Calcolo del fuzzing: `fuzzCoordinates(lat, lng, radiusMeters)` in `src/db/geo.ts`.
+- Il valore è statico — cambiare le preferenze non aggiorna i sighting già salvati.
 
 ### Encryption
 Encryption-at-rest fornita automaticamente da Neon. Nessuna logica applicativa.

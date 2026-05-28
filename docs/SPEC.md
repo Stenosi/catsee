@@ -86,9 +86,11 @@ Per garantire un ambiente safe e prevenire abusi:
 
 ### 4.3 Gestione Privacy Coordinate
 
-- Al primo post (o nel profilo, modificabile in qualsiasi momento) l'utente sceglie:
-  - **Posizione approssimata** (default, raggio ~100m, fuzzing applicato server-side).
-  - **Posizione esatta** (opt-in esplicito con conferma di aver letto un'avvertenza).
+- L'utente sceglie il livello di privacy nelle **Impostazioni** (modificabile in qualsiasi momento):
+  - **Standard** (default, raggio ~150m) — bilancia privacy e utilità.
+  - **Privacy rafforzata** (raggio ~300m) — per chi vuole più anonimato.
+  - **Posizione precisa** (0m, opt-in esplicito) — le coordinate esatte vengono pubblicate.
+- Il fuzzing viene applicato **al momento della pubblicazione** e salvato staticamente — cambiare le preferenze non modifica i sighting già pubblicati.
 - **Nel database** salviamo sempre le coordinate vere (encryption at-rest).
 - **Via API pubblica** esponiamo solo le coordinate fuzzate (a meno che l'utente abbia scelto "esatta").
 - Le coordinate vere sono visibili **solo all'autore** del post nella sua mappa privata.
