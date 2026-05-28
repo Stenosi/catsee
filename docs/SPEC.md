@@ -206,6 +206,7 @@ Per garantire un ambiente safe e prevenire abusi:
   - **Anti-cheating:** i post non-live non contribuiscono agli streak giornalieri e non danno XP bonus "primo avvistamento". I contatori badge si aggiornano normalmente.
   - **UX:** nel wizard `/scatta`, aggiungere un'opzione "Carica dalla galleria" accanto al viewfinder. Il flusso successivo (preview → form) è identico allo scatto live, tranne che per la mappa libera e il badge non-live.
   - **Motivazione:** utenti che incontrano un gatto ma non hanno l'app aperta in quel momento; fotografi che hanno già scattato con la fotocamera nativa.
+  - **Nota tecnica — distinguibilità live vs non-live:** non è possibile verificare tecnicamente se una foto è stata scattata al momento o caricata dalla galleria. I metadati EXIF (`DateTimeOriginal`) sono falsificabili e spesso strippati. L'unica protezione è il design: due flussi separati nell'app, `isLive` impostato server-side in base al flusso usato, badge non-live visibile alla community. L'onestà è contrattuale (ToS), non tecnica. Vedi anche l'analisi comparativa in `CLAUDE.md` § Camera.
 
 ### v1.1b — "Post Browsing contestuale"
 

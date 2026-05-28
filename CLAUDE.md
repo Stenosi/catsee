@@ -113,6 +113,23 @@ Niente DELETE sincroni. Quando un file diventa orfano (avatar sostituito, post e
 ### Camera
 Non usiamo la camera di sistema (salverebbe in galleria). Usiamo `navigator.mediaDevices.getUserMedia()` per il feed video in-app + canvas per la cattura del frame. Garantisce l'autenticità BeReal-style.
 
+**Analisi approccio attuale vs fotocamera nativa / galleria** (decisione aperta, da rivalutare prima del lancio):
+
+| | `getUserMedia` (attuale) | `<input capture>` / galleria |
+|---|---|---|
+| Qualità foto | ⚠️ Peggiore — niente HDR, night mode, ISP nativo | ✅ Massima — usa il sistema operativo |
+| Zoom | ✅ Hardware su Android via `applyConstraints` | ✅ Zoom ottico nativo su tutti i device |
+| Zoom su iOS | ❌ Non disponibile (`getCapabilities().zoom` non esposto) | ✅ Nativo |
+| Autenticità | ✅ Garantita — feed video live, impossibile caricare da galleria | ❌ Non garantibile — `capture` ignorato su Android |
+| Salvataggio in galleria | ✅ Zero — il frame viene catturato su canvas | ❌ L'OS può salvare la foto in galleria |
+| EXIF strippato | ✅ Automatico — canvas non copia metadati | ❌ Va strippato esplicitamente lato server |
+| Controllo UI | ✅ Totale — preview, AI verify in tempo reale | ❌ Interfaccia dell'OS, non personalizzabile |
+| Permessi | ✅ Solo fotocamera | ⚠️ Fotocamera + galleria (se upload abilitato) |
+
+**Si può distinguere scatto live da upload galleria?** No, in modo affidabile. I metadati EXIF (`DateTimeOriginal`, `DateTimeDigitized`) sono facilmente falsificabili e spesso strippati prima della condivisione. L'unica protezione è il **design del prodotto**: i post non-live hanno un badge visivo e non contribuiscono a streak/XP. L'onestà è affidata alla community, non a una verifica tecnica.
+
+**Conclusione provvisoria:** l'approccio `getUserMedia` rimane quello corretto per i post "live" (principio di autenticità). L'upload da galleria, quando implementato (v1.1b), userà un flusso separato con badge non-live esplicito e senza vincoli GPS. I due flussi coesistono.
+
 ### AI verifica
 Verifica "is-a-cat" via TensorFlow.js + COCO-SSD client-side. Zero costi, zero latenza server, foto non viaggia mai per essere validata. Se fallisce, post va in moderazione admin.
 
