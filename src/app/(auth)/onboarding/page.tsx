@@ -179,7 +179,10 @@ export default function OnboardingPage() {
         {STEPS.map((s, i) => (
           <div key={s} className="relative flex items-center justify-center py-1">
             {i > 0 && (
-              <div className="absolute right-1/2 left-0 h-0.5 top-1/2 -translate-y-1/2 bg-muted overflow-hidden">
+              <div
+                className="absolute h-0.5 top-1/2 -translate-y-1/2 bg-muted overflow-hidden"
+                style={{ left: 'calc(-50% + 6px)', right: 'calc(50% + 6px)' }}
+              >
                 <div className={cn('h-full bg-primary transition-all duration-500 ease-in-out', stepIndex >= i ? 'w-full' : 'w-0')} />
               </div>
             )}
@@ -187,11 +190,6 @@ export default function OnboardingPage() {
               'relative z-10 w-2 h-2 rounded-full shrink-0 transition-colors duration-200',
               stepIndex >= i ? 'bg-primary' : 'bg-muted',
             )} />
-            {i < STEPS.length - 1 && (
-              <div className="absolute left-1/2 right-0 h-0.5 top-1/2 -translate-y-1/2 bg-muted overflow-hidden">
-                <div className={cn('h-full bg-primary transition-all duration-500 ease-in-out', stepIndex > i ? 'w-full' : 'w-0')} />
-              </div>
-            )}
           </div>
         ))}
       </div>
