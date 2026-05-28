@@ -30,6 +30,11 @@ export default function CameraStep({ onCapture }: Props) {
   const [zoomCaps, setZoomCaps] = useState<ZoomCaps | null>(null);
   const [zoom, setZoom] = useState(1);
 
+  // Stato pinch: mappa pointerId → posizione corrente
+  const pinchPointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinchStartDistRef = useRef<number | null>(null);
+  const pinchStartZoomRef = useRef<number>(1);
+
   const startCamera = useCallback(async (facingMode: FacingMode) => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
@@ -91,12 +96,48 @@ export default function CameraStep({ onCapture }: Props) {
   }, [permission]);
 
   async function applyZoom(value: number) {
-    setZoom(value);
+    const caps = zoomCaps;
+    if (!caps) return;
+    const clamped = Math.min(caps.max, Math.max(caps.min, value));
+    setZoom(clamped);
     const track = streamRef.current?.getVideoTracks()[0];
     if (!track) return;
     try {
-      await track.applyConstraints({ advanced: [{ zoom: value } as MediaTrackConstraintSet] });
+      await track.applyConstraints({ advanced: [{ zoom: clamped } as MediaTrackConstraintSet] });
     } catch { /* dispositivo potrebbe non supportarlo dopo l'avvio */ }
+  }
+
+  function onPinchPointerDown(e: React.PointerEvent) {
+    pinchPointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  }
+
+  function onPinchPointerMove(e: React.PointerEvent) {
+    if (!zoomCaps) return;
+    const pointers = pinchPointersRef.current;
+    if (!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (pointers.size !== 2) return;
+
+    const [a, b] = Array.from(pointers.values());
+    const dist = Math.hypot(a.x - b.x, a.y - b.y);
+
+    if (pinchStartDistRef.current === null) {
+      // Prima lettura con 2 dita: memorizza distanza e zoom di partenza
+      pinchStartDistRef.current = dist;
+      pinchStartZoomRef.current = zoom;
+      return;
+    }
+
+    const scale = dist / pinchStartDistRef.current;
+    applyZoom(pinchStartZoomRef.current * scale);
+  }
+
+  function onPinchPointerUp(e: React.PointerEvent) {
+    pinchPointersRef.current.delete(e.pointerId);
+    if (pinchPointersRef.current.size < 2) {
+      pinchStartDistRef.current = null;
+    }
   }
 
   function flipCamera() {
@@ -142,8 +183,12 @@ export default function CameraStep({ onCapture }: Props) {
         autoPlay
         playsInline
         muted
+        onPointerDown={onPinchPointerDown}
+        onPointerMove={onPinchPointerMove}
+        onPointerUp={onPinchPointerUp}
+        onPointerCancel={onPinchPointerUp}
         className={cn(
-          'absolute inset-0 w-full h-full object-cover',
+          'absolute inset-0 w-full h-full object-cover touch-none',
           facing === 'user' && '-scale-x-100',
           permission !== 'granted' && 'invisible',
         )}
@@ -205,7 +250,7 @@ export default function CameraStep({ onCapture }: Props) {
             {/* Zoom slider — solo se il dispositivo supporta zoom hardware */}
             {zoomCaps && (
               <div className="w-full flex flex-col items-center gap-2 px-4">
-                <span className="text-white/80 text-xs font-semibold tabular-nums">
+                <span className="text-white/80 text-sm font-semibold tabular-nums">
                   {zoom.toFixed(1)}×
                 </span>
                 <input
@@ -232,7 +277,7 @@ export default function CameraStep({ onCapture }: Props) {
 
             {/* Shutter + flip */}
             <div className="w-full flex items-center justify-between px-4">
-              <div className="w-10" />
+              <div className="w-16" />
 
               <button
                 onClick={capture}
