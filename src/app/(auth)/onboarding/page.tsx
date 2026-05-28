@@ -1,11 +1,28 @@
 'use client';
 
 import { useState, useEffect, useTransition, useRef } from 'react';
-import { Loader2, CheckCircle, XCircle, Info } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, Info, Check, X, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { cn } from '@/lib/utils';
 import { checkUsername, completeOnboarding } from './actions';
+
+function ConstraintRow({ met, idle, children }: { met: boolean; idle: boolean; children: React.ReactNode }) {
+  return (
+    <li className={cn('flex items-center gap-2 text-sm transition-colors duration-150',
+      idle ? 'text-muted-foreground' : met ? 'text-success' : 'text-destructive',
+    )}>
+      {idle
+        ? <Minus className="w-3.5 h-3.5 shrink-0" />
+        : met
+          ? <Check className="w-3.5 h-3.5 shrink-0" />
+          : <X className="w-3.5 h-3.5 shrink-0" />
+      }
+      {children}
+    </li>
+  );
+}
 
 type Step = 'username' | 'nickname';
 type UsernameState = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
@@ -57,6 +74,19 @@ export default function OnboardingPage() {
   const canProceedUsername = usernameState === 'available';
   const canSubmit = canProceedUsername && nickname.trim().length > 0 && !isPending;
   const isUsernameError = usernameState === 'taken' || usernameState === 'invalid';
+
+  const usernameIdle = username === '';
+  const usernameRules = [
+    { label: 'Da 3 a 30 caratteri', met: username.length >= 3 && username.length <= 30 },
+    { label: 'Solo lettere, numeri, . e _', met: /^[a-zA-Z0-9._]+$/.test(username) },
+    { label: 'Non inizia o finisce con . o _', met: username.length > 0 && !/^[._]/.test(username) && !/[._]$/.test(username) },
+  ];
+
+  const nicknameIdle = nickname === '';
+  const nicknameRules = [
+    { label: 'Almeno 1 carattere', met: nickname.trim().length >= 1 },
+    { label: 'Massimo 30 caratteri', met: nickname.length <= 30 },
+  ];
 
   return (
     <div className="flex flex-col flex-1 px-6 pt-8 pb-8 max-w-sm mx-auto w-full">
@@ -124,12 +154,14 @@ export default function OnboardingPage() {
             <Info />
             <AlertTitle>Requisiti username</AlertTitle>
             <AlertDescription>
-              <ul className="list-disc list-inside space-y-1 mt-1">
-                <li>Solo lettere, numeri, punto e underscore</li>
-                <li>Da 3 a 30 caratteri</li>
-                <li>Non può iniziare o finire con <code>.</code> o <code>_</code></li>
-                <li>Modificabile ogni 30 giorni</li>
+              <ul className="space-y-1.5 mt-1">
+                {usernameRules.map((rule) => (
+                  <ConstraintRow key={rule.label} met={rule.met} idle={usernameIdle}>
+                    {rule.label}
+                  </ConstraintRow>
+                ))}
               </ul>
+              <p className="text-xs text-muted-foreground mt-2">Modificabile ogni 30 giorni.</p>
             </AlertDescription>
           </Alert>
 
@@ -168,13 +200,16 @@ export default function OnboardingPage() {
 
           <Alert>
             <Info />
-            <AlertTitle>Note sul nickname</AlertTitle>
+            <AlertTitle>Requisiti nickname</AlertTitle>
             <AlertDescription>
-              <ul className="list-none pl-0 space-y-1 mt-1">
-                <li>Può contenere spazi, emoji e caratteri speciali</li>
-                <li>Massimo 30 caratteri</li>
-                <li>Modificabile in qualsiasi momento</li>
+              <ul className="space-y-1.5 mt-1">
+                {nicknameRules.map((rule) => (
+                  <ConstraintRow key={rule.label} met={rule.met} idle={nicknameIdle}>
+                    {rule.label}
+                  </ConstraintRow>
+                ))}
               </ul>
+              <p className="text-xs text-muted-foreground mt-2">Può contenere spazi, emoji e caratteri speciali. Modificabile in qualsiasi momento.</p>
             </AlertDescription>
           </Alert>
 
