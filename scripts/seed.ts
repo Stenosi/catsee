@@ -1,5 +1,5 @@
 /**
- * Seed script — popola il DB con dati iniziali.
+ * Seed script - popola il DB con dati iniziali.
  *
  * Da eseguire una volta dopo `db:push` con: `npm run db:seed`
  *

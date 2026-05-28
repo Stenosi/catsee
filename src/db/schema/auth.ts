@@ -20,7 +20,7 @@ import {
 import { users } from './users';
 
 // ============================================================================
-// accounts — collegamenti OAuth
+// accounts - collegamenti OAuth
 // ============================================================================
 
 export const accounts = pgTable(
@@ -48,7 +48,7 @@ export const accounts = pgTable(
 );
 
 // ============================================================================
-// sessions — sessioni attive
+// sessions - sessioni attive
 // ============================================================================
 
 export const sessions = pgTable('sessions', {
@@ -60,7 +60,7 @@ export const sessions = pgTable('sessions', {
 });
 
 // ============================================================================
-// verificationTokens — magic link e verifiche email
+// verificationTokens - magic link e verifiche email
 // ============================================================================
 
 export const verificationTokens = pgTable(
@@ -76,7 +76,7 @@ export const verificationTokens = pgTable(
 );
 
 // ============================================================================
-// authenticators — passkey / WebAuthn (non MVP, lasciato per futuro)
+// authenticators - passkey / WebAuthn (non MVP, lasciato per futuro)
 // ============================================================================
 
 export const authenticators = pgTable(

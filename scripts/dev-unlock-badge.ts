@@ -1,5 +1,5 @@
 /**
- * Script DEV — sblocca un badge per un utente dato l'email.
+ * Script DEV - sblocca un badge per un utente dato l'email.
  * Usage: npx tsx scripts/dev-unlock-badge.ts <email> <badgeId>
  * Esempio: npx tsx scripts/dev-unlock-badge.ts mario@example.com panther_5
  */

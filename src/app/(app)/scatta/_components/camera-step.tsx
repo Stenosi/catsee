@@ -48,7 +48,7 @@ export default function CameraStep({ onCapture }: Props) {
       });
       streamRef.current = stream;
 
-      // Assegna lo stream al video — l'elemento è sempre nel DOM grazie al layout unificato
+      // Assegna lo stream al video - l'elemento è sempre nel DOM grazie al layout unificato
       if (videoRef.current) videoRef.current.srcObject = stream;
 
       // Leggi le capabilities di zoom (disponibile su Android Chrome, non su iOS)
@@ -176,7 +176,7 @@ export default function CameraStep({ onCapture }: Props) {
 
   return (
     <>
-      {/* Il video è sempre nel DOM — srcObject viene assegnato appena lo stream è pronto,
+      {/* Il video è sempre nel DOM - srcObject viene assegnato appena lo stream è pronto,
           indipendentemente dallo stato permission. Nascosto finché non siamo in 'granted'. */}
       <video
         ref={videoRef}
@@ -230,7 +230,7 @@ export default function CameraStep({ onCapture }: Props) {
         </div>
       )}
 
-      {/* Controlli — visibili solo se fotocamera attiva */}
+      {/* Controlli - visibili solo se fotocamera attiva */}
       {permission === 'granted' && (
         <>
           {/* Top bar */}
@@ -247,7 +247,7 @@ export default function CameraStep({ onCapture }: Props) {
           {/* Bottom controls */}
           <div className="absolute bottom-0 inset-x-0 flex flex-col items-center gap-4 px-6 pb-[calc(env(safe-area-inset-bottom)+2.5rem)]">
 
-            {/* Zoom slider — solo se il dispositivo supporta zoom hardware */}
+            {/* Zoom slider - solo se il dispositivo supporta zoom hardware */}
             {zoomCaps && (
               <div className="w-full flex flex-col items-center gap-2 px-4">
                 <span className="text-white/80 text-sm font-semibold tabular-nums">

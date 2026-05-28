@@ -392,7 +392,7 @@ export default function ModificaClient({
         </div>
       </div>
 
-      {/* Salva — fixed in fondo */}
+      {/* Salva - fixed in fondo */}
       <div className="mt-auto px-4 py-4 border-t border-border">
         <Button
           type="button"

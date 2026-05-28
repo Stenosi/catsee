@@ -1,5 +1,5 @@
 ---
-name: Cerca — ricerca per location
+name: Cerca - ricerca per location
 description: Funzionalità pianificata ma non implementata nella pagina /cerca
 type: project
 ---

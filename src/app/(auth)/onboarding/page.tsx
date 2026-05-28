@@ -171,20 +171,25 @@ export default function OnboardingPage() {
     <div className="flex flex-col flex-1 px-6 pt-8 pb-8 max-w-sm mx-auto w-full">
 
       {/* Progress dots */}
-      <div className="flex items-center mb-10" aria-label={`Step ${stepIndex + 1} di ${STEPS.length}`}>
+      <div
+        className="w-full mb-10"
+        style={{ display: 'grid', gridTemplateColumns: `repeat(${STEPS.length}, 1fr)` }}
+        aria-label={`Step ${stepIndex + 1} di ${STEPS.length}`}
+      >
         {STEPS.map((s, i) => (
-          <div key={s} className="flex items-center">
+          <div key={s} className="relative flex items-center justify-center py-1">
+            {i > 0 && (
+              <div className="absolute right-1/2 left-0 h-0.5 top-1/2 -translate-y-1/2 bg-muted overflow-hidden">
+                <div className={cn('h-full bg-primary transition-all duration-500 ease-in-out', stepIndex >= i ? 'w-full' : 'w-0')} />
+              </div>
+            )}
             <div className={cn(
-              'w-2 h-2 rounded-full shrink-0 transition-colors duration-200',
+              'relative z-10 w-2 h-2 rounded-full shrink-0 transition-colors duration-200',
               stepIndex >= i ? 'bg-primary' : 'bg-muted',
-              i > 0 && stepIndex === i ? 'delay-300' : 'delay-0',
             )} />
             {i < STEPS.length - 1 && (
-              <div className="relative w-8 h-0.5 bg-muted mx-1">
-                <div className={cn(
-                  'absolute inset-y-0 left-0 bg-primary transition-all duration-500 ease-in-out',
-                  stepIndex > i ? 'w-full' : 'w-0',
-                )} />
+              <div className="absolute left-1/2 right-0 h-0.5 top-1/2 -translate-y-1/2 bg-muted overflow-hidden">
+                <div className={cn('h-full bg-primary transition-all duration-500 ease-in-out', stepIndex > i ? 'w-full' : 'w-0')} />
               </div>
             )}
           </div>

@@ -23,7 +23,7 @@ export const userRoleEnum = pgEnum('user_role', ['user', 'admin']);
 // ============================================================================
 
 /**
- * Settings utente — JSONB flessibile per accomodare future preferenze
+ * Settings utente - JSONB flessibile per accomodare future preferenze
  * senza migrazioni.
  */
 export type UserSettings = {
@@ -54,7 +54,7 @@ export const users = pgTable(
     // ── Identità
     email: text('email').notNull().unique(),
     username: text('username').notNull().unique(),
-    /** Timestamp dell'ultima modifica username — enforce regola "1 cambio ogni 30g" */
+    /** Timestamp dell'ultima modifica username - enforce regola "1 cambio ogni 30g" */
     usernameUpdatedAt: timestamp('username_updated_at', { withTimezone: true })
       .defaultNow()
       .notNull(),

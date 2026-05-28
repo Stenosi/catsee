@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 
 // Endpoint disponibile SOLO in development.
 // Crea una sessione Auth.js reale per l'utente DEV_USER_EMAIL senza passare
-// da magic link o OAuth — utile per il loop di sviluppo veloce su desktop.
+// da magic link o OAuth - utile per il loop di sviluppo veloce su desktop.
 export async function GET(request: Request) {
   if (process.env.NODE_ENV !== 'development') {
     return new NextResponse(null, { status: 404 });

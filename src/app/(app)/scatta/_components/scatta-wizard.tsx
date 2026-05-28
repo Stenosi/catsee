@@ -121,7 +121,7 @@ export default function ScattaWizard() {
       setExtractedPalette(colors);
       setSuggestedColors(mapPaletteToColors(colors));
     }).catch(() => {
-      // palette non estratta — si salva [] come fallback
+      // palette non estratta - si salva [] come fallback
     });
   }, [step, capturedUrl]);
 
@@ -192,7 +192,7 @@ export default function ScattaWizard() {
       if (aiVerified) {
         toast.success('Avvistamento pubblicato!');
       } else {
-        toast.success('Avvistamento salvato — in attesa di approvazione.', {
+        toast.success('Avvistamento salvato - in attesa di approvazione.', {
           description: 'Non abbiamo rilevato un gatto con certezza. Sarà visibile dopo la revisione.',
           duration: 6000,
         });

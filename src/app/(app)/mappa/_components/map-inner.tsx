@@ -80,10 +80,10 @@ function InitialPosition({ onLocated }: InitialPositionProps) {
         map.flyTo([pos.coords.latitude, pos.coords.longitude], 14, { duration: 1.2 });
         onLocated(pos.coords.latitude, pos.coords.longitude);
       },
-      () => { /* permission denied or error — stay on default center */ },
+      () => { /* permission denied or error - stay on default center */ },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
     );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return null;

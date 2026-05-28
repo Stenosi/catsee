@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ArrowLeft, Construction } from 'lucide-react';
 
-export const metadata = { title: 'Termini di servizio — CatSee' };
+export const metadata = { title: 'Termini di servizio - CatSee' };
 
 export default function TerminiPage() {
   return (

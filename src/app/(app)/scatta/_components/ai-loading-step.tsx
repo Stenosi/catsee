@@ -28,7 +28,7 @@ export default function AiLoadingStep() {
 
   return (
     <div className="absolute inset-0 bg-background flex flex-col items-center justify-center gap-12 px-8">
-      {/* Icona animata — container esplicito w-32 h-32 per contenere i cerchi */}
+      {/* Icona animata - container esplicito w-32 h-32 per contenere i cerchi */}
       <div className="relative w-32 h-32 flex items-center justify-center">
         <div className="absolute w-28 h-28 rounded-full bg-primary/8 motion-preset-pulse motion-duration-[2200ms]" />
         <div className="absolute w-20 h-20 rounded-full bg-primary/15 motion-preset-pulse motion-duration-[1400ms]" />

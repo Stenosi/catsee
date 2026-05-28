@@ -76,7 +76,7 @@ export default function ProfiloClient({
     const [avatarLightbox, setAvatarLightbox] = useState(false);
     const [tab, setTab] = usePersistedTab('tab:/profilo', 'post', TABS);
     const { handleTouchStart, handleTouchEnd: swipeEnd } = useTabSwipe(tab, setTab, TABS);
-    // Leaflet cattura i touch sulla mappa — disabilitiamo lo swipe quando siamo su quella tab
+    // Leaflet cattura i touch sulla mappa - disabilitiamo lo swipe quando siamo su quella tab
     function handleTouchEnd(e: React.TouchEvent) {
         if (tab === 'mappa') return;
         swipeEnd(e);

@@ -1,4 +1,4 @@
-# CatSee — Database package
+# CatSee - Database package
 
 Schema Drizzle + script per il database PostgreSQL su Neon, con PostGIS.
 
@@ -32,10 +32,11 @@ Schema Drizzle + script per il database PostgreSQL su Neon, con PostGIS.
 ## Setup iniziale (una sola volta)
 
 1. **Crea progetto su Neon**
-   - https://console.neon.tech → crea nuovo progetto
+   - <https://console.neon.tech> → crea nuovo progetto
    - Copia la `DATABASE_URL` (connection string "pooled")
 
 2. **Configura `.env`**
+
    ```bash
    cp .env.example .env
    # Compila DATABASE_URL e ADMIN_EMAIL
@@ -51,15 +52,19 @@ Schema Drizzle + script per il database PostgreSQL su Neon, con PostGIS.
    - Aggiungi gli script `db:*`
 
 5. **Push dello schema**
+
    ```bash
    npm run db:push
    ```
+
    Drizzle ti mostrerà cosa farà → conferma.
 
 6. **Seed iniziale**
+
    ```bash
    npm run db:seed
    ```
+
    Inserisce i badge MVP. Per promuovere admin:
    - Registrati nell'app con email = ADMIN_EMAIL
    - Rilancia `npm run db:seed`
@@ -77,6 +82,7 @@ Schema Drizzle + script per il database PostgreSQL su Neon, con PostGIS.
 Per **MVP** usiamo `db:push` perché lo schema cambia spesso e siamo da soli. È più rapido.
 
 Quando il prodotto sarà stabile / in produzione con utenti veri, passiamo a:
+
 ```bash
 npm run db:generate   # genera file SQL di migrazione
 git commit ...        # versiona il file
@@ -86,22 +92,27 @@ npm run db:migrate    # applica le migrazioni
 ## Note tecniche
 
 ### Soft delete
+
 Tutte le tabelle "primarie" (users, sightings) hanno `deletedAt`. Le query devono filtrare `WHERE deleted_at IS NULL` oppure usare le viste/indici parziali predefiniti.
 
 ### Coordinate
+
 - `locationReal`: coordinate vere, mai esposte via API.
 - `locationFuzzed`: offset random calcolato al momento della pubblicazione in base a `users.settings`:
   - `preciseLocation: true` → 0m (nessun offset)
   - `highPrivacy: true` → ~300m
   - default → ~150m
 - Calcolo del fuzzing: `fuzzCoordinates(lat, lng, radiusMeters)` in `src/db/geo.ts`.
-- Il valore è statico — cambiare le preferenze non aggiorna i sighting già salvati.
+- Il valore è statico - cambiare le preferenze non aggiorna i sighting già salvati.
 
 ### Encryption
+
 Encryption-at-rest fornita automaticamente da Neon. Nessuna logica applicativa.
 
 ### Pulizia file R2
+
 Niente delete sincroni. Il file viene aggiunto a `r2_cleanup_queue` con stato `pending`. Un job notturno (cron Vercel) processa la coda con retry automatici.
 
 ### Auth.js
+
 Le tabelle `accounts`, `sessions`, `verificationTokens`, `authenticators` sono lo schema standard atteso da Auth.js v5 con DrizzleAdapter. Non modificarle a meno di aggiornamenti maggiori di Auth.js.

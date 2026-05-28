@@ -33,7 +33,7 @@ export const cleanupStatusEnum = pgEnum('cleanup_status', [
 ]);
 
 /**
- * Tipo di file — utile per logging e debug, non strettamente necessario
+ * Tipo di file - utile per logging e debug, non strettamente necessario
  * (la chiave R2 è auto-descrittiva grazie al path tipo "avatars/uuid.jpg").
  */
 export const cleanupFileTypeEnum = pgEnum('cleanup_file_type', [
@@ -57,7 +57,7 @@ export const r2CleanupQueue = pgTable(
     /** Numero di tentativi falliti */
     attempts: text('attempts').default('0').notNull(),
 
-    /** Ultimo errore — utile per debug */
+    /** Ultimo errore - utile per debug */
     lastError: text('last_error'),
 
     createdAt: timestamp('created_at', { withTimezone: true })

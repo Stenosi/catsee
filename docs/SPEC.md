@@ -1,8 +1,8 @@
-# CatSee — Documento di Specifica MVP
+# CatSee - Documento di Specifica MVP
 
 > Working title: **CatSee** (placeholder, da rivedere prima del lancio).
 
-**Versione documento:** 0.3 — MVP consolidato
+**Versione documento:** 0.3 - MVP consolidato
 **Data:** 26 aprile 2026
 **Status:** Draft
 
@@ -14,9 +14,9 @@ CatSee è una Progressive Web App che permette agli amanti dei gatti di document
 
 L'app combina tre anime:
 
-1. **Diario personale** — tieni traccia dei gatti che incontri nella tua vita.
-2. **Social leggero** — segui altri utenti, scopri i loro gatti, reagisci con emoji.
-3. **Gamification onesta** — badge, streak e contatori incentivano l'esplorazione, con meccaniche anti-cheating per restare credibili.
+1. **Diario personale** - tieni traccia dei gatti che incontri nella tua vita.
+2. **Social leggero** - segui altri utenti, scopri i loro gatti, reagisci con emoji.
+3. **Gamification onesta** - badge, streak e contatori incentivano l'esplorazione, con meccaniche anti-cheating per restare credibili.
 
 Il prodotto è pensato come **PWA web-based** per massimizzare l'accessibilità (no App Store, no Play Store, no costi di pubblicazione, una sola codebase) ma con esperienza mobile-first e installabilità sul telefono.
 
@@ -87,10 +87,10 @@ Per garantire un ambiente safe e prevenire abusi:
 ### 4.3 Gestione Privacy Coordinate
 
 - L'utente sceglie il livello di privacy nelle **Impostazioni** (modificabile in qualsiasi momento):
-  - **Standard** (default, raggio ~150m) — bilancia privacy e utilità.
-  - **Privacy rafforzata** (raggio ~300m) — per chi vuole più anonimato.
-  - **Posizione precisa** (0m, opt-in esplicito) — le coordinate esatte vengono pubblicate.
-- Il fuzzing viene applicato **al momento della pubblicazione** e salvato staticamente — cambiare le preferenze non modifica i sighting già pubblicati.
+  - **Standard** (default, raggio ~150m) - bilancia privacy e utilità.
+  - **Privacy rafforzata** (raggio ~300m) - per chi vuole più anonimato.
+  - **Posizione precisa** (0m, opt-in esplicito) - le coordinate esatte vengono pubblicate.
+- Il fuzzing viene applicato **al momento della pubblicazione** e salvato staticamente - cambiare le preferenze non modifica i sighting già pubblicati.
 - **Nel database** salviamo sempre le coordinate vere (encryption at-rest).
 - **Via API pubblica** esponiamo solo le coordinate fuzzate (a meno che l'utente abbia scelto "esatta").
 - Le coordinate vere sono visibili **solo all'autore** del post nella sua mappa privata.
@@ -166,14 +166,14 @@ Per garantire un ambiente safe e prevenire abusi:
   - Verifica AI is-a-cat obbligatoria.
   - Validazione coerenza tag colore con palette estratta (warning soft, non blocca).
 - **Badge MVP iniziali:**
-  - 🥇 *Primo Gatto* — primo avvistamento.
-  - 🐾 *Esploratore* — 5 gatti avvistati.
-  - 🎖️ *Cat Hunter* — 10 gatti avvistati.
-  - 🏆 *Cat Master* — 50 gatti avvistati.
-  - 🔥 *Streak 2 giorni* — avvistamenti in 2 giorni consecutivi.
-  - 🔥🔥 *Streak 7 giorni* — avvistamenti in 7 giorni consecutivi.
-  - 🌑 *Notturno* — avvistamento tra le 22:00 e le 06:00.
-  - 🖤 *Pantera* — 5 gatti neri avvistati.
+  - 🥇 *Primo Gatto* - primo avvistamento.
+  - 🐾 *Esploratore* - 5 gatti avvistati.
+  - 🎖️ *Cat Hunter* - 10 gatti avvistati.
+  - 🏆 *Cat Master* - 50 gatti avvistati.
+  - 🔥 *Streak 2 giorni* - avvistamenti in 2 giorni consecutivi.
+  - 🔥🔥 *Streak 7 giorni* - avvistamenti in 7 giorni consecutivi.
+  - 🌑 *Notturno* - avvistamento tra le 22:00 e le 06:00.
+  - 🖤 *Pantera* - 5 gatti neri avvistati.
 - I badge sono visibili sul profilo, mostrati con animazione/notifica al momento dell'unlock.
 
 ### 4.11 Moderazione
@@ -189,9 +189,9 @@ Per garantire un ambiente safe e prevenire abusi:
 
 ## 5. Funzionalità Versioni Future
 
-### v1.1 — "Privacy & Polish" (subito dopo lancio)
+### v1.1 - "Privacy & Polish" (subito dopo lancio)
 
-- **Pagina profilo pubblico `/profilo/[username]`:** route dinamica che mostra il profilo di qualsiasi utente (avatar, nickname, bio, griglia post approvati). Necessaria per linkare l'autore dal bottom sheet della mappa (avatar+username attualmente non cliccabili — il link è già pronto, manca la destinazione) e da qualsiasi altro punto dell'app che referenzia un utente.
+- **Pagina profilo pubblico `/profilo/[username]`:** route dinamica che mostra il profilo di qualsiasi utente (avatar, nickname, bio, griglia post approvati). Necessaria per linkare l'autore dal bottom sheet della mappa (avatar+username attualmente non cliccabili - il link è già pronto, manca la destinazione) e da qualsiasi altro punto dell'app che referenzia un utente.
 
 - **Profili privati (filosofia A):**
   - Profilo non visibile pubblicamente (mostra "questo profilo è privato").
@@ -199,34 +199,34 @@ Per garantire un ambiente safe e prevenire abusi:
   - Le foto **diventano riconducibili al profilo solo per i follower approvati** o se il profilo torna pubblico.
   - Default per nuovi utenti: pubblico.
 
-### v1.1b — "Upload non-live"
+### v1.1b - "Upload non-live"
 
 - **Upload immagine dalla galleria** come alternativa allo scatto live. L'utente carica una foto esistente invece di scattarla al momento.
-  - **Geolocalizzazione manuale:** nessun vincolo GPS — la mappa è libera, il pin può essere posizionato ovunque nel mondo senza restrizione al raggio 50m.
+  - **Geolocalizzazione manuale:** nessun vincolo GPS - la mappa è libera, il pin può essere posizionato ovunque nel mondo senza restrizione al raggio 50m.
   - **Badge visivo "non live":** i post pubblicati con questo flusso mostrano un indicatore distintivo (es. icona o etichetta) nella card del feed, nella griglia del profilo e nella pagina di dettaglio. Comunica onestà verso la community: la foto non è stata scattata sul momento.
   - **Nessuna verifica AI obbligatoria:** il flusso può passare direttamente in `moderationStatus: 'pending'` (revisione manuale) oppure usare lo stesso hook `useAiVerify` come per lo scatto live.
   - **Anti-cheating:** i post non-live non contribuiscono agli streak giornalieri e non danno XP bonus "primo avvistamento". I contatori badge si aggiornano normalmente.
   - **UX:** nel wizard `/scatta`, aggiungere un'opzione "Carica dalla galleria" accanto al viewfinder. Il flusso successivo (preview → form) è identico allo scatto live, tranne che per la mappa libera e il badge non-live.
   - **Motivazione:** utenti che incontrano un gatto ma non hanno l'app aperta in quel momento; fotografi che hanno già scattato con la fotocamera nativa.
-  - **Nota tecnica — distinguibilità live vs non-live:** non è possibile verificare tecnicamente se una foto è stata scattata al momento o caricata dalla galleria. I metadati EXIF (`DateTimeOriginal`) sono falsificabili e spesso strippati. L'unica protezione è il design: due flussi separati nell'app, `isLive` impostato server-side in base al flusso usato, badge non-live visibile alla community. L'onestà è contrattuale (ToS), non tecnica. Vedi anche l'analisi comparativa in `CLAUDE.md` § Camera.
+  - **Nota tecnica - distinguibilità live vs non-live:** non è possibile verificare tecnicamente se una foto è stata scattata al momento o caricata dalla galleria. I metadati EXIF (`DateTimeOriginal`) sono falsificabili e spesso strippati. L'unica protezione è il design: due flussi separati nell'app, `isLive` impostato server-side in base al flusso usato, badge non-live visibile alla community. L'onestà è contrattuale (ToS), non tecnica. Vedi anche l'analisi comparativa in `CLAUDE.md` § Camera.
 
-### v1.1b — "Post Browsing contestuale"
+### v1.1b - "Post Browsing contestuale"
 
 - **Navigazione post in-context stile Instagram:** invece di aprire `/post/[id]` come pagina isolata, mostrare una lista scorrevole di post con il post selezionato già visibile. L'utente può scorrere verso il post precedente/successivo senza tornare alla pagina di provenienza.
   - **Contesti pianificati:**
-    - **Griglia profilo** (proprio e altrui) — sfogliare i post di un utente in sequenza.
-    - **Risultati ricerca "Gatti"** — sfogliare i risultati trovati senza tornare alla lista.
+    - **Griglia profilo** (proprio e altrui) - sfogliare i post di un utente in sequenza.
+    - **Risultati ricerca "Gatti"** - sfogliare i risultati trovati senza tornare alla lista.
   - **Contesti esclusi (navigazione puntuale resta):** mappa pubblica, mappa del profilo, feed, link diretto/condivisione.
   - **Motivo del rinvio:** richiede virtual scroll, gestione posizione e prefetch non banali. Priorità bassa in MVP dove le griglie hanno pochi post. Da rivalutare quando il volume di contenuti rende la navigazione sequenziale rilevante.
 
-### v1.2 — "Discovery"
+### v1.2 - "Discovery"
 
 - **Filtri mappa avanzati:** per "miei like", raggio km da posizione corrente, orario diurno/notturno, pelo corto/lungo, combinazioni multiple.
 - **Heatmap zone:** layer aggiuntivo sulla mappa con densità di avvistamenti (`Leaflet.heat`).
 - **Statistiche profilo:** "le tue zone preferite" calcolate via clustering geografico (visibili solo all'utente).
 - **Condivisione esterna** (se non già completata in MVP).
 
-### v2.0 — "Identità del Gatto"
+### v2.0 - "Identità del Gatto"
 
 - **Schede gatto comunitarie:** wiki dei gatti del quartiere. Gli utenti creano "schede" (es. "Bartolomeo del bar di via Roma") con foto principale + galleria. Quando si fotografa, opzione "linka a un gatto esistente" → ricerca per nome o nelle vicinanze. Schede collaborative (più utenti contribuiscono).
 - **Auto-suggerimenti identità:** quando carichi una foto, sistema cerca gatti esistenti entro 50m con tag colore identici → "potrebbe essere questo gatto?" come hint, mai automatico.
@@ -240,7 +240,7 @@ Per garantire un ambiente safe e prevenire abusi:
 - **Anti-cheating rafforzato:** diversità geografica (max N avvistamenti dalla stessa coordinata danno XP), validazione palette ↔ tag.
 - **Internazionalizzazione completa:** strutture i18n già pronte dall'MVP, attivazione lingua inglese e altre.
 
-### v2.1 — "Engagement"
+### v2.1 - "Engagement"
 
 - **Notifiche push (Web Push):** preferenze granulari, tutto disattivabile, notifiche tipo:
   - "La tua streak scade tra 3 ore!"
@@ -249,7 +249,7 @@ Per garantire un ambiente safe e prevenire abusi:
 - **Reazioni estese:** set di emoji più ampio.
 - **Badge stagionali:** Halloween (gatti neri), Natale (gatti con sciarpa/cappello), ecc.
 
-### v3.0 — "Community Mature"
+### v3.0 - "Community Mature"
 
 - **Classifiche regionali** (per città/regione, opt-in).
 - **Eventi community:** "Cat Hunt Day", contest fotografici.
@@ -402,9 +402,9 @@ Report
 2. **Live demo** ben mantenuta su dominio dedicato.
 3. **Case study** post-mortem: problema, scelte fatte, errori, miglioramenti. Pubblicabile su Medium/Dev.to/blog personale.
 4. **Documentazione tecnica leggibile** (questo doc è il primo passo).
-5. **Video demo da 60 secondi** (Loom) — fondamentale per recruiter.
+5. **Video demo da 60 secondi** (Loom) - fondamentale per recruiter.
 6. **Metriche di utilizzo reale** (anche piccole) aumentano credibilità.
-7. **CI/CD pulito** (GitHub Actions, deploy automatici, test) — mostra rigore.
+7. **CI/CD pulito** (GitHub Actions, deploy automatici, test) - mostra rigore.
 8. **Test automatizzati** sui flow critici (Vitest + Playwright).
 
 ## 11. Domande Aperte
@@ -413,7 +413,7 @@ Decisioni rimandate da prendere in fasi future:
 
 - Branding completo (nome definitivo, logo, palette colori, tono di voce).
 - Wireframe e flow utente dettagliati.
-- ✅ Schema DB completo con constraint, indici, PostGIS per query geografiche — risolto nel setup iniziale (2026-05-10), schema pushato su Neon con PostGIS attivo.
+- ✅ Schema DB completo con constraint, indici, PostGIS per query geografiche - risolto nel setup iniziale (2026-05-10), schema pushato su Neon con PostGIS attivo.
 - Definizione precisa API endpoints (REST? RSC + Server Actions?).
 - Strategia di testing dettagliata.
 - Setup repository (struttura cartelle, conventional commits, branching strategy).
@@ -424,7 +424,7 @@ Decisioni rimandate da prendere in fasi future:
 
 ## Changelog
 
-- **0.4** (2026-05-10 — post-setup):
+- **0.4** (2026-05-10 - post-setup):
   - Schema DB completo pushato su Neon (PostgreSQL 17, regione Europa, PostGIS attivo).
   - Auth.js v5 beta installato con DrizzleAdapter; magic link e Google OAuth prossimo step.
   - shadcn/ui installato con stile **base-nova** (usa `@base-ui/react` come primitive, colori OKLCH).

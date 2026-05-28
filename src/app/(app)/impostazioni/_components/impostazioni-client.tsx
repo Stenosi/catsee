@@ -45,7 +45,7 @@ export default function ImpostazioniClient({ settings, username }: Props) {
   const { state, install, reset } = useInstallPrompt();
   const [showIosHint, setShowIosHint] = useState(false);
 
-  // Privacy level — optimistic UI
+  // Privacy level - optimistic UI
   const [committedLevel, setCommittedLevel] = useState<PrivacyLevel>(settingsToLevel(settings));
   const [optimisticLevel, setOptimisticLevel] = useOptimistic(committedLevel);
 

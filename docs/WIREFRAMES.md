@@ -1,10 +1,10 @@
-# CatSee — Wireframes (Mobile MVP)
+# CatSee - Wireframes (Mobile MVP)
 
-**Versione:** 0.2 — feedback iterazione 1
+**Versione:** 0.2 - feedback iterazione 1
 **Companion document:** `SPEC.md` v0.3
 **Target:** mobile, viewport 375-430px (iPhone/Android moderni)
 **Tema:** solo chiaro per MVP, codice dark-mode-ready
-**Approccio:** code-first (no Figma per ora — il developer è più rapido in codice)
+**Approccio:** code-first (no Figma per ora - il developer è più rapido in codice)
 
 ---
 
@@ -54,7 +54,7 @@ Riepilogo per navigare i wireframe:
 └──────────────────────────┘
 ```
 
-### 0.4 Bottom Navbar — versione MVP (5 voci)
+### 0.4 Bottom Navbar - versione MVP (5 voci)
 
 **Decisione:** 5 voci. La distinzione Home/Esplora rischiava di sovrapporsi, quindi Feed rimane una voce unica con tab interne. La **Ricerca** è spostata dall'header alla navbar (era accessibile da header variante A), portando le voci a 5 e permettendo al FAB di stare geometricamente al centro (2 | FAB | 2).
 
@@ -67,6 +67,7 @@ Riepilogo per navigare i wireframe:
 ```
 
 **Logica delle 5 voci:**
+
 - **Mappa** = visione spaziale dei dati (la lente più caratteristica del prodotto).
 - **Feed** = visione temporale dei dati, con tab interne: *Seguiti* / *Esplora* / *Vicini*.
 - **Scatta (FAB)** = azione di creazione, sempre al centro, prominente.
@@ -74,11 +75,13 @@ Riepilogo per navigare i wireframe:
 - **Profilo** = il proprio profilo + accesso a settings globali.
 
 **Componenti:**
+
 - 5 voci con icona + label corta sotto (text-xs); il FAB non ha label.
 - FAB centrale: più grande, colore primary, sporge ~8px sopra la barra (estetica BeReal/Strava).
 - Voce attiva: icona piena + colore primary; voci inattive: outline + grigio.
 
 **Comportamenti:**
+
 - Tap su voce: navigazione immediata, no transizione.
 - Tap sul FAB: apre il flow di scatto (mai apre un menu).
 - Tap su voce già attiva: scroll-to-top + refresh (pattern Twitter/Instagram).
@@ -88,50 +91,60 @@ Riepilogo per navigare i wireframe:
   - Schermate di dettaglio fullscreen (foto fullscreen).
 
 **Edge cases:**
+
 - FAB Scatta disabilitato visivamente se permessi camera negati: badge rosso "!" + tap mostra modale spiegazione.
 - Permessi GPS negati ma camera OK: FAB attivo, ma in fase di pubblicazione si bloccherà con messaggio.
 
-### 0.5 Header — varianti per schermata
+### 0.5 Header - varianti per schermata
 
 Header alto 56px, sticky, sfondo background.
 
-**Variante A — Mappa / Feed (solo logo):**
+**Variante A - Mappa / Feed (solo logo):**
+
 ```
 ┌──────────────────────────┐
 │ {logo}                   │
 └──────────────────────────┘
 ```
+
 La ricerca non è più nell'header: è accessibile direttamente dalla voce "Cerca" nella navbar.
 
-**Variante B — Schermata di dettaglio (con back):**
+**Variante B - Schermata di dettaglio (con back):**
+
 ```
 ┌──────────────────────────┐
 │ {<}  Titolo schermata    │
 └──────────────────────────┘
 ```
 
-**Variante C — Profilo proprio:**
+**Variante C - Profilo proprio:**
+
 ```
 ┌──────────────────────────┐
 │  Profilo            {⚙}  │
 └──────────────────────────┘
 ```
+
 L'ingranaggio porta alle impostazioni globali (vedi sezione 4).
 
-**Variante D — Profilo altro utente:**
+**Variante D - Profilo altro utente:**
+
 ```
 ┌──────────────────────────┐
 │ {<}  @username      {⋮}  │
 └──────────────────────────┘
 ```
+
 Menu `{⋮}` per: Segnala, Blocca (v1.1).
 
-**Variante E — Cerca (tab principale, no back):**
+**Variante E - Cerca (tab principale, no back):**
+
 ```
 ┌──────────────────────────┐
 │ <ricerca...>         {x} │
 └──────────────────────────┘
 ```
+
 L'header della schermata Cerca è la search bar stessa, a piena larghezza. `{x}` compare solo se c'è testo e svuota il campo.
 
 ### 0.6 Stati globali ricorrenti
@@ -147,12 +160,14 @@ L'header della schermata Cerca è la search bar stessa, a piena larghezza. `{x}`
 **Scopo:** spiegare i vantaggi della PWA e invitare all'installazione, senza essere invasivi.
 
 **Quando mostrarlo:**
+
 - L'utente NON ha ancora installato la PWA.
 - È al **secondo** ingresso nell'app (no first-time, l'utente è ancora in onboarding).
 - Ha completato almeno **un avvistamento** (è motivato).
 - È stato dismissato meno di 3 volte (poi non si mostra più).
 
 **Layout (banner non bloccante, in cima al feed):**
+
 ```
 ┌──────────────────────────┐
 │ 💡 Installa CatSee   {x} │
@@ -163,6 +178,7 @@ L'header della schermata Cerca è la search bar stessa, a piena larghezza. `{x}`
 ```
 
 **Comportamenti:**
+
 - Tap "Scopri come" → schermata 3.6 "Perché installare la PWA".
 - Su Chrome/Android: trigger `beforeinstallprompt` evento per installazione 1-tap.
 - Su iOS Safari: schermata istruzionale ("Tocca {condividi}, poi Aggiungi alla schermata Home").
@@ -177,6 +193,7 @@ L'header della schermata Cerca è la search bar stessa, a piena larghezza. `{x}`
 **Scopo:** "vendere" il prodotto in 5 secondi, portare al login.
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │                          │
@@ -207,11 +224,13 @@ L'header della schermata Cerca è la search bar stessa, a piena larghezza. `{x}`
 **Componenti:** illustrazione hero in alto, logo, headline, sub-headline, CTA primario "Inizia ad avvistare", CTA secondario testuale "Esplora la mappa", sezione "hai già un account" col link login.
 
 **Comportamenti:**
+
 - "Inizia ad avvistare" → schermata Login (1.2).
 - "Esplora la mappa" → mappa in modalità ospite (read-only, navbar limitata: solo Mappa + Login).
 - "Accedi" → schermata Login.
 
 **Edge cases:**
+
 - Utente già con sessione attiva: redirect automatico alla home (mai mostrata).
 
 ### 1.2 Login
@@ -219,6 +238,7 @@ L'header della schermata Cerca è la search bar stessa, a piena larghezza. `{x}`
 **Scopo:** autenticazione veloce con magic link o Google.
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │ {<}                      │
@@ -242,15 +262,17 @@ L'header della schermata Cerca è la search bar stessa, a piena larghezza. `{x}`
 └──────────────────────────┘
 ```
 
-**Componenti:** input email, bottone primario, separatore, bottone Google, **disclaimer testuale legale con link cliccabili** (NO checkbox — pattern moderno conforme GDPR).
+**Componenti:** input email, bottone primario, separatore, bottone Google, **disclaimer testuale legale con link cliccabili** (NO checkbox - pattern moderno conforme GDPR).
 
 **Comportamenti:**
+
 - Validazione email client-side (formato).
 - Tap "Invia link magico" → spinner sul bottone → schermata 1.3.
 - Tap Google → flow OAuth → al ritorno: nuovo utente → 1.4 onboarding; esistente → home.
 - Tap su "Termini di servizio" o "Privacy policy" → apre rispettivamente 4.6.1 / 4.6.2 (in modalità "preview" se non loggato).
 
 **Edge cases:**
+
 - Email non valida: messaggio inline rosso sotto l'input.
 - Errore di rete: toast "Errore di connessione, riprova".
 - Rate limiting (3+ richieste in 1 minuto): "Troppi tentativi, riprova tra X minuti".
@@ -260,6 +282,7 @@ L'header della schermata Cerca è la search bar stessa, a piena larghezza. `{x}`
 **Scopo:** rassicurare l'utente, fornire fallback.
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │ {<}                      │
@@ -285,18 +308,21 @@ L'header della schermata Cerca è la search bar stessa, a piena larghezza. `{x}`
 **Componenti:** illustrazione, titolo, **email parzialmente mascherata** (privacy), istruzioni, bottone reinvio con cooldown 30s, link cambia email.
 
 **Comportamenti:**
+
 - Polling silenzioso ogni 5s per check sessione (UX moderno).
 - Bottone reinvio: disabilitato per 30s post-tap, poi attivo.
 
 **Edge cases:**
+
 - Magic link cliccato da altro dispositivo: questo schermo continua polling fino a timeout (5min).
 - Magic link scaduto (>15 min): schermata 1.7 "link non valido o scaduto" (vedi sezione 1.7 nuova).
 
-### 1.4 Onboarding — Username & Nickname
+### 1.4 Onboarding - Username & Nickname
 
 **Scopo:** raccogliere identità minima al primo login.
 
-**Step 1 di 2 — Username:**
+**Step 1 di 2 - Username:**
+
 ```
 ┌──────────────────────────┐
 │  ●○                      │
@@ -315,7 +341,8 @@ L'header della schermata Cerca è la search bar stessa, a piena larghezza. `{x}`
 └──────────────────────────┘
 ```
 
-**Step 2 di 2 — Nickname:**
+**Step 2 di 2 - Nickname:**
+
 ```
 ┌──────────────────────────┐
 │  ●●                      │
@@ -337,11 +364,13 @@ L'header della schermata Cerca è la search bar stessa, a piena larghezza. `{x}`
 **Componenti:** progress dots, titolo grande, input con validazione live, **hint contestuale dentro card "💡"** (più gradevole del testo libero).
 
 **Comportamenti:**
+
 - Username: validazione live (debounce 400ms) → disponibile / occupato / non valido / contiene parole non ammesse.
 - Pulsante "Continua" disabilitato finché non valido.
 - Step 2: nickname obbligatorio, max 30 caratteri.
 
 **Edge cases:**
+
 - Username con parole offensive: messaggio gentile "questo username non è ammesso, prova con un altro".
 - Chiusura app a metà: al prossimo accesso riprende dallo step.
 
@@ -352,6 +381,7 @@ L'header della schermata Cerca è la search bar stessa, a piena larghezza. `{x}`
 Mostrata: prima volta che si tocca il FAB Scatta.
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │ {x}                      │
@@ -385,10 +415,12 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 ```
 
 **Comportamenti:**
+
 - Tap "Concedi entrambi" → trigger sequenziale browser: prima camera, poi GPS.
 - Tap "più tardi" → torna alla home, FAB con badge "!".
 
 **Edge cases:**
+
 - Solo camera concessa, no GPS: l'utente può scattare e salvare nel proprio profilo, ma il post **non appare sulla mappa pubblica**. Toast informativo: "Senza GPS, le foto restano private. Concedi GPS per condividere".
 - Solo GPS, no camera: blocco totale (non puoi avvistare senza scattare).
 - Entrambi negati: schermata 1.5b con istruzioni per riattivare da settings browser.
@@ -396,6 +428,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 ### 1.6 Permessi negati (1.5b)
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │ {<}                      │
@@ -426,6 +459,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 **Scopo:** gestire link cliccati troppo tardi o già usati.
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │                          │
@@ -442,6 +476,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 ```
 
 **Comportamenti:**
+
 - Tap "Richiedi nuovo link" → torna a 1.2 Login con email pre-compilata se conosciuta.
 
 ---
@@ -450,11 +485,12 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 
 ### 2.1 Feed
 
-> ⚠️ **Da rivedere:** la visualizzazione attuale delle card post (`feed-post-card.tsx`) non è soddisfacente — layout e gerarchia visiva vanno riprogettati prima del lancio.
+> ⚠️ **Da rivedere:** la visualizzazione attuale delle card post (`feed-post-card.tsx`) non è soddisfacente - layout e gerarchia visiva vanno riprogettati prima del lancio.
 
 **Scopo:** visione temporale dei contenuti, con tre modalità in tab.
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │ {logo}                   │  ← header variante A
@@ -484,19 +520,23 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 ```
 
 **Tab "Seguiti"** (default per utenti che seguono almeno 1 persona):
+
 - Feed cronologico dei post degli utenti seguiti.
 - Empty state se non segui nessuno: "Non segui ancora nessuno. Vai a Esplora per scoprire utenti".
 
 **Tab "Esplora":**
+
 - Feed cronologico globale (tutti gli utenti, ordine cronologico, no algoritmo).
 - Default per nuovi utenti.
 
 **Tab "Vicini":**
+
 - Solo se permessi GPS attivi.
 - Slider per il raggio: 5 / 10 / 25 / 50 km (default 5).
 - Senza permessi GPS: prompt richiesta permessi inline, con possibilità di abilitarli.
 
 **Componenti card post:**
+
 - Header card: avatar + nickname (NO @username) + timestamp relativo.
 - Foto gatto (rapporto 4:5 o 1:1).
 - Nickname gatto (in evidenza, tipo titolo).
@@ -505,6 +545,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 - Reazioni: emoji con counter.
 
 **Comportamenti:**
+
 - Pull-to-refresh in cima.
 - Infinite scroll.
 - Tap sulla foto → 3.1 dettaglio post.
@@ -513,10 +554,12 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 - Tap su tab già attivo → scroll-to-top + refresh.
 
 **Empty states:**
+
 - Tab Seguiti: "Non segui ancora nessuno. Esplora per trovare gente."
 - Tab Vicini: "Nessun gatto avvistato in un raggio di Xkm. Aumenta il raggio o sii il primo!"
 
 **Edge cases:**
+
 - Errore caricamento: banner top + bottone retry, lista cachata non scompare.
 - Post in moderazione: non appare nei feed pubblici, l'autore lo vede solo nel proprio profilo con badge "in revisione".
 
@@ -525,6 +568,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 **Scopo:** vedere i gatti avvistati nel mondo, geolocalizzati.
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │ {logo}                   │  ← header variante A
@@ -554,7 +598,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 
 **Componenti:**
 
-- Header: solo logo (variante A — la ricerca è accessibile dalla voce "Cerca" in navbar).
+- Header: solo logo (variante A - la ricerca è accessibile dalla voce "Cerca" in navbar).
 - Riga filtri pill orizzontali: Data, Colore, Username; tap apre bottom sheet con opzioni.
 - Mappa Leaflet a pieno schermo.
 - FAB "recenter" in basso a destra (sopra navbar).
@@ -562,26 +606,30 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 - Cluster: cerchio con counter (es. "12").
 
 **Comportamenti:**
+
 - Zoom iniziale: posizione utente con zoom medio (livello ~14 city), o Italia se no permessi.
 - Tap su pin → bottom sheet preview (foto + nickname + autore + data + bottone "vedi dettaglio").
 - Tap su cluster → zoom-in automatico.
 - Tap su filtro → bottom sheet con opzioni multi-select.
 
 **Empty state:**
+
 - Nessun pin nell'area visibile: overlay semitrasparente "Nessun gatto avvistato qui. Sii il primo!" + CTA "Scatta".
 
 **Edge cases:**
+
 - Mappa non carica (no internet): placeholder grigio + "Connetti per vedere la mappa".
 - Permessi GPS negati: mappa centrata su Italia, FAB recenter mostra modale "abilita GPS".
 - Performance: limite ~500 pin caricati nel viewport, fallback a clustering più aggressivo.
 
-### 2.3 Scatta — vedi sezione 5
+### 2.3 Scatta - vedi sezione 5
 
 ### 2.4 Profilo (proprio)
 
 **Scopo:** vedere proprio profilo, post, badge, accedere a settings.
 
 **Layout (revisione):**
+
 ```
 ┌──────────────────────────┐
 │  Profilo            {⚙}  │  ← header variante C
@@ -617,10 +665,12 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 ```
 
 **Note sulla revisione layout:**
+
 - I post sono prima dei badge: l'utente che torna sul proprio profilo cerca prima i suoi contenuti.
 - Le label dei contatori sono italiane semplici: "gatti", "seguaci", "seguiti".
 
 **Comportamenti:**
+
 - Tap avatar: modale con avatar fullscreen.
 - Tap badge: bottom sheet con nome + descrizione + data unlock.
 - Tap "{⚙}": apre settings root (4.1).
@@ -628,6 +678,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 - Tap contatore "seguaci"/"seguiti": apre 3.3 lista.
 
 **Empty states:**
+
 - Nessun post: card centrale "Non hai ancora avvistato gatti. Inizia ora!" + CTA Scatta.
 - Nessun badge: card "Avvista il tuo primo gatto per sbloccare i badge".
 
@@ -640,6 +691,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 **Scopo:** vista completa di un singolo avvistamento.
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │ {<}                  {⋮} │
@@ -673,7 +725,8 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 └──────────────────────────┘
 ```
 
-**Decisione MVP — descrizione/note:** **MANTENIAMO** le note nel post, con queste protezioni:
+**Decisione MVP - descrizione/note:** **MANTENIAMO** le note nel post, con queste protezioni:
+
 - Max 200 caratteri (limite stretto, riduce rischio tossicità).
 - Filtro automatico parole offensive (libreria `obscenity`) → blocco upload se trovate.
 - Parole "moderatamente volgari" → asterischi automatici lato server con toggle nel profilo per "Mostra contenuto censurato" (default off).
@@ -682,6 +735,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 **Componenti:** foto fullwidth, autore con timestamp, nickname gatto (se presente), tag chips, note (se presenti), mini-mappa coordinate fuzzed, reazioni con counter, bottone reagisci, bottone condividi.
 
 **Comportamenti:**
+
 - Menu `{⋮}` in alto a destra:
   - Se post di altri: "Segnala", "Copia link".
   - Se post proprio: "Modifica", "Elimina", "Copia link".
@@ -691,11 +745,13 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 - Tap "Condividi" → Web Share API.
 
 **Modifica post (MVP):**
+
 - Permessa solo per: nickname gatto, tag colori, pelo, note.
 - NON permessa per: foto, posizione (sarebbe troppo facile mentire dopo).
 - Indicatore "modificato" visibile sul post.
 
 **Edge cases:**
+
 - Post eliminato: "Questo post non è più disponibile" + bottone "Torna indietro".
 - Post in moderazione visualizzato dall'autore: banner giallo "In revisione, visibile solo a te".
 
@@ -704,15 +760,18 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 **Scopo:** vedere profilo e post di un altro utente.
 
 **Layout:** come 2.4 profilo proprio, con queste differenze:
+
 - Header variante D: `{<}` + `@username` + `{⋮}` (Segnala, Blocca v1.1).
 - Bottone "Segui / Non seguire più" al posto di "Modifica profilo".
 - Niente bottone "I miei gatti su mappa" (privato).
 
 **Comportamenti:**
+
 - Tap "Segui" → toggle istantaneo (optimistic update).
 - Tap "Non seguire più" → conferma rapida tramite toast con undo (3s).
 
 **Edge cases:**
+
 - Profilo bloccato (v1.1): mostra "Questo utente ti ha bloccato".
 - Profilo privato (v1.1, filosofia A): mostra avatar + nickname + bio + "Profilo privato. Segui per vedere i post." + bottone segui. Le sue foto sono comunque sulla mappa pubblica come anonime.
 
@@ -721,6 +780,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 **Scopo:** vedere chi segui o chi ti segue.
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │ {<}  Seguaci / Seguiti   │
@@ -742,16 +802,17 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 
 **Comportamenti:** tap su riga → 3.2 profilo. Bottone segui inline.
 
-### 3.4 Cerca (tab navbar — MVP: solo utenti)
+### 3.4 Cerca (tab navbar - MVP: solo utenti)
 
-> ⚠️ **Da rivedere:** sia la griglia esplora (post random) sia i risultati "Gatti" nella ricerca (`cerca-client.tsx`) non sono soddisfacenti visivamente — vanno riprogettati prima del lancio.
+> ⚠️ **Da rivedere:** sia la griglia esplora (post random) sia i risultati "Gatti" nella ricerca (`cerca-client.tsx`) non sono soddisfacenti visivamente - vanno riprogettati prima del lancio.
 
-**Scopo:** trovare utenti per username/nickname. Accessibile direttamente dalla voce "Cerca" nella bottom navbar — non più come sub-page dell'header.
+**Scopo:** trovare utenti per username/nickname. Accessibile direttamente dalla voce "Cerca" nella bottom navbar - non più come sub-page dell'header.
 
 **MVP:** solo utenti.
 **v1.1:** ricerca multi-tipo (utenti / gatti per nickname / location), tab orizzontali stile Instagram.
 
 **Layout MVP:**
+
 ```
 ┌──────────────────────────┐
 │ <ricerca...>         {x} │  ← header variante E (search bar a piena larghezza)
@@ -771,6 +832,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 **Note MVP:** nei risultati ricerca mostriamo nickname + @username + count gatti, perché serve disambiguare utenti con nickname simili.
 
 **Comportamenti:**
+
 - Ricerca live (debounce 300ms).
 - Tap su utente → 3.2 profilo.
 - Cancellazione ricerca → schermata "ricerche recenti" (v1.x, MVP vuoto).
@@ -782,6 +844,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 **Scopo:** vedere tutti i badge ottenuti e quelli da ottenere.
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │ {<}  I tuoi badge        │
@@ -800,6 +863,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 ```
 
 **Comportamenti:**
+
 - Tap su badge ottenuto → bottom sheet "Nome + descrizione + data unlock".
 - Tap su badge bloccato → "Nome + come sbloccarlo".
 
@@ -808,6 +872,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 **Scopo:** spiegare i vantaggi della PWA, motivare all'installazione.
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │ {<}  CatSee come app     │
@@ -851,6 +916,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 ```
 
 **Comportamenti:**
+
 - Tap "Su Android" → istruzioni con screenshot del flow Chrome (banner installazione).
 - Tap "Su iOS" → istruzioni passo-passo: tocca {condividi}, scorri, tocca "Aggiungi a Home".
 - Se Chrome ha già emesso `beforeinstallprompt`, mostra subito un bottone "Installa ora" (1-tap).
@@ -899,6 +965,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 ### 4.2 Modifica profilo
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │ {<}  Modifica profilo {salva}│
@@ -920,6 +987,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 ```
 
 **Comportamenti:**
+
 - Bottone "salva" disabilitato finché niente è modificato.
 - Cambio username: validazione SPEC § 4.1.1; warning "potrai cambiarlo di nuovo solo tra 30 giorni".
 - **Cambio avatar:** file picker → schermata 4.2.1 di crop quadrato (in-app, libreria `react-easy-crop`) → upload R2 con loader.
@@ -929,6 +997,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 **Scopo:** consentire crop quadrato in-app stile Instagram.
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │ {x}              {Salva} │
@@ -952,18 +1021,21 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 ```
 
 **Comportamenti:**
+
 - Drag per spostare il crop, pinch/slider per zoom.
 - Tap "Salva" → upload del crop quadrato a R2 → display in profilo (sempre tondo via CSS).
 - Tap "x" → annulla, torna a 4.2 senza modifiche.
 
 **Storage e gestione vecchie foto:**
+
 - Su upload nuovo avatar: salva nuovo file su R2 con UUID nel path, aggiorna `User.avatar_url`.
 - Eliminazione vecchia foto: chiamata best-effort dopo conferma DB. Se fallisce, log + job notturno di pulizia.
 - Cap risoluzione: avatar 400×400 max, JPEG quality 85, ~30-50KB target. Compressione client-side con `browser-image-compression`.
 
-### 4.3 Privacy — Coordinate posizione
+### 4.3 Privacy - Coordinate posizione
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │ {<}  Coordinate          │
@@ -989,6 +1061,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 ```
 
 **Comportamenti:**
+
 - Tap su "Esatta": modale di conferma esplicita "Sei sicuro? Tutti potranno vedere dove ti trovavi al momento del post".
 - Cambio: si applica solo ai post futuri.
 
@@ -1007,7 +1080,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 └──────────────────────────┘
 ```
 
-### 4.5 Account — Email
+### 4.5 Account - Email
 
 ```
 ┌──────────────────────────┐
@@ -1035,6 +1108,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 **Approccio MVP:** schermate con contenuto markdown renderizzato. Header back + titolo. Il contenuto reale dei testi sarà scritto separatamente con cura, ispirato a template aperti (Termly, iubenda) e tarato sui dati realmente trattati dall'app.
 
 **Sezioni minime privacy policy:**
+
 1. Chi siamo e come contattarci.
 2. Dati personali raccolti (lista esplicita: email, username, foto, coordinate vere e fuzzed, IP login, user agent).
 3. Per ogni dato: finalità, base giuridica GDPR, periodo di conservazione.
@@ -1045,6 +1119,7 @@ Mostrata: prima volta che si tocca il FAB Scatta.
 8. Modifiche alla policy.
 
 **Sezioni minime ToS:**
+
 1. Cosa offre il servizio.
 2. Età minima 14 anni.
 3. Cosa l'utente può/non può fare (no spam, no offese, no contenuti illegali, foto solo di gatti).
@@ -1066,12 +1141,14 @@ Il FAB "Scatta" apre una sequenza fullscreen con la navbar nascosta.
 **Motivazione:** la camera nativa salva la foto in galleria. Per garantire il vincolo BeReal-style (no upload da galleria, autenticità) accediamo direttamente al feed video in-app, catturiamo il frame con un canvas, e la foto risultante non passa mai dalla galleria del dispositivo.
 
 **Trade-off:**
+
 - ✅ Autenticità garantita.
 - ✅ Stessa codebase su tutti i browser.
 - ❌ Niente flash hardware avanzato, niente HDR, niente stabilizzazione hardware.
 - ❌ Su iOS Safari richiede HTTPS + gesture utente (non bloccante).
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │ {x}              {flip}  │
@@ -1090,11 +1167,13 @@ Il FAB "Scatta" apre una sequenza fullscreen con la navbar nascosta.
 **Componenti:** vista camera fullscreen, X chiudi, flip camera, bottone scatto.
 
 **Comportamenti:**
+
 - Tap scatto → cattura frame → 5.2 preview.
 - Tap X → conferma "Annullare l'avvistamento?" → torna a schermata precedente.
 - Tap flip → switch frontale/posteriore.
 
 **Edge cases:**
+
 - Camera non disponibile/negata: schermata 1.6 errore con istruzioni.
 - Browser troppo vecchio: "Il tuo browser non supporta la fotocamera in-app, prova ad aggiornarlo".
 
@@ -1114,12 +1193,14 @@ Il FAB "Scatta" apre una sequenza fullscreen con la navbar nascosta.
 ```
 
 **Comportamenti:**
+
 - Tap "Rifai" → torna a 5.1.
 - Tap "Continua" → 5.3 verifica AI.
 
 ### 5.3 Verifica AI
 
 **Loader:**
+
 ```
 ┌──────────────────────────┐
 │                          │
@@ -1132,6 +1213,7 @@ Il FAB "Scatta" apre una sequenza fullscreen con la navbar nascosta.
 ```
 
 **Warning se NO gatto:**
+
 ```
 ┌──────────────────────────┐
 │ {<}                      │
@@ -1153,6 +1235,7 @@ Il FAB "Scatta" apre una sequenza fullscreen con la navbar nascosta.
 ```
 
 **Comportamenti:**
+
 - Verifica TF.js client-side: 1-2s tipici, max 5s timeout (in caso: salta e considera "verificata").
 - Se OK: passa a 5.4 senza schermata intermedia.
 - Se NO: warning, l'utente può rifare o inviare per revisione (post in `moderation_status = 'pending'`).
@@ -1160,6 +1243,7 @@ Il FAB "Scatta" apre una sequenza fullscreen con la navbar nascosta.
 ### 5.4 Compilazione metadati
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │ {<}  Avvistamento        │
@@ -1194,12 +1278,14 @@ Il FAB "Scatta" apre una sequenza fullscreen con la navbar nascosta.
 ```
 
 **Decisioni MVP:**
+
 - **Nickname gatto OBBLIGATORIO** (funge da titolo del post). Anche un soprannome inventato va bene. Hint sotto il campo: "Anche un soprannome o descrizione".
 - **Colori: max 3 selezionabili.**
 - **Pelo: scelta manuale** (la verifica automatica non è affidabile).
 - **Posizione: pin spostabile entro un raggio limitato** (~50m dalla posizione GPS originale). Tentativi di spostamento maggiori → warning "stai modificando troppo la posizione, sei sicuro?". Mai possibile spostare in altro continente.
 
 **Comportamenti:**
+
 - Tag colori: pre-selezionati i top 2-3 dalla palette estratta, l'utente può confermare/aggiungere/togliere.
 - Validazione AI palette ↔ tag: warning soft "i colori scelti non sembrano corrispondere alla foto" (non blocca).
 - Note: filtro parole offensive lato server, blocco se trovate; parole "moderatamente volgari" → asterischi automatici.
@@ -1207,11 +1293,13 @@ Il FAB "Scatta" apre una sequenza fullscreen con la navbar nascosta.
 - Tap "Pubblica" → spinner → 5.5.
 
 **Edge cases:**
+
 - Errore upload: toast errore, bottone "riprova" mantenendo i dati.
 
 ### 5.5 Successo + eventuali badge
 
 **Post pubblicato:**
+
 ```
 ┌──────────────────────────┐
 │                          │
@@ -1227,6 +1315,7 @@ Il FAB "Scatta" apre una sequenza fullscreen con la navbar nascosta.
 ```
 
 **Con unlock badge:**
+
 ```
 ┌──────────────────────────┐
 │                          │
@@ -1247,6 +1336,7 @@ Il FAB "Scatta" apre una sequenza fullscreen con la navbar nascosta.
 ```
 
 **Comportamenti:**
+
 - Animazione confetti per badge unlock (`canvas-confetti`).
 - Più badge unlock contemporanei: schermate sequenziali.
 - Dopo l'ultima: 5.5 finale "vedi sulla mappa / avvista altro".
@@ -1262,6 +1352,7 @@ Il FAB "Scatta" apre una sequenza fullscreen con la navbar nascosta.
 **Scopo:** overview rapida dello stato del sistema.
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │ {<}  Admin               │
@@ -1287,6 +1378,7 @@ Il FAB "Scatta" apre una sequenza fullscreen con la navbar nascosta.
 ### 6.2 Coda moderazione
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │ {<}  Moderazione         │
@@ -1304,6 +1396,7 @@ Il FAB "Scatta" apre una sequenza fullscreen con la navbar nascosta.
 ```
 
 **Comportamenti:**
+
 - Tap su card → vista completa post.
 - Approva → `moderation_status = 'approved'`, post diventa pubblico.
 - Rifiuta → modale con motivazione + flag opzionale "ban autore" → `moderation_status = 'rejected'`.
@@ -1311,6 +1404,7 @@ Il FAB "Scatta" apre una sequenza fullscreen con la navbar nascosta.
 ### 6.3 Lista utenti
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │ {<}  Utenti              │
@@ -1331,6 +1425,7 @@ Il FAB "Scatta" apre una sequenza fullscreen con la navbar nascosta.
 ```
 
 **Comportamenti:**
+
 - Ricerca per username/nickname/email.
 - Tap su utente → 3.2 profilo.
 - "Forza username": modale con input nuovo username + motivazione → notifica all'utente.
@@ -1341,6 +1436,7 @@ Il FAB "Scatta" apre una sequenza fullscreen con la navbar nascosta.
 **Scopo:** vedere e gestire le segnalazioni utenti.
 
 **Layout:**
+
 ```
 ┌──────────────────────────┐
 │ {<}  Report              │
@@ -1367,7 +1463,7 @@ Il FAB "Scatta" apre una sequenza fullscreen con la navbar nascosta.
 - Stati di errore globali (offline, errore generico, post 404, profilo 404).
 - Schermata blocca/segnala utente (in-app, non admin).
 - Schermata "Eliminazione account" (conferma + countdown 14 giorni).
-- Schermata cookie/consenso GDPR primo accesso (se necessaria — Plausible/Umami sono cookieless, potrebbe non servire).
+- Schermata cookie/consenso GDPR primo accesso (se necessaria - Plausible/Umami sono cookieless, potrebbe non servire).
 - Gestione pull-to-refresh dettagliata.
 - Animazioni transizione tra schermate (decidere: slide, fade, niente).
 - Dialoghi dei filtri mappa con UI dettagliata.
@@ -1377,7 +1473,7 @@ Il FAB "Scatta" apre una sequenza fullscreen con la navbar nascosta.
 
 ## Changelog
 
-- **0.3** (2026-05-10 — post-setup):
+- **0.3** (2026-05-10 - post-setup):
   - Toast: confermato Sonner come implementazione (nota in sezione 0.6).
 - **0.2** (2026-04-27):
   - Bottom navbar a 4 voci (Mappa, Feed, Scatta, Profilo) anziché 5.

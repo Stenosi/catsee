@@ -11,7 +11,7 @@ import {
 import { users } from './users';
 
 /**
- * Categoria del badge — usata per filtraggi e visualizzazione raggruppata.
+ * Categoria del badge - usata per filtraggi e visualizzazione raggruppata.
  */
 export const badgeCategoryEnum = pgEnum('badge_category', [
   'milestone', // contatori di gatti avvistati
@@ -23,7 +23,7 @@ export const badgeCategoryEnum = pgEnum('badge_category', [
 
 /**
  * Catalogo dei badge esistenti.
- * NON una tabella runtime — viene popolata dal seed (scripts/seed.ts).
+ * NON una tabella runtime - viene popolata dal seed (scripts/seed.ts).
  * In v2 potremo aggiungere/modificare badge dal pannello admin.
  *
  * `id` è un slug umano-leggibile (es. "first_cat", "night_owl") perché
@@ -32,10 +32,10 @@ export const badgeCategoryEnum = pgEnum('badge_category', [
 export const badges = pgTable('badges', {
   id: text('id').primaryKey(),
 
-  /** Nome user-facing — es. "Primo Gatto" */
+  /** Nome user-facing - es. "Primo Gatto" */
   name: text('name').notNull(),
 
-  /** Descrizione user-facing — es. "Hai pubblicato il tuo primo avvistamento" */
+  /** Descrizione user-facing - es. "Hai pubblicato il tuo primo avvistamento" */
   description: text('description').notNull(),
 
   /** Emoji o nome icona (per ora emoji unicode, in futuro path a SVG) */
@@ -44,7 +44,7 @@ export const badges = pgTable('badges', {
   category: badgeCategoryEnum('category').notNull(),
 
   /**
-   * Ordine di display — per fissare un ordinamento coerente sul profilo.
+   * Ordine di display - per fissare un ordinamento coerente sul profilo.
    * Più basso = mostrato prima.
    */
   displayOrder: text('display_order').notNull(),
@@ -65,7 +65,7 @@ export type NewBadge = typeof badges.$inferInsert;
 
 /**
  * Assegnazione di un badge a un utente.
- * Composite PK (userId, badgeId) — un badge può essere ottenuto una sola volta.
+ * Composite PK (userId, badgeId) - un badge può essere ottenuto una sola volta.
  */
 export const userBadges = pgTable(
   'user_badges',

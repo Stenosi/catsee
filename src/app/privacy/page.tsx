@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ArrowLeft, Construction } from 'lucide-react';
 
-export const metadata = { title: 'Privacy policy — CatSee' };
+export const metadata = { title: 'Privacy policy - CatSee' };
 
 export default function PrivacyPage() {
   return (

@@ -14,8 +14,8 @@ export function usePersistedTab<T extends string>(
     if (stored && validTabs.includes(stored as T)) {
       setTabState(stored as T);
     }
-  // validTabs è un array const definito a livello di modulo — non cambia mai
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // validTabs è un array const definito a livello di modulo - non cambia mai
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
   const setTab = useCallback(

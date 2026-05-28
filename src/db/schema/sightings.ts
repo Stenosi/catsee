@@ -15,7 +15,7 @@ import { sql } from 'drizzle-orm';
 import { users } from './users';
 
 // ============================================================================
-// CUSTOM TYPE: geography(Point, 4326) — PostGIS
+// CUSTOM TYPE: geography(Point, 4326) - PostGIS
 // ============================================================================
 
 /**
@@ -115,7 +115,7 @@ export const SIGHTING_LIMITS = {
   FUZZING_RADIUS_METERS: 100,
 } as const;
 
-/** Tag colori disponibili — sincronizzato con UI */
+/** Tag colori disponibili - sincronizzato con UI */
 export const TAG_COLORS = [
   'black',
   'white',
@@ -209,7 +209,7 @@ export const sightings = pgTable(
       .default('approved')
       .notNull(),
 
-    /** Numero di report aggregati — denormalizzato per performance */
+    /** Numero di report aggregati - denormalizzato per performance */
     reportsCount: doublePrecision('reports_count').default(0).notNull(),
 
     // ── Visibilità
@@ -236,20 +236,20 @@ export const sightings = pgTable(
   (table) => ({
     // ── INDICI PER QUERY COMUNI
 
-    // Feed "post di un utente" — ordinati per data desc
+    // Feed "post di un utente" - ordinati per data desc
     userIdCreatedAtIdx: index('sightings_user_id_created_at_idx').on(
       table.userId,
       table.createdAt,
     ),
 
-    // Feed esplora — post pubblici recenti
+    // Feed esplora - post pubblici recenti
     publicFeedIdx: index('sightings_public_feed_idx')
       .on(table.createdAt)
       .where(
         sql`visibility = 'public' AND moderation_status = 'approved' AND deleted_at IS NULL`,
       ),
 
-    // Mappa — query geografiche con PostGIS, indice GIST
+    // Mappa - query geografiche con PostGIS, indice GIST
     locationFuzzedIdx: index('sightings_location_fuzzed_idx')
       .using('gist', table.locationFuzzed),
 

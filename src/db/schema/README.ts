@@ -1,5 +1,5 @@
 /**
- * CatSee — Database Schema
+ * CatSee - Database Schema
  *
  * Drizzle ORM + PostgreSQL (Neon) + PostGIS extension
  *

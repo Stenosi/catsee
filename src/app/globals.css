@@ -55,7 +55,7 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* ─── Palette A: "Ginger Cat" — Light Mode ─── */
+/* ─── Palette A: "Ginger Cat" - Light Mode ─── */
 :root {
   --background: oklch(0.974 0.012 80);
   --foreground: oklch(0.182 0.025 47);
@@ -98,7 +98,7 @@
   --sidebar-ring: oklch(0.67 0.19 48);
 }
 
-/* ─── Palette A: "Ginger Cat" — Dark Mode ─── */
+/* ─── Palette A: "Ginger Cat" - Dark Mode ─── */
 .dark {
   --background: oklch(0.12 0.02 47);
   --foreground: oklch(0.926 0.01 75);
@@ -141,9 +141,17 @@
 }
 
 @keyframes badge-glow {
-  0%   { box-shadow: 0 0 0 0px oklch(0.67 0.19 48 / 0), 0 0 0px 0px oklch(0.67 0.19 48 / 0); }
-  25%  { box-shadow: 0 0 0 3px oklch(0.67 0.19 48 / 0.75), 0 0 18px 5px oklch(0.67 0.19 48 / 0.4); }
-  100% { box-shadow: 0 0 0 0px oklch(0.67 0.19 48 / 0), 0 0 0px 0px oklch(0.67 0.19 48 / 0); }
+  0% {
+    box-shadow: 0 0 0 0px oklch(0.67 0.19 48 / 0), 0 0 0px 0px oklch(0.67 0.19 48 / 0);
+  }
+
+  25% {
+    box-shadow: 0 0 0 3px oklch(0.67 0.19 48 / 0.75), 0 0 18px 5px oklch(0.67 0.19 48 / 0.4);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0px oklch(0.67 0.19 48 / 0), 0 0 0px 0px oklch(0.67 0.19 48 / 0);
+  }
 }
 
 .badge-glow {

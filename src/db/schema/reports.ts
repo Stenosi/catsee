@@ -12,7 +12,7 @@ import { users } from './users';
 import { sightings } from './sightings';
 
 /**
- * Motivo della segnalazione — selezionato dall'utente al momento del report.
+ * Motivo della segnalazione - selezionato dall'utente al momento del report.
  */
 export const reportReasonEnum = pgEnum('report_reason', [
   'not_a_cat',         // la foto non contiene un gatto
@@ -72,7 +72,7 @@ export const reports = pgTable(
       .on(table.createdAt)
       .where(sql`resolution = 'pending'`),
 
-    // "Quanti report ha questo post" — usato per auto-hide a 5+
+    // "Quanti report ha questo post" - usato per auto-hide a 5+
     sightingIdx: index('reports_sighting_idx').on(table.sightingId),
 
     // Un utente non può segnalare lo stesso post due volte

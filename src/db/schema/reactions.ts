@@ -42,7 +42,7 @@ export const reactions = pgTable(
   (table) => ({
     pk: primaryKey({ columns: [table.userId, table.sightingId] }),
 
-    // Per "vedi tutte le reazioni di un post" — count + raggruppamento per emoji
+    // Per "vedi tutte le reazioni di un post" - count + raggruppamento per emoji
     sightingIdx: index('reactions_sighting_idx').on(table.sightingId),
   }),
 );

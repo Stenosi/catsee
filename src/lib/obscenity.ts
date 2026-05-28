@@ -15,7 +15,7 @@ const englishMatcher = new RegExpMatcher({
   ...englishRecommendedTransformers,
 });
 
-// Parole singole con severità >= 1 — le parole a 0 sono falsi positivi (es. "uccello", "finocchio")
+// Parole singole con severità >= 1 - le parole a 0 sono falsi positivi (es. "uccello", "finocchio")
 const italianDataset = new DataSet();
 for (const [word, severity] of Object.entries(italianCuss)) {
   if ((severity as number) >= 1 && !word.includes(' ')) {

@@ -66,7 +66,7 @@ export function BadgesClient({ items, unlockedCount, totalCount }: Props) {
         JSON.stringify([...seen, ...newIds]),
       );
     } catch {
-      // storage full or blocked — ignore
+      // storage full or blocked - ignore
     }
 
     // Confetti burst

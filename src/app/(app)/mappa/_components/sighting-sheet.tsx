@@ -31,7 +31,7 @@ export default function SightingSheet({ sighting, onClose }: Props) {
     const deltaY = e.clientY - startYRef.current;
     if (!draggingRef.current) {
       if (deltaY < DRAG_INTENT_THRESHOLD) return;
-      // Soglia superata: è un drag — cattura il pointer e blocca i click
+      // Soglia superata: è un drag - cattura il pointer e blocca i click
       draggingRef.current = true;
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     }
