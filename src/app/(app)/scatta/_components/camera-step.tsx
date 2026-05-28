@@ -193,9 +193,9 @@ export default function CameraStep({ onCapture }: Props) {
             <button
               onClick={() => router.back()}
               aria-label="Chiudi fotocamera"
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white"
+              className="w-16 h-16 flex items-center justify-center rounded-full bg-black/50 text-white"
             >
-              <X className="w-5 h-5" />
+              <X className="w-7 h-7" />
             </button>
           </div>
 
@@ -204,8 +204,8 @@ export default function CameraStep({ onCapture }: Props) {
 
             {/* Zoom slider — solo se il dispositivo supporta zoom hardware */}
             {zoomCaps && (
-              <div className="w-full flex items-center gap-3 px-4">
-                <span className="text-white/70 text-xs font-medium tabular-nums w-10 text-right">
+              <div className="w-full flex flex-col items-center gap-2 px-4">
+                <span className="text-white/80 text-xs font-semibold tabular-nums">
                   {zoom.toFixed(1)}×
                 </span>
                 <input
@@ -215,9 +215,11 @@ export default function CameraStep({ onCapture }: Props) {
                   step={zoomCaps.step}
                   value={zoom}
                   onChange={(e) => applyZoom(Number(e.target.value))}
+                  style={{
+                    background: `linear-gradient(to right, white ${((zoom - zoomCaps.min) / (zoomCaps.max - zoomCaps.min)) * 100}%, rgba(255,255,255,0.3) ${((zoom - zoomCaps.min) / (zoomCaps.max - zoomCaps.min)) * 100}%)`,
+                  }}
                   className={cn(
-                    'flex-1 h-1 appearance-none rounded-full cursor-pointer',
-                    'bg-white/30',
+                    'w-full h-1 appearance-none rounded-full cursor-pointer',
                     '[&::-webkit-slider-thumb]:appearance-none',
                     '[&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4',
                     '[&::-webkit-slider-thumb]:rounded-full',
@@ -249,9 +251,9 @@ export default function CameraStep({ onCapture }: Props) {
               <button
                 onClick={flipCamera}
                 aria-label="Cambia fotocamera"
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white"
+                className="w-16 h-16 flex items-center justify-center rounded-full bg-black/50 text-white"
               >
-                <RefreshCw className="w-5 h-5" />
+                <RefreshCw className="w-7 h-7" />
               </button>
             </div>
           </div>
