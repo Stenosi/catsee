@@ -61,7 +61,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter,
   session: { strategy: 'database' },
   providers: [
-    Google,
+    Google({ allowDangerousEmailAccountLinking: true }),
     Resend({
       apiKey: process.env.AUTH_RESEND_KEY!,
       from: process.env.EMAIL_FROM ?? 'onboarding@resend.dev',
