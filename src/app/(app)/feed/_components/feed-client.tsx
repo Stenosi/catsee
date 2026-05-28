@@ -59,7 +59,11 @@ export default function FeedClient({ initialPosts }: Props) {
         const newestAt = posts[0]?.createdAt;
         fetchFollowingFeed(newestAt ? new Date(newestAt) : undefined).then((newPosts) => {
           if (newPosts.length > 0) {
-            setPosts((prev) => [...newPosts, ...prev]);
+            setPosts((prev) => {
+              const existingIds = new Set(prev.map((p) => p.id));
+              const deduped = newPosts.filter((p) => !existingIds.has(p.id));
+              return deduped.length > 0 ? [...deduped, ...prev] : prev;
+            });
           }
           isRefreshingRef.current = false;
           setIsRefreshing(false);
