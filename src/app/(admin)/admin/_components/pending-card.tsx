@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { approveSighting, rejectSighting } from "../actions";
 import ImageLightbox from "@/components/image-lightbox";
@@ -49,6 +50,13 @@ export default function PendingCard(props: PendingCardProps) {
   const [loading, setLoading] = useState<'approve' | 'reject' | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if ((e.target as HTMLElement).closest('button, a')) return;
+    cardRef.current?.classList.add('bg-muted');
+  }
+  function handlePointerUp() { cardRef.current?.classList.remove('bg-muted'); }
 
   if (dismissed) return null;
 
@@ -81,8 +89,12 @@ export default function PendingCard(props: PendingCardProps) {
   return (
     // Tap sulla card (fuori da elementi interattivi) espande/collassa la nota
     <div
-      className="p-4 space-y-3 active:bg-muted transition-colors cursor-pointer select-none"
+      ref={cardRef}
+      className="p-4 space-y-3 transition-colors cursor-pointer select-none"
       onClick={() => props.note && props.onToggleExpand()}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
     >
       <div className="flex gap-3">
         {/* Thumbnail — tappabile per ingrandire */}
@@ -107,7 +119,13 @@ export default function PendingCard(props: PendingCardProps) {
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="text-sm font-semibold text-foreground truncate">{props.catNickname}</span>
               <span className="text-xs text-muted-foreground shrink-0">·</span>
-              <span className="text-xs text-muted-foreground shrink-0">@{props.authorUsername}</span>
+              <Link
+                href={`/profilo/${props.authorUsername}`}
+                onClick={(e) => e.stopPropagation()}
+                className="text-xs text-muted-foreground shrink-0 hover:underline"
+              >
+                @{props.authorUsername}
+              </Link>
             </div>
             <span className="text-xs text-muted-foreground shrink-0">{timeAgo}</span>
           </div>

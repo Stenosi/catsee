@@ -44,6 +44,15 @@ export async function dismissReports(sightingId: string) {
   revalidatePath('/admin/segnalazioni');
 }
 
+export async function dismissUserReports(reportedUserId: string) {
+  await requireAdmin();
+  await db
+    .update(reports)
+    .set({ resolution: 'dismissed', resolvedAt: new Date() })
+    .where(and(eq(reports.reportedUserId, reportedUserId), eq(reports.resolution, 'pending')));
+  revalidatePath('/admin/segnalazioni');
+}
+
 export async function removeReportedPost(sightingId: string) {
   await requireAdmin();
   await db

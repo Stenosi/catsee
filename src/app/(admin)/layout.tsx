@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { requireOnboardedSession } from '@/lib/session';
 import { db } from '@/db';
 import { sightings, reports, users } from '@/db/schema';
-import { eq, and, isNull, count } from 'drizzle-orm';
+import { eq, and, isNull, count, sql } from 'drizzle-orm';
 import AdminHeader from './admin/_components/admin-header';
 import AdminTabs from './admin/_components/admin-tabs';
 import AdminSwipeMain from './admin/_components/admin-swipe-main';
@@ -19,7 +19,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     db.select({ pendingCount: count() })
       .from(sightings)
       .where(and(eq(sightings.moderationStatus, 'pending'), isNull(sightings.deletedAt))),
-    db.select({ reportCount: count() })
+    db.select({
+        reportCount: sql<number>`count(DISTINCT COALESCE(${reports.sightingId}::text, ${reports.reportedUserId}::text))::int`,
+      })
       .from(reports)
       .where(eq(reports.resolution, 'pending')),
     db.select({ bannedCount: count() })

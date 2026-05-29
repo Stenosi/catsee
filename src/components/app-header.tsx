@@ -94,7 +94,7 @@ function ImpostazioniHeader({ role }: { role: 'user' | 'admin' }) {
         aria-label="Torna indietro"
         className={cn(
           "flex items-center justify-center w-9 h-9 -ml-2 rounded-full",
-          "text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          "text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground"
         )}
       >
         <ChevronLeft className="w-5 h-5" strokeWidth={1.75} />
@@ -106,7 +106,7 @@ function ImpostazioniHeader({ role }: { role: 'user' | 'admin' }) {
           aria-label="Dashboard admin"
           className={cn(
             "flex items-center justify-center w-9 h-9 rounded-full",
-            "text-primary transition-colors hover:bg-primary/10"
+            "text-primary transition-colors hover:bg-primary/10 active:bg-primary/10"
           )}
         >
           <ShieldCheck className="w-5 h-5" strokeWidth={1.75} />
@@ -125,7 +125,7 @@ function FlagButton({ type, targetId }: { type: 'post' | 'user'; targetId: strin
         aria-label="Segnala"
         className={cn(
           "flex items-center justify-center w-9 h-9 rounded-full",
-          "text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          "text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground"
         )}
       >
         <Flag className="w-5 h-5" strokeWidth={1.75} />
@@ -158,7 +158,7 @@ function BackHeaderButton() {
       aria-label="Torna indietro"
       className={cn(
         "flex items-center justify-center w-9 h-9 -ml-2 rounded-full",
-        "text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        "text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground"
       )}
     >
       <ChevronLeft className="w-5 h-5" strokeWidth={1.75} />
@@ -208,7 +208,7 @@ function FollowSearchHeader() {
         aria-label="Torna indietro"
         className={cn(
           "flex items-center justify-center w-9 h-9 -ml-2 shrink-0 rounded-full",
-          "text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          "text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground"
         )}
       >
         <ChevronLeft className="w-5 h-5" strokeWidth={1.75} />
@@ -347,7 +347,7 @@ function ProfiloHeader({ username }: { username: string | null }) {
         onClick={() => router.push('/impostazioni')}
         className={cn(
           "flex items-center justify-center w-9 h-9 rounded-full",
-          "text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          "text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground active:bg-accent active:text-accent-foreground"
         )}
       >
         <Settings className="w-5 h-5" strokeWidth={1.75} />

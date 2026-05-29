@@ -5,11 +5,10 @@ import { toast } from "sonner";
 import { Flag } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { dismissReports, removeReportedPost, banUser } from "../actions";
+import { dismissUserReports, banUser } from "../actions";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Badge } from "@/components/ui/badge";
-import ImageLightbox from "@/components/image-lightbox";
 
 const REASON_LABELS: Record<string, string> = {
   not_a_cat: "Non è un gatto",
@@ -19,14 +18,11 @@ const REASON_LABELS: Record<string, string> = {
   other: "Altro",
 };
 
-export interface ReportGroupProps {
-  sightingId: string;
-  userId: string;
-  thumbnailUrl: string;
-  catNickname: string;
-  note: string | null;
-  authorNickname: string;
-  authorUsername: string;
+export interface UserReportGroupProps {
+  reportedUserId: string;
+  reportedNickname: string;
+  reportedUsername: string;
+  reportedAvatarUrl: string | null;
   reportCount: number;
   reasons: { value: string; count: number }[];
   reporters: string[];
@@ -34,10 +30,9 @@ export interface ReportGroupProps {
   onToggleExpand: () => void;
 }
 
-export default function ReportGroup(props: ReportGroupProps) {
+export default function UserReportGroup(props: UserReportGroupProps) {
   const [loading, setLoading] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState(false);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
@@ -59,50 +54,53 @@ export default function ReportGroup(props: ReportGroupProps) {
     }
   }
 
+  const initials = props.reportedNickname
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
+
   return (
     <div
       ref={cardRef}
       className="p-4 space-y-3 transition-colors cursor-pointer select-none"
-      onClick={() => props.note && props.onToggleExpand()}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
     >
       <div className="flex gap-3">
-        {/* Thumbnail — tappabile per ingrandire */}
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); setLightboxOpen(true); }}
-          className="w-18 h-18 rounded-xl overflow-hidden shrink-0 bg-muted active:opacity-80 transition-opacity"
-          aria-label="Ingrandisci immagine"
+        {/* Avatar */}
+        <Link
+          href={`/profilo/${props.reportedUsername}`}
+          onClick={(e) => e.stopPropagation()}
+          className="w-18 h-18 rounded-xl overflow-hidden shrink-0 bg-primary/20 flex items-center justify-center active:opacity-80 transition-opacity"
+          aria-label="Vai al profilo"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={props.thumbnailUrl}
-            alt={props.catNickname}
-            className="w-full h-full object-cover"
-          />
-        </button>
+          {props.reportedAvatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={props.reportedAvatarUrl}
+              alt={props.reportedNickname}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-xl font-bold text-primary">{initials}</span>
+          )}
+        </Link>
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          {/* Titolo + badge segnalazioni */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
-              <Link
-                href={`/post/${props.sightingId}`}
-                onClick={(e) => e.stopPropagation()}
-                className="text-sm font-semibold text-foreground truncate hover:underline"
-              >
-                {props.catNickname}
-              </Link>
+              <span className="text-sm font-semibold text-foreground truncate">{props.reportedNickname}</span>
               <span className="text-xs text-muted-foreground shrink-0">·</span>
               <Link
-                href={`/profilo/${props.authorUsername}`}
+                href={`/profilo/${props.reportedUsername}`}
                 onClick={(e) => e.stopPropagation()}
                 className="text-xs text-muted-foreground shrink-0 hover:underline"
               >
-                @{props.authorUsername}
+                @{props.reportedUsername}
               </Link>
             </div>
             <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive text-xs font-semibold shrink-0">
@@ -111,19 +109,12 @@ export default function ReportGroup(props: ReportGroupProps) {
             </span>
           </div>
 
-          {/* Nota — espandibile */}
-          {props.note && (
-            <div
-              className={cn(
-                "overflow-hidden transition-[max-height] duration-300 ease-in-out mt-1",
-                props.expanded ? "max-h-40" : "max-h-4"
-              )}
-            >
-              <p className="text-xs text-muted-foreground leading-4">{props.note}</p>
-            </div>
-          )}
+          {/* Badge "Utente" */}
+          <div className="mt-1">
+            <Badge variant="secondary" className="text-xs">Segnalazione utente</Badge>
+          </div>
 
-          {/* Tipi di segnalazione con counter */}
+          {/* Tipi di segnalazione */}
           {props.reasons.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-1.5">
               {props.reasons.map((r) => (
@@ -143,34 +134,19 @@ export default function ReportGroup(props: ReportGroupProps) {
           variant="outline"
           className="flex-1 bg-success/10 text-success hover:text-success hover:bg-success/20 border-success/30"
           disabled={loading !== null}
-          onClick={() => handle(() => dismissReports(props.sightingId), 'dismiss')}
+          onClick={() => handle(() => dismissUserReports(props.reportedUserId), 'dismiss')}
         >
           {loading === 'dismiss' ? 'Attendere…' : 'Respingi'}
-        </Button>
-        <Button
-          variant="outline"
-          className="flex-1 bg-primary/10 text-primary hover:text-primary hover:bg-primary/20 border-primary/30"
-          disabled={loading !== null}
-          onClick={() => handle(() => removeReportedPost(props.sightingId), 'remove')}
-        >
-          {loading === 'remove' ? 'Rimozione…' : 'Rimuovi post'}
         </Button>
         <Button
           variant="destructive"
           className="flex-1"
           disabled={loading !== null}
-          onClick={() => handle(() => banUser(props.userId), 'ban')}
+          onClick={() => handle(() => banUser(props.reportedUserId), 'ban')}
         >
           {loading === 'ban' ? 'Ban…' : 'Banna'}
         </Button>
       </ButtonGroup>
-
-      <ImageLightbox
-        src={props.thumbnailUrl}
-        alt={props.catNickname}
-        open={lightboxOpen}
-        onClose={() => setLightboxOpen(false)}
-      />
     </div>
   );
 }
