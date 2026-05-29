@@ -1,12 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { formatDistanceToNow } from "date-fns";
-import { it } from "date-fns/locale";
 import { CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { approveSighting, rejectSighting } from "../actions";
+
+const rtf = new Intl.RelativeTimeFormat('it', { numeric: 'auto' });
+
+function relativeTime(date: Date): string {
+  const diff = (date.getTime() - Date.now()) / 1000;
+  if (Math.abs(diff) < 60) return rtf.format(Math.round(diff), 'second');
+  if (Math.abs(diff) < 3600) return rtf.format(Math.round(diff / 60), 'minute');
+  if (Math.abs(diff) < 86400) return rtf.format(Math.round(diff / 3600), 'hour');
+  return rtf.format(Math.round(diff / 86400), 'day');
+}
 
 const COLOR_DOTS: Record<string, string> = {
   black: "bg-gray-900",
@@ -62,9 +70,7 @@ export default function PendingCard(props: PendingCardProps) {
     }
   }
 
-  const timeAgo = props.createdAt
-    ? formatDistanceToNow(props.createdAt, { locale: it, addSuffix: true })
-    : '';
+  const timeAgo = props.createdAt ? relativeTime(props.createdAt) : '';
 
   return (
     <div className="p-4 space-y-3">
