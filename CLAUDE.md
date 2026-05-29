@@ -682,6 +682,44 @@ Con i `loading.tsx`, Next.js App Router mostra istantaneamente header + navbar +
 - **PWA install prompt:** da aggiungere in onboarding step dedicato — vedi piano dettagliato in sezione successiva.
 - **Performance punto 3** (da sessione 13): separare `getSession` dal layout con `Suspense`.
 
+## Aggiornamenti sessione 15 (2026-05-29)
+
+### AI verify — cache IndexedDB + preload anticipato
+
+- **`use-ai-verify.ts`** refactored:
+  - `loadingPromise` module-level: evita download paralleli concorrenti (più chiamanti attendono la stessa Promise).
+  - Prima sessione: scarica il modello da rete → salva il graph model in IndexedDB via `(model as any).model.save('indexeddb://catsee-coco-ssd')`. Fire-and-forget, errori di salvataggio ignorati silenziosamente.
+  - Sessioni successive: `tf.io.listModels()` controlla la presenza della chiave → `cocoSsd.load({ modelUrl: 'indexeddb://catsee-coco-ssd' })` carica senza download di rete. Funziona sia in browser che in PWA.
+  - `preloadModel()` esportato: idempotente, fire-and-forget. Sicuro da chiamare più volte.
+  - **Pattern chiave:** `cocoSsd.load({ modelUrl: 'indexeddb://...' })` è il modo ufficiale TF.js per caricare da IndexedDB — evita di dover ricostruire la classe `ObjectDetection` manualmente.
+
+- **`camera-step.tsx`**:
+  - Mount effect: `navigator.permissions.query({ name: 'camera' })` — se `state === 'granted'` (permesso già concesso in sessione precedente) chiama `preloadModel()` subito, prima ancora che `startCamera` risolva.
+  - Effect `permission === 'granted'`: chiama `preloadModel()` anche al primo accesso (quando l'utente concede il permesso per la prima volta). Sostituisce anche il vecchio commento sul "sync srcObject".
+
+### Fix UX vari (sessione precedente alla compressione)
+
+- **Onboarding PWA step rimosso:** lo step PWA è stato eliminato completamente (dot, linea, JSX, state). GPS è ora l'ultimo step (step 5) e ridiritta a `/profilo`.
+- **Fix post-login 404:** `proxy.ts` ora imposta `callbackUrl` solo per route statiche note (`SAFE_CALLBACK_PATHS`). Route dinamiche come `/profilo/[username]` o `/post/[id]` non vengono mai usate come callbackUrl per evitare redirect su pagine 404 se la risorsa non esiste.
+- **Report drawer:** `handleSubmit` in `report-modal.tsx` chiama `onClose()` dopo il successo (senza `try/finally` per evitare race condition con l'animazione vaul).
+- **Feed immagini 1:1:** `feed-post-card.tsx` usa `aspect-square overflow-hidden` sul container + `absolute inset-0 object-cover` sull'immagine. Il tap naviga a `/post/[id]` (nessun lightbox). Skeleton allineato in `loading.tsx`.
+
+### Convenzioni aggiornate
+
+- **`callbackUrl` nel proxy:** usare `SAFE_CALLBACK_PATHS` (array di route statiche top-level) per decidere se impostare il redirect post-login. Mai passare route dinamiche come callbackUrl.
+- **IndexedDB TF.js:** pattern `tf.io.listModels()` → `cocoSsd.load({ modelUrl: 'indexeddb://...' })` → fallback rete → `model.save()`. La chiave IDB è `indexeddb://catsee-coco-ssd`.
+- **Preload pesante al permesso:** quando un'operazione pesante (modello AI) è necessaria in un passo successivo del wizard, triggerare il preload non appena il passo precedente ha un segnale di "ready" (es. permesso fotocamera concesso).
+
+### Debiti tecnici aggiornati
+
+- ~~**AI verify cache tra sessioni**~~ ✅ Risolto — IndexedDB caching + preload anticipato.
+- **Dashboard Admin** (`/admin`): moderazione post pending, segnalazioni, gestione utenti. Piano dettagliato esiste (vedi piano in questo file).
+- **Badge engine:** `checkAndAwardBadges(userId, trigger)` per assegnazione automatica badge.
+- **Sondaggi:** tabelle DB + card feed + UI admin.
+- **Notifiche Push:** service worker, VAPID, `push_subscriptions`, `web-push`.
+- **PWA install prompt:** step onboarding dedicato.
+- **Performance punto 3:** separare `getSession` dal layout con `Suspense`.
+
 ## Piano: Notifiche Push (da implementare)
 
 ### Infrastruttura necessaria
