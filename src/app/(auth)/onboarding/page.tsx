@@ -79,7 +79,7 @@ export default function OnboardingPage() {
   const [gpsStatus, setGpsStatus] = useState<GpsStatus>('idle');
 
   // Step 6 — PWA
-  const [pwaStatus, setPwaStatus] = useState<'checking' | 'standalone' | 'installable' | 'installing' | 'installed' | 'unsupported'>('checking');
+  const [pwaStatus, setPwaStatus] = useState<'checking' | 'standalone' | 'installable' | 'installing' | 'installed' | 'unsupported_ios' | 'unsupported_other'>('checking');
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   // ── PWA install prompt — cattura al mount ──────────────────────────────────
@@ -89,9 +89,20 @@ export default function OnboardingPage() {
       setPwaStatus('standalone');
       return;
     }
-    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    if (isIos) { setPwaStatus('unsupported'); return; }
 
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+    // Leggi il prompt già catturato dallo script inline nel root layout
+    const existing = (window as Window & { __deferredInstallPrompt?: BeforeInstallPromptEvent }).__deferredInstallPrompt;
+    if (existing) {
+      setDeferredPrompt(existing);
+      setPwaStatus('installable');
+      return;
+    }
+
+    if (isIos) { setPwaStatus('unsupported_ios'); return; }
+
+    // Ascolta eventi futuri (es. primo caricamento in produzione)
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
@@ -99,10 +110,10 @@ export default function OnboardingPage() {
     };
     window.addEventListener('beforeinstallprompt', handler);
 
-    // Fallback: se dopo 4s non arriva il prompt, il browser non supporta
+    // Fallback: se dopo 5s nessun prompt, l'ambiente non supporta l'installazione
     const timeout = setTimeout(() => {
-      setPwaStatus((prev) => prev === 'checking' ? 'unsupported' : prev);
-    }, 4000);
+      setPwaStatus((prev) => prev === 'checking' ? 'unsupported_other' : prev);
+    }, 5000);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
@@ -556,7 +567,7 @@ export default function OnboardingPage() {
             </>
           )}
 
-          {/* Installabile (Chrome/Android) */}
+          {/* Installabile (Chrome/Android) o in attesa del prompt */}
           {(pwaStatus === 'installable' || pwaStatus === 'installing' || pwaStatus === 'checking') && (
             <>
               <div className="flex flex-col gap-1">
@@ -603,8 +614,29 @@ export default function OnboardingPage() {
             </>
           )}
 
-          {/* Non supportato / iOS — istruzioni manuali */}
-          {pwaStatus === 'unsupported' && (
+          {/* Non supportato / altri browser (Android non-Chrome, desktop, ecc.) */}
+          {pwaStatus === 'unsupported_other' && (
+            <>
+              <div className="flex flex-col gap-1">
+                <h1 className="text-2xl font-semibold">Installa CatSee</h1>
+                <p className="text-sm text-muted-foreground">Aggiungi CatSee alla schermata Home per accedervi rapidamente, senza barre del browser.</p>
+              </div>
+              <div className="flex flex-col items-center gap-6 py-2">
+                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Smartphone className="w-10 h-10 text-primary" />
+                </div>
+                <p className="text-sm text-center text-muted-foreground">
+                  Per installare l'app, apri CatSee in <span className="font-medium text-foreground">Chrome su Android</span> e tocca "Installa app" nel menu del browser, oppure cerca l'icona di installazione nella barra degli indirizzi.
+                </p>
+              </div>
+              <Button onClick={() => router.push('/profilo')} className="w-full mt-auto">
+                Continua
+              </Button>
+            </>
+          )}
+
+          {/* Non supportato / iOS — istruzioni manuali Safari */}
+          {pwaStatus === 'unsupported_ios' && (
             <>
               <div className="flex flex-col gap-1">
                 <h1 className="text-2xl font-semibold">Aggiungi alla Home</h1>

@@ -43,6 +43,15 @@ export default function RootLayout({
       lang="it"
       className={`${jakartaSans.variable} ${geistMono.variable} antialiased`}
     >
+      {/* Cattura beforeinstallprompt prima che React monti — lo script viene eseguito in modo sincrono */}
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            window.__deferredInstallPrompt = e;
+          });
+        `}} />
+      </head>
       <body className="h-full overflow-hidden">
         {children}
         <Toaster position="top-center" richColors />
