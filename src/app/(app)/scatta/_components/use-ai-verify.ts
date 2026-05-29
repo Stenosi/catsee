@@ -5,11 +5,63 @@ import type { ObjectDetection } from '@tensorflow-models/coco-ssd';
 
 export type AiVerifyState = 'idle' | 'loading' | 'cat' | 'no-cat' | 'error';
 
-// Singleton: il modello viene scaricato una sola volta per sessione e riusato.
+const IDB_KEY = 'indexeddb://catsee-coco-ssd';
+
+// Singleton in-memory: evita di ricaricare il modello nella stessa sessione tab.
 let cachedModel: ObjectDetection | null = null;
+// Promise condivisa per evitare download paralleli concorrenti.
+let loadingPromise: Promise<ObjectDetection> | null = null;
 
 export function isModelCached() {
   return cachedModel !== null;
+}
+
+async function loadModel(): Promise<ObjectDetection> {
+  if (cachedModel) return cachedModel;
+  if (loadingPromise) return loadingPromise;
+
+  loadingPromise = (async () => {
+    const [tf, cocoSsd] = await Promise.all([
+      import('@tensorflow/tfjs'),
+      import('@tensorflow-models/coco-ssd'),
+    ]);
+    await tf.ready();
+
+    // Prova prima la cache IndexedDB (persiste tra sessioni, sia browser che PWA).
+    let model: ObjectDetection | null = null;
+    try {
+      const saved = await tf.io.listModels();
+      if (IDB_KEY in saved) {
+        model = await cocoSsd.load({ modelUrl: IDB_KEY });
+      }
+    } catch {
+      // IndexedDB non disponibile o modello corrotto — ricade sul download di rete.
+    }
+
+    if (!model) {
+      model = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
+      // Salva il graph model in IndexedDB per le sessioni future (fire-and-forget).
+      try {
+        const raw = (model as unknown as { model: { save(url: string): Promise<unknown> } }).model;
+        await raw.save(IDB_KEY);
+      } catch {
+        // Salvataggio fallito (es. storage quota) — nessun problema, si riscarica la prossima volta.
+      }
+    }
+
+    cachedModel = model;
+    return model;
+  })();
+
+  // Se il caricamento fallisce, azzera la promise per permettere un retry.
+  loadingPromise.catch(() => { loadingPromise = null; });
+
+  return loadingPromise;
+}
+
+/** Pre-carica il modello in background. Idempotente: sicuro da chiamare più volte. */
+export function preloadModel() {
+  loadModel().catch(() => { /* silent — l'errore verrà gestito all'uso effettivo */ });
 }
 
 export function useAiVerify(imageUrl: string | null, enabled: boolean) {
@@ -25,18 +77,7 @@ export function useAiVerify(imageUrl: string | null, enabled: boolean) {
 
     async function run() {
       try {
-        let model = cachedModel;
-
-        if (!model) {
-          const [tf, cocoSsd] = await Promise.all([
-            import('@tensorflow/tfjs'),
-            import('@tensorflow-models/coco-ssd'),
-          ]);
-          await tf.ready();
-          model = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
-          cachedModel = model;
-        }
-
+        const model = await loadModel();
         if (cancelled) return;
 
         const img = new Image();

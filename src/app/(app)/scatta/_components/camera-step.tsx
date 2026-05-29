@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, RefreshCw, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { preloadModel } from './use-ai-verify';
 
 type Permission = 'loading' | 'granted' | 'denied' | 'error';
 type FacingMode = 'environment' | 'user';
@@ -67,6 +68,12 @@ export default function CameraStep({ onCapture }: Props) {
   }, []);
 
   useEffect(() => {
+    // Se il permesso fotocamera era già stato concesso in precedenza, pre-carica
+    // subito il modello AI senza aspettare che l'utente arrivi al form step.
+    navigator.permissions?.query({ name: 'camera' as PermissionName })
+      .then((s) => { if (s.state === 'granted') preloadModel(); })
+      .catch(() => { /* browser non supporta la Permissions API per 'camera' */ });
+
     startCamera('environment');
 
     function stopStream() {
@@ -85,13 +92,14 @@ export default function CameraStep({ onCapture }: Props) {
     };
   }, [startCamera]);
 
-  // Quando il componente monta, il videoRef è già disponibile ma lo stream potrebbe
-  // arrivare prima del primo render. Questo effect sincronizza srcObject se necessario.
+  // Quando il permesso viene appena concesso (primo accesso alla fotocamera):
+  // sincronizza srcObject se necessario e avvia il preload del modello AI.
   useEffect(() => {
-    if (permission === 'granted' && videoRef.current && streamRef.current) {
-      if (!videoRef.current.srcObject) {
+    if (permission === 'granted') {
+      if (videoRef.current && streamRef.current && !videoRef.current.srcObject) {
         videoRef.current.srcObject = streamRef.current;
       }
+      preloadModel();
     }
   }, [permission]);
 
