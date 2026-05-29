@@ -14,9 +14,18 @@ interface Props {
 export default function ImageLightbox({ src, alt = '', open, onClose, circle = false }: Props) {
   useEffect(() => {
     if (!open) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
+
+    history.pushState({ lightbox: true }, '');
+
+    function onPopState() { onClose(); }
+    function onKeyDown(e: KeyboardEvent) { if (e.key === 'Escape') history.back(); }
+
+    window.addEventListener('popstate', onPopState);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('popstate', onPopState);
+      document.removeEventListener('keydown', onKeyDown);
+    };
   }, [open, onClose]);
 
   if (!open) return null;
@@ -24,10 +33,10 @@ export default function ImageLightbox({ src, alt = '', open, onClose, circle = f
   return (
     <div
       className="fixed inset-0 z-1000 bg-black/90 flex items-center justify-center p-4"
-      onClick={onClose}
+      onClick={() => history.back()}
     >
       <button
-        onClick={onClose}
+        onClick={() => history.back()}
         aria-label="Chiudi"
         className="absolute top-[calc(env(safe-area-inset-top)+1rem)] right-4 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white"
       >
