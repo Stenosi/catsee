@@ -59,7 +59,7 @@ export default function FeedPostCard({ post }: { post: FeedPost }) {
       </div>
 
       {/* Foto */}
-      <Link href={`/post/${post.id}`} className="block relative aspect-square bg-muted">
+      <Link href={`/post/${post.id}`} className="block relative aspect-square bg-muted overflow-hidden">
         {!loaded && <Skeleton className="absolute inset-0 rounded-none" />}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -67,7 +67,7 @@ export default function FeedPostCard({ post }: { post: FeedPost }) {
           alt={post.catNickname}
           onLoad={() => setLoaded(true)}
           className={cn(
-            'w-full h-full object-cover transition-opacity duration-500',
+            'absolute inset-0 w-full h-full object-cover transition-opacity duration-500',
             loaded ? 'opacity-100' : 'opacity-0',
           )}
         />
