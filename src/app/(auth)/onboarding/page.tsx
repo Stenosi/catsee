@@ -4,7 +4,7 @@ import { useState, useEffect, useTransition, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Loader2, CheckCircle, XCircle, Info, Check, X, Minus,
-  Camera, MapPin, CheckCircle2, AlertCircle,
+  Camera, MapPin, CheckCircle2, AlertCircle, Smartphone, Share,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,8 +29,13 @@ function ConstraintRow({ met, idle, children }: { met: boolean; idle: boolean; c
   );
 }
 
-const STEPS = ['username', 'nickname', 'avatar', 'privacy', 'gps'] as const;
+const STEPS = ['username', 'nickname', 'avatar', 'privacy', 'gps', 'pwa'] as const;
 type Step = typeof STEPS[number];
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
 
 type UsernameState = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 type GpsStatus = 'idle' | 'requesting' | 'granted' | 'denied';
@@ -72,6 +77,47 @@ export default function OnboardingPage() {
 
   // Step 5 — GPS
   const [gpsStatus, setGpsStatus] = useState<GpsStatus>('idle');
+
+  // Step 6 — PWA
+  const [pwaStatus, setPwaStatus] = useState<'checking' | 'standalone' | 'installable' | 'installing' | 'installed' | 'unsupported'>('checking');
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+
+  // ── PWA install prompt — cattura al mount ──────────────────────────────────
+
+  useEffect(() => {
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setPwaStatus('standalone');
+      return;
+    }
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (isIos) { setPwaStatus('unsupported'); return; }
+
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      setPwaStatus('installable');
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+
+    // Fallback: se dopo 4s non arriva il prompt, il browser non supporta
+    const timeout = setTimeout(() => {
+      setPwaStatus((prev) => prev === 'checking' ? 'unsupported' : prev);
+    }, 4000);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      clearTimeout(timeout);
+    };
+  }, []);
+
+  async function handlePwaInstall() {
+    if (!deferredPrompt) return;
+    setPwaStatus('installing');
+    await deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    setDeferredPrompt(null);
+    setPwaStatus(outcome === 'accepted' ? 'installed' : 'installable');
+  }
 
   // ── Username live check ─────────────────────────────────────────────────────
 
@@ -451,7 +497,7 @@ export default function OnboardingPage() {
                 <Button onClick={requestGps} className="w-full">
                   <MapPin className="w-4 h-4" /> Attiva posizione
                 </Button>
-                <Button variant="ghost" onClick={() => router.push('/mappa')} className="w-full">
+                <Button variant="ghost" onClick={() => setStep('pwa')} className="w-full">
                   Decidi dopo
                 </Button>
               </>
@@ -462,11 +508,140 @@ export default function OnboardingPage() {
               </Button>
             )}
             {(gpsStatus === 'granted' || gpsStatus === 'denied') && (
-              <Button onClick={() => router.push('/mappa')} className="w-full">
-                {gpsStatus === 'granted' ? 'Inizia ad avvistare!' : 'Vai alla mappa'}
+              <Button onClick={() => setStep('pwa')} className="w-full">
+                Continua
               </Button>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ── Step 6: PWA install ── */}
+      {step === 'pwa' && (
+        <div className="flex flex-col flex-1 gap-8">
+
+          {/* Già installata */}
+          {pwaStatus === 'standalone' && (
+            <>
+              <div className="flex flex-col gap-1">
+                <h1 className="text-2xl font-semibold">CatSee è già installata</h1>
+                <p className="text-sm text-muted-foreground">Ottimo — stai già usando la versione app.</p>
+              </div>
+              <div className="flex flex-col items-center gap-4 py-6">
+                <div className="w-20 h-20 rounded-full bg-success/15 flex items-center justify-center">
+                  <CheckCircle2 className="w-10 h-10 text-success" />
+                </div>
+              </div>
+              <Button onClick={() => router.push('/profilo')} className="w-full mt-auto">
+                Inizia ad avvistare!
+              </Button>
+            </>
+          )}
+
+          {/* Installazione completata */}
+          {pwaStatus === 'installed' && (
+            <>
+              <div className="flex flex-col gap-1">
+                <h1 className="text-2xl font-semibold">Installazione completata!</h1>
+                <p className="text-sm text-muted-foreground">Trovi CatSee sulla schermata Home del tuo dispositivo.</p>
+              </div>
+              <div className="flex flex-col items-center gap-4 py-6">
+                <div className="w-20 h-20 rounded-full bg-success/15 flex items-center justify-center">
+                  <CheckCircle2 className="w-10 h-10 text-success" />
+                </div>
+              </div>
+              <Button onClick={() => router.push('/profilo')} className="w-full mt-auto">
+                Inizia ad avvistare!
+              </Button>
+            </>
+          )}
+
+          {/* Installabile (Chrome/Android) */}
+          {(pwaStatus === 'installable' || pwaStatus === 'installing' || pwaStatus === 'checking') && (
+            <>
+              <div className="flex flex-col gap-1">
+                <h1 className="text-2xl font-semibold">Installa CatSee</h1>
+                <p className="text-sm text-muted-foreground">Aggiungi l'app alla schermata Home per la miglior esperienza.</p>
+              </div>
+
+              <div className="flex flex-col items-center gap-6 py-2">
+                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Smartphone className="w-10 h-10 text-primary" />
+                </div>
+                <ul className="w-full space-y-3">
+                  {[
+                    { icon: '🏠', text: 'Accesso rapido dalla schermata Home' },
+                    { icon: '🚀', text: 'Schermo intero, senza barre del browser' },
+                    { icon: '📶', text: 'Più veloce e reattiva del sito web' },
+                    { icon: '🔔', text: 'Notifiche native per nuovi gatti (prossimamente)' },
+                  ].map(({ icon, text }) => (
+                    <li key={text} className="flex items-center gap-3 text-sm text-foreground">
+                      <span className="text-base w-6 text-center shrink-0">{icon}</span>
+                      {text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="flex flex-col gap-3 mt-auto">
+                <Button
+                  onClick={handlePwaInstall}
+                  disabled={pwaStatus !== 'installable'}
+                  className="w-full"
+                >
+                  {pwaStatus === 'installing'
+                    ? <><Loader2 className="w-4 h-4 animate-spin" />Installazione…</>
+                    : pwaStatus === 'checking'
+                      ? <><Loader2 className="w-4 h-4 animate-spin" />Preparazione…</>
+                      : <><Smartphone className="w-4 h-4" />Installa CatSee</>
+                  }
+                </Button>
+                <Button variant="ghost" onClick={() => router.push('/profilo')} className="w-full">
+                  Continua senza installare
+                </Button>
+              </div>
+            </>
+          )}
+
+          {/* Non supportato / iOS — istruzioni manuali */}
+          {pwaStatus === 'unsupported' && (
+            <>
+              <div className="flex flex-col gap-1">
+                <h1 className="text-2xl font-semibold">Aggiungi alla Home</h1>
+                <p className="text-sm text-muted-foreground">Il tuo browser non supporta l'installazione automatica, ma puoi aggiungerla manualmente in pochi secondi.</p>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col items-center gap-4 py-2">
+                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Smartphone className="w-10 h-10 text-primary" />
+                  </div>
+                </div>
+                <div className="rounded-xl border border-border overflow-hidden divide-y divide-border">
+                  {[
+                    { step: '1', text: 'Apri Safari (se non sei già qui)' },
+                    { step: '2', icon: <Share className="w-4 h-4 text-primary shrink-0" />, text: 'Tocca l\'icona condividi nella barra in basso' },
+                    { step: '3', text: 'Scorri e seleziona "Aggiungi alla schermata Home"' },
+                    { step: '4', text: 'Tocca "Aggiungi" in alto a destra' },
+                  ].map(({ step: s, icon, text }) => (
+                    <div key={s} className="flex items-center gap-3 px-4 py-3 bg-card">
+                      {icon ?? (
+                        <span className="w-5 h-5 rounded-full bg-primary/15 text-primary text-xs font-bold flex items-center justify-center shrink-0">{s}</span>
+                      )}
+                      <span className="text-sm text-foreground">{text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 mt-auto">
+                <Button onClick={() => router.push('/profilo')} className="w-full">
+                  Ho capito, vai avanti
+                </Button>
+              </div>
+            </>
+          )}
+
         </div>
       )}
 

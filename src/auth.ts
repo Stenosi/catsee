@@ -74,6 +74,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: '/login',
   },
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith('/')) return `${baseUrl}${url}`;
+      if (url.startsWith(baseUrl)) return url;
+      return `${baseUrl}/profilo`;
+    },
     async session({ session, user }) {
       // Con strategy "database", user è la riga del DB restituita dall'adapter.
       // Il tipo è AdapterUser ma a runtime contiene tutti i nostri campi custom.

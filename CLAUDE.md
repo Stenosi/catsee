@@ -538,9 +538,9 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 ### Debiti tecnici aggiornati (sessione 10)
 
 - ~~**Redirect post-pubblicazione**~~ ✅ - redirect a `/feed` dopo publish.
-- **Desktop lock `/scatta`:** da aggiungere prima del lancio.
-- **Pannello admin moderazione:** i post in `pending` non hanno UI per essere approvati/rifiutati.
-- **Profilo pubblico `/profilo/[username]`:** il blocco avatar+username nel bottom sheet della mappa è già pronto visivamente ma non è cliccabile - manca la route destinazione. Da implementare in v1.1 insieme ai profili privati.
+- ~~**Desktop lock `/scatta`:**~~ ✅ Implementato — schermata "Funzione solo mobile" con rilevamento `maxTouchPoints`.
+- ~~**Pannello admin moderazione:**~~ ✅ Dashboard admin completa (moderazione, segnalazioni, utenti).
+- ~~**Profilo pubblico `/profilo/[username]` dalla mappa:**~~ ✅ Avatar+username nel sighting sheet sono link a `/profilo/[username]`.
 - **Tile layer dark mode:** light mode usa `Stadia.AlidadeSmooth`, dark mode dovrà usare `Stadia.AlidadeSmoothDark` (`https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png`). Il commento è già nel codice in `map-inner.tsx` e `profile-map-inner.tsx`.
 - ~~**Pin cliccabili → dettaglio post**~~ ✅ - `router.push('/post/[id]')` nel click handler del marker Leaflet.
 - **Logo CatSee:** attualmente si usa l'icona Lucide `Cat` su sfondo amber come placeholder in tutte le icone PWA (favicon, apple-icon, manifest 192/512). Va sostituito con un logo vettoriale definitivo prima del lancio. Il logo deve essere quadrato con ~10-15% padding interno; esportare PNG 192×192, 512×512 (anche maskable), 180×180, 32×32. Verificare il maskable su maskable.app/editor. Quando pronto, sostituire i file `src/app/icon.tsx`, `src/app/apple-icon.tsx`, `src/app/icon-192/route.tsx`, `src/app/icon-512/route.tsx`.
@@ -604,9 +604,9 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 - **Swipe tab in `/cerca` non funziona su aree vuote (KB-004):** lo stesso hook `useTabSwipe` funziona in `/profilo` e `/profilo/follow` ma non in `/cerca` quando la lista risultati è corta/vuota. Causa non chiarita - vedi `docs/KNOWN_BUGS.md` KB-004 per dettagli e tentativi falliti.
 - **Navigazione post in-context (v1.1b):** da `/profilo/[username]` e dai risultati "Gatti" in `/cerca`, il tap su un post aprirà una lista scorrevole in-context (stile Instagram) invece della pagina isolata `/post/[id]`. Rinviato a quando il volume di post lo rende utile. Vedi `docs/SPEC.md` §5 v1.1b per dettagli e contesti esclusi.
 - **`follows-sheet.tsx`:** file rimasto nel repo ma non più usato (sostituito da `/profilo/follow`). Da rimuovere in pulizia futura.
-- **Desktop lock `/scatta`:** da aggiungere prima del lancio.
-- **Pannello admin moderazione:** post in `pending` senza UI di approvazione/rifiuto.
-- **Profilo pubblico `/profilo/[username]` dalla mappa:** blocco avatar nel sighting sheet non ancora cliccabile - manca integrazione con la route.
+- ~~**Desktop lock `/scatta`:**~~ ✅ Risolto.
+- ~~**Pannello admin moderazione:**~~ ✅ Risolto.
+- ~~**Profilo pubblico `/profilo/[username]` dalla mappa:**~~ ✅ Risolto.
 
 ## Aggiornamenti sessione 13 (2026-05-27)
 

@@ -55,7 +55,7 @@ export async function GET(request: Request) {
   // Costruisce la URL di redirect dalla request
   const requestUrl = new URL(request.url);
   const { protocol, host } = requestUrl;
-  const redirectUrl = `${protocol}//${host}/mappa`;
+  const redirectUrl = `${protocol}//${host}/profilo`;
 
   const response = NextResponse.redirect(redirectUrl);
 

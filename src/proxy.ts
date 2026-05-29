@@ -43,9 +43,9 @@ export default auth((req) => {
     return NextResponse.redirect(new URL('/onboarding', req.url));
   }
 
-  // Onboarding già completato ma tenta di riaprirlo → /mappa
+  // Onboarding già completato ma tenta di riaprirlo → /profilo
   if (session.user.onboardingCompleted && pathname === '/onboarding') {
-    return NextResponse.redirect(new URL('/mappa', req.url));
+    return NextResponse.redirect(new URL('/profilo', req.url));
   }
 
   return NextResponse.next();

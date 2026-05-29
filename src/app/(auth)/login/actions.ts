@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { cookies } from 'next/headers';
 
 export async function loginWithGoogle() {
-  await signIn('google', { redirectTo: '/mappa' });
+  await signIn('google', { redirectTo: '/profilo' });
 }
 
 const emailSchema = z.email();
@@ -31,7 +31,7 @@ export async function loginWithEmail(formData: FormData) {
   // redirect: false → signIn invia la mail e ritorna senza lanciare NEXT_REDIRECT.
   // In caso di errore Resend lancia AuthError.
   try {
-    await signIn('resend', { email: result.data, redirectTo: '/mappa', redirect: false });
+    await signIn('resend', { email: result.data, redirectTo: '/profilo', redirect: false });
   } catch (err) {
     if (err instanceof AuthError) {
       return { error: 'Errore durante invio email. Riprova.' };
