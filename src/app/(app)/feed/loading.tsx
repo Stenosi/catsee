@@ -14,7 +14,7 @@ function FeedCardSkeleton() {
       </div>
 
       {/* Foto */}
-      <Skeleton className="w-full aspect-[4/3] rounded-none" />
+      <Skeleton className="w-full aspect-square rounded-none" />
 
       {/* Footer */}
       <div className="flex flex-col gap-2 px-4 py-3">
