@@ -150,6 +150,15 @@ export default function OnboardingPage() {
 
   // ── Step 5 — GPS ────────────────────────────────────────────────────────────
 
+  useEffect(() => {
+    if (step !== 'gps') return;
+    if (!navigator.permissions) return;
+    navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+      if (result.state === 'granted') setGpsStatus('granted');
+      else if (result.state === 'denied') setGpsStatus('denied');
+    });
+  }, [step]);
+
   function requestGps() {
     setGpsStatus('requesting');
     navigator.geolocation.getCurrentPosition(
@@ -286,16 +295,16 @@ export default function OnboardingPage() {
 
           {formError && <p className="text-sm text-destructive" role="alert">{formError}</p>}
 
-          <div className="flex gap-3 mt-auto">
-            <Button type="button" variant="secondary" onClick={() => setStep('username')} disabled={isPendingNickname} className="flex-1">
-              Indietro
-            </Button>
+          <div className="flex flex-col gap-3 mt-auto">
             <Button
               onClick={handleNicknameContinue}
               disabled={nickname.trim().length === 0 || isPendingNickname}
-              className="flex-1"
+              className="w-full"
             >
               {isPendingNickname ? <><Loader2 className="w-4 h-4 animate-spin" />Salvataggio…</> : 'Continua'}
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => setStep('username')} disabled={isPendingNickname} className="w-full">
+              Indietro
             </Button>
           </div>
         </div>
@@ -345,14 +354,21 @@ export default function OnboardingPage() {
             />
           </div>
 
-          <div className="flex gap-3 mt-auto">
-            <Button variant="secondary" onClick={() => setStep('privacy')} className="flex-1">
-              {avatarPreviewUrl ? 'Continua' : 'Salta'}
-            </Button>
-            {!avatarPreviewUrl && (
-              <Button onClick={() => fileInputRef.current?.click()} disabled={isUploadingAvatar} className="flex-1">
-                Scegli foto
-              </Button>
+          <div className="flex flex-col gap-3 mt-auto">
+            {avatarPreviewUrl ? (
+              <>
+                <Button onClick={() => setStep('privacy')} className="w-full">Continua</Button>
+                <Button variant="ghost" onClick={() => fileInputRef.current?.click()} disabled={isUploadingAvatar} className="w-full">
+                  Cambia foto
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button onClick={() => fileInputRef.current?.click()} disabled={isUploadingAvatar} className="w-full">
+                  {isUploadingAvatar ? <><Loader2 className="w-4 h-4 animate-spin" />Caricamento…</> : 'Scegli foto'}
+                </Button>
+                <Button variant="ghost" onClick={() => setStep('privacy')} className="w-full">Salta</Button>
+              </>
             )}
           </div>
         </div>
@@ -431,23 +447,23 @@ export default function OnboardingPage() {
 
           <div className="flex flex-col gap-3 mt-auto">
             {gpsStatus === 'idle' && (
-              <Button onClick={requestGps}>
-                <MapPin className="w-4 h-4" /> Attiva posizione
-              </Button>
+              <>
+                <Button onClick={requestGps} className="w-full">
+                  <MapPin className="w-4 h-4" /> Attiva posizione
+                </Button>
+                <Button variant="ghost" onClick={() => router.push('/mappa')} className="w-full">
+                  Decidi dopo
+                </Button>
+              </>
             )}
             {gpsStatus === 'requesting' && (
-              <Button disabled>
+              <Button disabled className="w-full">
                 <Loader2 className="w-4 h-4 animate-spin" /> In attesa…
               </Button>
             )}
             {(gpsStatus === 'granted' || gpsStatus === 'denied') && (
-              <Button onClick={() => router.push('/mappa')}>
+              <Button onClick={() => router.push('/mappa')} className="w-full">
                 {gpsStatus === 'granted' ? 'Inizia ad avvistare!' : 'Vai alla mappa'}
-              </Button>
-            )}
-            {gpsStatus === 'idle' && (
-              <Button variant="ghost" onClick={() => router.push('/mappa')}>
-                Decidi dopo
               </Button>
             )}
           </div>

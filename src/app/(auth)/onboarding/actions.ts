@@ -89,7 +89,7 @@ export async function saveUsernameNickname(
 
   await db
     .update(users)
-    .set({ username, nickname, usernameUpdatedAt: new Date(), onboardingCompleted: true })
+    .set({ username, nickname, usernameUpdatedAt: new Date(), onboardingCompleted: true, deletedAt: null })
     .where(eq(users.id, session.user.id));
 
   return { success: true };
