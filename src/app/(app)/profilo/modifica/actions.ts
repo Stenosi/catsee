@@ -172,8 +172,13 @@ export async function saveAvatarUrl(key: string): Promise<SaveAvatarResult> {
 
   const current = await db.query.users.findFirst({
     where: (u, { eq }) => eq(u.id, userId),
-    columns: { avatarUrl: true },
+    columns: { avatarUrl: true, avatarBannedUntil: true },
   });
+
+  if (current?.avatarBannedUntil && current.avatarBannedUntil > new Date()) {
+    const daysLeft = Math.ceil((current.avatarBannedUntil.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    return { success: false, error: `Non puoi caricare una foto profilo per altri ${daysLeft} ${daysLeft === 1 ? 'giorno' : 'giorni'}.` };
+  }
 
   const newUrl = `${R2_PUBLIC_URL}/${key}`;
 

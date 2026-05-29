@@ -55,6 +55,7 @@ interface Props {
   bio: string | null;
   avatarUrl: string | null;
   usernameLockedDays: number;
+  avatarBannedDays: number;
 }
 
 export default function ModificaClient({
@@ -63,6 +64,7 @@ export default function ModificaClient({
   bio,
   avatarUrl,
   usernameLockedDays,
+  avatarBannedDays,
 }: Props) {
   const [avatarStatus, setAvatarStatus] = useState<'loading' | 'loaded' | 'error' | 'idle'>(
     avatarUrl ? 'loading' : 'idle',
@@ -74,12 +76,25 @@ export default function ModificaClient({
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
+  const isAvatarBanned = avatarBannedDays > 0;
+
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     // Reset input così lo stesso file può essere riselezionato
     e.target.value = '';
     setCropSrc(URL.createObjectURL(file));
+  }
+
+  function handleAvatarClick() {
+    if (isAvatarBanned) {
+      toast.error(
+        `Foto profilo bloccata per ${avatarBannedDays} ${avatarBannedDays === 1 ? 'giorno' : 'giorni'}`,
+        { description: 'La tua foto profilo è stata rimossa dall\'amministratore. Potrai caricarne una nuova al termine del periodo di blocco.' }
+      );
+      return;
+    }
+    fileInputRef.current?.click();
   }
 
   async function handleRemoveAvatar() {
@@ -209,10 +224,10 @@ export default function ModificaClient({
           />
           <button
             type="button"
-            aria-label="Cambia foto profilo"
+            aria-label={isAvatarBanned ? 'Foto profilo bloccata' : 'Cambia foto profilo'}
             className="relative group"
             disabled={uploadingAvatar}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={handleAvatarClick}
           >
             <div className="relative">
               <Avatar size="2xl" className="overflow-hidden">
@@ -234,20 +249,39 @@ export default function ModificaClient({
               )}
             </div>
 
-            {/* Overlay fotocamera */}
+            {/* Overlay icona */}
             <div className={cn(
               'absolute bottom-0 right-0',
               'flex items-center justify-center w-7 h-7 rounded-full',
-              'bg-primary text-primary-foreground border-2 border-background',
+              'border-2 border-background',
               'transition-transform group-active:scale-95',
+              isAvatarBanned
+                ? 'bg-muted text-muted-foreground'
+                : 'bg-primary text-primary-foreground',
             )}>
               {uploadingAvatar
                 ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                : <Camera className="w-3.5 h-3.5" strokeWidth={2} />
+                : isAvatarBanned
+                  ? <Lock className="w-3.5 h-3.5" strokeWidth={2} />
+                  : <Camera className="w-3.5 h-3.5" strokeWidth={2} />
               }
             </div>
           </button>
-          {currentAvatarUrl && (
+
+          {isAvatarBanned && (
+            <Alert className="mt-1">
+              <Lock />
+              <AlertDescription>
+                Foto profilo bloccata. Potrai caricarne una nuova tra{' '}
+                <span className="font-medium text-foreground">
+                  {avatarBannedDays} {avatarBannedDays === 1 ? 'giorno' : 'giorni'}
+                </span>
+                .
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {currentAvatarUrl && !isAvatarBanned && (
             <AlertDialog>
               <AlertDialogTrigger
                 render={<Button type="button" variant="destructive" size="sm" disabled={uploadingAvatar} />}

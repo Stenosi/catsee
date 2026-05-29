@@ -4,10 +4,11 @@ import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { Flag } from "lucide-react";
 import Link from "next/link";
-import { dismissUserReports, banUser } from "../actions";
+import { dismissUserReports, banUser, removeUserAvatar } from "../actions";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Badge } from "@/components/ui/badge";
+import ImageLightbox from "@/components/image-lightbox";
 
 const REASON_LABELS: Record<string, string> = {
   not_a_cat: "Non è un gatto",
@@ -34,6 +35,7 @@ export interface UserReportGroupProps {
 export default function UserReportGroup(props: UserReportGroupProps) {
   const [loading, setLoading] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
@@ -71,12 +73,12 @@ export default function UserReportGroup(props: UserReportGroupProps) {
       onPointerCancel={handlePointerUp}
     >
       <div className="flex gap-3">
-        {/* Avatar — fully rounded */}
-        <Link
-          href={`/profilo/${props.reportedUsername}`}
-          onClick={(e) => e.stopPropagation()}
+        {/* Avatar — tappabile per ingrandire */}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); if (props.reportedAvatarUrl) setLightboxOpen(true); }}
           className="w-18 h-18 rounded-full overflow-hidden shrink-0 bg-primary/20 flex items-center justify-center active:opacity-80 transition-opacity"
-          aria-label="Vai al profilo"
+          aria-label="Ingrandisci foto profilo"
         >
           {props.reportedAvatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -88,13 +90,19 @@ export default function UserReportGroup(props: UserReportGroupProps) {
           ) : (
             <span className="text-xl font-bold text-primary">{initials}</span>
           )}
-        </Link>
+        </button>
 
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-sm font-semibold text-foreground truncate">{props.reportedNickname}</span>
+              <Link
+                href={`/profilo/${props.reportedUsername}`}
+                onClick={(e) => e.stopPropagation()}
+                className="text-sm font-semibold text-foreground truncate hover:underline"
+              >
+                {props.reportedNickname}
+              </Link>
               <span className="text-xs text-muted-foreground shrink-0">·</span>
               <Link
                 href={`/profilo/${props.reportedUsername}`}
@@ -140,6 +148,14 @@ export default function UserReportGroup(props: UserReportGroupProps) {
           {loading === 'dismiss' ? 'Attendere…' : 'Respingi'}
         </Button>
         <Button
+          variant="outline"
+          className="flex-1 bg-primary/10 text-primary hover:text-primary hover:bg-primary/20 border-primary/30"
+          disabled={loading !== null || !props.reportedAvatarUrl}
+          onClick={() => handle(() => removeUserAvatar(props.reportedUserId), 'avatar')}
+        >
+          {loading === 'avatar' ? 'Rimozione…' : 'Rimuovi avatar'}
+        </Button>
+        <Button
           variant="destructive"
           className="flex-1"
           disabled={loading !== null}
@@ -148,6 +164,16 @@ export default function UserReportGroup(props: UserReportGroupProps) {
           {loading === 'ban' ? 'Ban…' : 'Banna'}
         </Button>
       </ButtonGroup>
+
+      {props.reportedAvatarUrl && (
+        <ImageLightbox
+          src={props.reportedAvatarUrl}
+          alt={props.reportedNickname}
+          open={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+          circle
+        />
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/db';
-import { sightings, reports, users } from '@/db/schema';
+import { sightings, reports, users, r2CleanupQueue } from '@/db/schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { requireOnboardedSession } from '@/lib/session';
@@ -41,6 +41,21 @@ export async function dismissReports(sightingId: string) {
     .update(reports)
     .set({ resolution: 'dismissed', resolvedAt: new Date() })
     .where(and(eq(reports.sightingId, sightingId), eq(reports.resolution, 'pending')));
+  revalidatePath('/admin/segnalazioni');
+}
+
+export async function removeUserAvatar(userId: string) {
+  await requireAdmin();
+  const [user] = await db.select({ avatarUrl: users.avatarUrl }).from(users).where(eq(users.id, userId));
+  const bannedUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  await db
+    .update(users)
+    .set({ avatarUrl: null, avatarBannedUntil: bannedUntil, updatedAt: new Date() })
+    .where(eq(users.id, userId));
+  if (user?.avatarUrl) {
+    const key = user.avatarUrl.replace(`${process.env.R2_PUBLIC_URL}/`, '');
+    await db.insert(r2CleanupQueue).values({ r2Key: key, fileType: 'avatar' });
+  }
   revalidatePath('/admin/segnalazioni');
 }
 

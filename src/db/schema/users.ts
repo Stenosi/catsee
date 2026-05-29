@@ -69,6 +69,8 @@ export const users = pgTable(
     banned: boolean('banned').default(false).notNull(),
     bannedAt: timestamp('banned_at', { withTimezone: true }),
     bannedReason: text('banned_reason'),
+    /** Fino a quando l'utente non può caricare una foto profilo (ban temporaneo avatar). */
+    avatarBannedUntil: timestamp('avatar_banned_until', { withTimezone: true }),
 
     // ── Onboarding
     onboardingCompleted: boolean('onboarding_completed').default(false).notNull(),
