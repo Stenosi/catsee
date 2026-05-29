@@ -14,6 +14,7 @@ declare module 'next-auth' {
       nickname: string;
       role: 'user' | 'admin';
       onboardingCompleted: boolean;
+      banned: boolean;
     };
   }
 }
@@ -83,6 +84,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.user.nickname = dbUser.nickname ?? '';
       session.user.role = dbUser.role ?? 'user';
       session.user.onboardingCompleted = dbUser.onboardingCompleted ?? false;
+      session.user.banned = dbUser.banned ?? false;
       return session;
     },
   },

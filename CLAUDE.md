@@ -198,6 +198,7 @@ L'ordine di sviluppo che ha più senso (non rigido):
 10. ✅ Sistema badge + unlock animations (badge engine automatico da fare)
 11. ⬜ Moderazione (segnalazioni, pannello admin)
 11b. ✅ Impostazioni: privacy fuzzing (3 livelli), elimina account
+11c. ⬜ Sicurezza contenuti pre-release (vedi `docs/SPEC.md` §11)
 12. ⬜ PWA manifest + service worker + install prompt
 13. ✅ Job cron R2 cleanup
 14. ⬜ Privacy policy + ToS + GDPR consent

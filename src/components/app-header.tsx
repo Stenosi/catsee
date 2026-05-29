@@ -3,8 +3,9 @@
 import { useRef, useState, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Settings, ChevronLeft, Search, X, Loader2 } from "lucide-react";
+import { Settings, ChevronLeft, Search, X, Loader2, ShieldCheck, Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ReportModal from "./report-modal";
 
 const HIDDEN_PATHS = ["/scatta"];
 
@@ -14,35 +15,63 @@ const BACK_HEADERS: Record<string, string> = {
   "/impostazioni": "Impostazioni",
 };
 
-const BACK_HEADER_PREFIXES: Array<{ prefix: string; title: string }> = [
-  { prefix: "/post/", title: "Avvistamento" },
-  { prefix: "/profilo/", title: "Profilo" },
-];
+interface AppHeaderProps {
+  username: string | null;
+  role?: 'user' | 'admin';
+  userId?: string | null;
+}
 
-export default function AppHeader({ username }: { username: string | null }) {
+export default function AppHeader({ username, role = 'user', userId = null }: AppHeaderProps) {
   const pathname = usePathname();
 
   if (HIDDEN_PATHS.includes(pathname)) return null;
 
   return (
     <header className="shrink-0 relative z-40 h-14 bg-card border-b border-border flex items-center px-4">
-      <HeaderContent pathname={pathname} username={username} />
+      <HeaderContent pathname={pathname} username={username} role={role} userId={userId} />
     </header>
   );
 }
 
-function HeaderContent({ pathname, username }: { pathname: string; username: string | null }) {
-  if (BACK_HEADERS[pathname]) {
-    return <BackHeader title={BACK_HEADERS[pathname]} />;
-  }
-
+function HeaderContent({
+  pathname,
+  username,
+  role,
+  userId,
+}: {
+  pathname: string;
+  username: string | null;
+  role: 'user' | 'admin';
+  userId: string | null;
+}) {
+  // Exact matches first
   if (pathname === "/profilo/follow") {
     return <FollowSearchHeader />;
   }
 
-  const dynamicBack = BACK_HEADER_PREFIXES.find((p) => pathname.startsWith(p.prefix));
-  if (dynamicBack) {
-    return <BackHeader title={dynamicBack.title} />;
+  if (pathname === "/impostazioni") {
+    return <ImpostazioniHeader role={role} />;
+  }
+
+  if (BACK_HEADERS[pathname]) {
+    return <BackHeader title={BACK_HEADERS[pathname]} />;
+  }
+
+  // /post/[id] - always show flag if logged in
+  if (pathname.startsWith("/post/")) {
+    const postId = pathname.split("/post/")[1];
+    return <PostHeader postId={postId} userId={userId} />;
+  }
+
+  // /profilo/[username] - show flag if not own profile
+  if (pathname.startsWith("/profilo/")) {
+    const pathUsername = pathname.split("/profilo/")[1]?.split("/")[0];
+    const isOwnProfile = username && pathUsername === username;
+    return <BackHeader title="Profilo" rightSlot={
+      !isOwnProfile && userId && pathUsername ? (
+        <FlagButton type="user" targetId={pathUsername} />
+      ) : undefined
+    } />;
   }
 
   if (pathname === "/profilo") {
@@ -56,9 +85,8 @@ function HeaderContent({ pathname, username }: { pathname: string; username: str
   return <LogoHeader />;
 }
 
-function BackHeader({ title }: { title: string }) {
+function ImpostazioniHeader({ role }: { role: 'user' | 'admin' }) {
   const router = useRouter();
-
   return (
     <div className="flex w-full items-center gap-2">
       <button
@@ -71,7 +99,79 @@ function BackHeader({ title }: { title: string }) {
       >
         <ChevronLeft className="w-5 h-5" strokeWidth={1.75} />
       </button>
-      <span className="text-base font-semibold text-foreground">{title}</span>
+      <span className="flex-1 text-base font-semibold text-foreground">Impostazioni</span>
+      {role === 'admin' && (
+        <button
+          onClick={() => router.push('/admin')}
+          aria-label="Dashboard admin"
+          className={cn(
+            "flex items-center justify-center w-9 h-9 rounded-full",
+            "text-primary transition-colors hover:bg-primary/10"
+          )}
+        >
+          <ShieldCheck className="w-5 h-5" strokeWidth={1.75} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function FlagButton({ type, targetId }: { type: 'post' | 'user'; targetId: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        aria-label="Segnala"
+        className={cn(
+          "flex items-center justify-center w-9 h-9 rounded-full",
+          "text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        )}
+      >
+        <Flag className="w-5 h-5" strokeWidth={1.75} />
+      </button>
+      <ReportModal
+        open={open}
+        onClose={() => setOpen(false)}
+        type={type}
+        targetId={targetId}
+      />
+    </>
+  );
+}
+
+function PostHeader({ postId, userId }: { postId: string; userId: string | null }) {
+  return (
+    <div className="flex w-full items-center gap-2">
+      <BackHeaderButton />
+      <span className="flex-1 text-base font-semibold text-foreground">Avvistamento</span>
+      {userId && postId && <FlagButton type="post" targetId={postId} />}
+    </div>
+  );
+}
+
+function BackHeaderButton() {
+  const router = useRouter();
+  return (
+    <button
+      onClick={() => router.back()}
+      aria-label="Torna indietro"
+      className={cn(
+        "flex items-center justify-center w-9 h-9 -ml-2 rounded-full",
+        "text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+      )}
+    >
+      <ChevronLeft className="w-5 h-5" strokeWidth={1.75} />
+    </button>
+  );
+}
+
+function BackHeader({ title, rightSlot }: { title: string; rightSlot?: React.ReactNode }) {
+  return (
+    <div className="flex w-full items-center gap-2">
+      <BackHeaderButton />
+      <span className="flex-1 text-base font-semibold text-foreground">{title}</span>
+      {rightSlot}
     </div>
   );
 }

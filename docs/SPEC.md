@@ -407,7 +407,78 @@ Report
 7. **CI/CD pulito** (GitHub Actions, deploy automatici, test) - mostra rigore.
 8. **Test automatizzati** sui flow critici (Vitest + Playwright).
 
-## 11. Domande Aperte
+## 11. Sicurezza Contenuti e Moderazione (da completare pre-release)
+
+Questa sezione cataloga tutti i vettori di abuso identificati e le protezioni da implementare prima della prima release pubblica.
+
+### 11.1 Testi — gap attuali
+
+| Campo | Dove | Protezione attuale | Da fare |
+|---|---|---|---|
+| `username` | Onboarding / Modifica profilo | Zod + `containsProfanity()` + parole riservate | Ampliare dizionario italiano |
+| `nickname` | Onboarding / Modifica profilo | Zod + `containsProfanity()` | Ampliare dizionario italiano |
+| `bio` | Modifica profilo | `containsProfanity()` | Verificare limite lunghezza nel DB |
+| `catNickname` | Form scatto | **Nessuna** | Aggiungere `containsProfanity()` in `publishSighting` |
+| `note` | Form scatto | **Nessuna** | Aggiungere `containsProfanity()` in `publishSighting` |
+
+> **Quick win:** aggiungere `containsProfanity()` a `catNickname` e `note` in `src/app/(app)/scatta/actions.ts` — due righe di codice.
+
+### 11.2 Immagini — gap attuali
+
+| Tipo | Protezione attuale | Gap | Soluzione consigliata |
+|---|---|---|---|
+| Foto avvistamento | COCO-SSD "is-a-cat" client-side | Bypassabile con gatto piccolo + contenuto NSFW in primo piano | Moderazione admin obbligatoria per tutti i post (già nel piano) |
+| Avatar profilo | Solo validazione MIME (`image/jpeg`) | Foto NSFW caricate direttamente su R2 senza filtro | Moderazione manuale segnalazioni OR servizio AI NSFW (es. AWS Rekognition, NudeNet) |
+
+**Scenari di bypass AI verify:**
+- Gatto minuscolo in angolo + contenuto NSFW in primo piano → COCO-SSD rileva il gatto → `approved` diretto
+- Il modello è client-side: un utente tecnico può patcharla per restituire sempre `cat`
+- **Conseguenza:** la moderazione admin deve essere il secondo layer, non opzionale
+
+### 11.3 Comportamento social
+
+| Azione | Rischio | Da fare |
+|---|---|---|
+| Follow massivo | Spam di notifiche | Rate limiting su `/follow` (Upstash) |
+| Reaction spam | Inflazione engagement | Rate limiting su `/reaction` (il toggle previene duplicati ma non il rate) |
+| Segnalazioni false | Rimozione post legittimi | Max N segnalazioni per utente per post; cooldown tra segnalazioni |
+| Username squatting | Appropriarsi username di account eliminati | Lock temporaneo (es. 7 gg) su username rilasciati da account cancellati |
+
+### 11.4 Dati geografici
+
+| Scenario | Rischio | Mitigazione attuale | Note |
+|---|---|---|---|
+| GPS spoofing | Post posizionati ovunque nel mondo | Fuzzing lato server (non previene, riduce utilità) | Difficile prevenire completamente; cluster anomali rilevabili in admin |
+| Presigned URL riutilizzato | Caricamento foto sostitutiva prima della scadenza | Scadenza 5 min | Accettabile per MVP |
+
+### 11.5 Account / Auth
+
+| Scenario | Rischio | Mitigazione attuale | Da fare |
+|---|---|---|---|
+| Account multipli stesso utente | Elusione ban | `allowDangerousEmailAccountLinking` | Ban per IP (parziale, VPN) o per device fingerprint (complesso) |
+| Re-onboarding dopo soft delete | Ripristino account bannato | `deletedAt: null` al re-onboarding (by design) | Al momento del ban: hard delete `accounts` OAuth per impedire rientro |
+| Bot / script automatici | Flood avvistamenti falsi | — | Rate limiting su `publishSighting` |
+
+### 11.6 Priorità di intervento
+
+**Alta — fare prima della release:**
+1. `containsProfanity()` su `catNickname` e `note` in `publishSighting` ← 2 righe
+2. Dashboard admin per moderare post `pending` (già in roadmap §4.11)
+3. Rate limiting su `publishSighting`, `follow`, `reaction`
+
+**Media — entro beta:**
+4. Filtro NSFW su avatar (servizio esterno o moderazione manuale su segnalazione)
+5. Protezione ban: hard delete `accounts` OAuth al ban utente
+6. Lock temporaneo username dopo eliminazione account
+
+**Bassa — post-lancio:**
+7. GPS spoofing detection (cluster anomali in admin analytics)
+8. Anti-spam segnalazioni false
+9. Blurring automatico volti (v2)
+
+---
+
+## 12. Domande Aperte
 
 Decisioni rimandate da prendere in fasi future:
 

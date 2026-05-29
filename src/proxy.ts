@@ -26,6 +26,18 @@ export default auth((req) => {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Utente bannato → login con errore
+  if (session.user.banned) {
+    return NextResponse.redirect(new URL('/login?error=banned', req.url));
+  }
+
+  // Guard dashboard admin
+  if (pathname.startsWith('/admin')) {
+    if (session.user.role !== 'admin') {
+      return NextResponse.redirect(new URL('/mappa', req.url));
+    }
+  }
+
   // Autenticato ma onboarding non completato → /onboarding
   if (!session.user.onboardingCompleted && pathname !== '/onboarding') {
     return NextResponse.redirect(new URL('/onboarding', req.url));
