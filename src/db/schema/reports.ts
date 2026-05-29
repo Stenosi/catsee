@@ -21,11 +21,12 @@ export const reportResolutionEnum = pgEnum('report_resolution', [
 
 /** Motivi validi per una segnalazione (validati a livello app). */
 export const REPORT_REASONS = [
-  'not_a_cat',         // la foto non contiene un gatto (solo per post)
-  'inappropriate',     // contenuto inappropriato
-  'spam',              // contenuto ripetuto / commerciale
-  'offensive_text',    // testo offensivo
-  'other',             // altro
+  'not_a_cat',              // la foto non contiene un gatto (solo per post)
+  'inappropriate',          // contenuto inappropriato
+  'inappropriate_avatar',   // foto profilo inappropriata (solo per utenti)
+  'spam',                   // contenuto ripetuto / commerciale
+  'offensive_text',         // testo offensivo
+  'other',                  // altro
 ] as const;
 
 export type ReportReason = typeof REPORT_REASONS[number];

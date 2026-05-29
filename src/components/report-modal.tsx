@@ -32,6 +32,7 @@ const POST_REASONS = [
 
 const USER_REASONS = [
   { value: 'inappropriate', label: 'Contenuto inappropriato' },
+  { value: 'inappropriate_avatar', label: 'Foto profilo inappropriata' },
   { value: 'spam', label: 'Spam' },
   { value: 'offensive_text', label: 'Testo offensivo' },
   { value: 'other', label: 'Altro' },

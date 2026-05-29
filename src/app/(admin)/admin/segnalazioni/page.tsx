@@ -133,6 +133,7 @@ export default async function SegnalazioniPage() {
         nickname: users.nickname,
         username: users.username,
         avatarUrl: users.avatarUrl,
+        bio: users.bio,
       })
       .from(users)
       .where(inArray(users.id, reportedUserIds));
@@ -180,6 +181,7 @@ export default async function SegnalazioniPage() {
         reportedNickname: user.nickname,
         reportedUsername: user.username,
         reportedAvatarUrl: user.avatarUrl ?? null,
+        reportedBio: user.bio ?? null,
         reportCount: g.count,
         reasons: reasonsWithCount,
         reporters: details.reporters,
@@ -189,24 +191,24 @@ export default async function SegnalazioniPage() {
 
   return (
     <div>
-      {hasPostReports && (
-        <div>
-          {hasUserReports && (
-            <div className="px-4 py-2 bg-muted/50">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Post</p>
-            </div>
-          )}
-          <ReportList items={postItems} />
-        </div>
-      )}
       {hasUserReports && (
         <div>
           {hasPostReports && (
-            <div className="px-4 py-2 bg-muted/50 border-t border-border">
+            <div className="px-4 py-2 bg-muted/50">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Utenti</p>
             </div>
           )}
           <UserReportList items={userItems} />
+        </div>
+      )}
+      {hasPostReports && (
+        <div>
+          {hasUserReports && (
+            <div className="px-4 py-2 bg-muted/50 border-t border-border">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Post</p>
+            </div>
+          )}
+          <ReportList items={postItems} />
         </div>
       )}
     </div>

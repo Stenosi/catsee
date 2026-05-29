@@ -4,7 +4,6 @@ import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { Flag } from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 import { dismissUserReports, banUser } from "../actions";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -13,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 const REASON_LABELS: Record<string, string> = {
   not_a_cat: "Non è un gatto",
   inappropriate: "Contenuto inappropriato",
+  inappropriate_avatar: "Foto profilo inappropriata",
   spam: "Spam",
   offensive_text: "Testo offensivo",
   other: "Altro",
@@ -23,6 +23,7 @@ export interface UserReportGroupProps {
   reportedNickname: string;
   reportedUsername: string;
   reportedAvatarUrl: string | null;
+  reportedBio: string | null;
   reportCount: number;
   reasons: { value: string; count: number }[];
   reporters: string[];
@@ -70,11 +71,11 @@ export default function UserReportGroup(props: UserReportGroupProps) {
       onPointerCancel={handlePointerUp}
     >
       <div className="flex gap-3">
-        {/* Avatar */}
+        {/* Avatar — fully rounded */}
         <Link
           href={`/profilo/${props.reportedUsername}`}
           onClick={(e) => e.stopPropagation()}
-          className="w-18 h-18 rounded-xl overflow-hidden shrink-0 bg-primary/20 flex items-center justify-center active:opacity-80 transition-opacity"
+          className="w-18 h-18 rounded-full overflow-hidden shrink-0 bg-primary/20 flex items-center justify-center active:opacity-80 transition-opacity"
           aria-label="Vai al profilo"
         >
           {props.reportedAvatarUrl ? (
@@ -109,10 +110,10 @@ export default function UserReportGroup(props: UserReportGroupProps) {
             </span>
           </div>
 
-          {/* Badge "Utente" */}
-          <div className="mt-1">
-            <Badge variant="secondary" className="text-xs">Segnalazione utente</Badge>
-          </div>
+          {/* Bio */}
+          {props.reportedBio && (
+            <p className="text-xs text-muted-foreground mt-1 leading-4 line-clamp-2">{props.reportedBio}</p>
+          )}
 
           {/* Tipi di segnalazione */}
           {props.reasons.length > 0 && (
