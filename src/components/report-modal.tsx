@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { createReport } from "@/app/(app)/segnala/actions";
+
+const CLOSE_THRESHOLD = 80;
+const DRAG_INTENT_THRESHOLD = 6;
 
 interface ReportModalProps {
   open: boolean;
@@ -28,11 +32,44 @@ const USER_REASONS = [
 ] as const;
 
 export default function ReportModal({ open, onClose, type, targetId }: ReportModalProps) {
+  const [mounted, setMounted] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const startYRef = useRef<number | null>(null);
+  const draggingRef = useRef(false);
 
-  const reasons = type === 'post' ? POST_REASONS : USER_REASONS;
-  const title = type === 'post' ? 'Segnala avvistamento' : 'Segnala utente';
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!open) {
+      const t = setTimeout(() => setSelected(null), 300);
+      return () => clearTimeout(t);
+    }
+  }, [open]);
+
+  function onPointerDown(e: React.PointerEvent) {
+    startYRef.current = e.clientY;
+    draggingRef.current = false;
+  }
+
+  function onPointerMove(e: React.PointerEvent) {
+    if (startYRef.current === null) return;
+    const deltaY = e.clientY - startYRef.current;
+    if (!draggingRef.current) {
+      if (deltaY < DRAG_INTENT_THRESHOLD) return;
+      draggingRef.current = true;
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    }
+    setDragY(Math.max(0, deltaY));
+  }
+
+  function onPointerUp() {
+    if (draggingRef.current && dragY >= CLOSE_THRESHOLD) onClose();
+    draggingRef.current = false;
+    setDragY(0);
+    startYRef.current = null;
+  }
 
   async function handleSubmit() {
     if (!selected) return;
@@ -44,39 +81,47 @@ export default function ReportModal({ open, onClose, type, targetId }: ReportMod
       } else {
         toast.success('Segnalazione inviata');
         onClose();
-        setSelected(null);
       }
     } finally {
       setLoading(false);
     }
   }
 
-  function handleClose() {
-    setSelected(null);
-    onClose();
-  }
+  const panelTransform = open ? `translateY(${dragY}px)` : 'translateY(100%)';
+  const panelTransition = draggingRef.current ? 'none' : 'transform 300ms ease-out';
 
-  if (!open) return null;
+  const reasons = type === 'post' ? POST_REASONS : USER_REASONS;
+  const title = type === 'post' ? 'Segnala avvistamento' : 'Segnala utente';
 
-  return (
-    <div
-      className="fixed inset-0 z-[1100] flex items-end justify-center"
-      onClick={handleClose}
-    >
+  if (!mounted) return null;
+
+  return createPortal(
+    <>
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" />
+      <div
+        className="fixed inset-0 z-1100 bg-black/50 transition-opacity duration-300"
+        style={{
+          opacity: open ? 1 - dragY / 200 : 0,
+          pointerEvents: open ? 'auto' : 'none',
+        }}
+        onClick={onClose}
+      />
 
       {/* Panel */}
       <div
-        className="relative w-full max-w-lg bg-card rounded-t-2xl pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-xl"
-        onClick={(e) => e.stopPropagation()}
+        className="fixed bottom-0 left-0 right-0 z-1101 bg-card rounded-t-2xl shadow-2xl select-none"
+        style={{ transform: panelTransform, transition: panelTransition }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
       >
         {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1">
+        <div className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing">
           <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
         </div>
 
-        <div className="px-5 pb-2 pt-2">
+        <div className="px-5 pt-2 pb-2">
           <h2 className="text-base font-semibold text-foreground">{title}</h2>
         </div>
 
@@ -106,10 +151,10 @@ export default function ReportModal({ open, onClose, type, targetId }: ReportMod
           ))}
         </div>
 
-        <div className="flex gap-3 px-5 pt-4 pb-2">
+        <div className="flex gap-3 px-5 pt-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
           <button
             type="button"
-            onClick={handleClose}
+            onClick={onClose}
             className="flex-1 h-11 rounded-full border border-border text-sm font-medium text-muted-foreground hover:bg-accent transition-colors"
           >
             Annulla
@@ -129,6 +174,7 @@ export default function ReportModal({ open, onClose, type, targetId }: ReportMod
           </button>
         </div>
       </div>
-    </div>
+    </>,
+    document.body,
   );
 }
