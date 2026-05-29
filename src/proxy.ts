@@ -16,6 +16,9 @@ export default auth((req) => {
 
   if (isPublic(pathname)) return NextResponse.next();
 
+  // Server action POST requests: bypass redirect logic, let the action handle auth
+  if (req.headers.get('next-action')) return NextResponse.next();
+
   // Non autenticato → login
   if (!session) {
     const loginUrl = new URL('/login', req.url);

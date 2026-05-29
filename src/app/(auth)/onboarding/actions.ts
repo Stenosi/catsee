@@ -8,7 +8,7 @@ import { eq, and, ne } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { containsProfanity } from '@/lib/obscenity';
-import { requireSession } from '@/lib/session';
+import { getSessionForAction } from '@/lib/session';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { r2, R2_BUCKET, R2_PUBLIC_URL } from '@/lib/r2';
@@ -104,7 +104,8 @@ export type GetOnboardingAvatarUploadUrlResult =
   | { success: false; error: string };
 
 export async function getOnboardingAvatarUploadUrl(): Promise<GetOnboardingAvatarUploadUrlResult> {
-  const session = await requireSession();
+  const session = await getSessionForAction();
+  if (!session) return { success: false, error: 'Non autenticato.' };
   const key = `avatars/${session.user.id}/${crypto.randomUUID()}.jpg`;
   try {
     const uploadUrl = await getSignedUrl(
@@ -125,7 +126,8 @@ export type SaveOnboardingAvatarResult =
 export type PrivacyLevel = 'standard' | 'high' | 'precise';
 
 export async function saveOnboardingAvatarUrl(key: string): Promise<SaveOnboardingAvatarResult> {
-  const session = await requireSession();
+  const session = await getSessionForAction();
+  if (!session) return { success: false, error: 'Non autenticato.' };
   const userId = session.user.id;
 
   const current = await db.query.users.findFirst({
@@ -150,7 +152,8 @@ export async function saveOnboardingAvatarUrl(key: string): Promise<SaveOnboardi
 export async function saveOnboardingPrivacyLevel(
   level: PrivacyLevel,
 ): Promise<{ success: boolean; error?: string }> {
-  const session = await requireSession();
+  const session = await getSessionForAction();
+  if (!session) return { success: false, error: 'Non autenticato.' };
 
   try {
     const userRow = await db

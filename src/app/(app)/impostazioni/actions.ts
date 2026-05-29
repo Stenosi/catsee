@@ -4,7 +4,7 @@ import { signOut } from '@/auth';
 import { db } from '@/db';
 import { users } from '@/db/schema';
 import type { UserSettings } from '@/db/schema';
-import { requireOnboardedSession } from '@/lib/session';
+import { getOnboardedSessionForAction } from '@/lib/session';
 import { eq } from 'drizzle-orm';
 
 export async function logout() {
@@ -15,7 +15,8 @@ export async function saveSetting<K extends keyof UserSettings>(
   key: K,
   value: UserSettings[K],
 ): Promise<{ success: boolean; error?: string }> {
-  const session = await requireOnboardedSession();
+  const session = await getOnboardedSessionForAction();
+  if (!session) return { success: false, error: 'Non autenticato.' };
 
   try {
     const userRow = await db
@@ -43,7 +44,8 @@ export type PrivacyLevel = 'standard' | 'high' | 'precise';
 export async function savePrivacyLevel(
   level: PrivacyLevel,
 ): Promise<{ success: boolean; error?: string }> {
-  const session = await requireOnboardedSession();
+  const session = await getOnboardedSessionForAction();
+  if (!session) return { success: false, error: 'Non autenticato.' };
 
   try {
     const userRow = await db
@@ -73,7 +75,8 @@ export async function savePrivacyLevel(
 export async function deleteAccount(
   usernameConfirm: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const session = await requireOnboardedSession();
+  const session = await getOnboardedSessionForAction();
+  if (!session) return { success: false, error: 'Non autenticato.' };
 
   const userRow = await db
     .select({ username: users.username, id: users.id })
