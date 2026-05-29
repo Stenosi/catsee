@@ -268,19 +268,6 @@ export default function ModificaClient({
             </div>
           </button>
 
-          {isAvatarBanned && (
-            <Alert className="mt-1">
-              <Lock />
-              <AlertDescription>
-                Foto profilo bloccata. Potrai caricarne una nuova tra{' '}
-                <span className="font-medium text-foreground">
-                  {avatarBannedDays} {avatarBannedDays === 1 ? 'giorno' : 'giorni'}
-                </span>
-                .
-              </AlertDescription>
-            </Alert>
-          )}
-
           {currentAvatarUrl && !isAvatarBanned && (
             <AlertDialog>
               <AlertDialogTrigger
