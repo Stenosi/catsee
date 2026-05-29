@@ -15,6 +15,10 @@ interface Props {
 
 export default function SightingSheet({ sighting, onClose }: Props) {
   const isOpen = sighting !== null;
+  const lastSightingRef = useRef<MapSighting | null>(null);
+  if (sighting) lastSightingRef.current = sighting;
+  const displaySighting = lastSightingRef.current;
+
   const [dragY, setDragY] = useState(0);
   const startYRef = useRef<number | null>(null);
   const draggingRef = useRef(false); // true = drag confermato (pointer catturato)
@@ -74,7 +78,7 @@ export default function SightingSheet({ sighting, onClose }: Props) {
           <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
         </div>
 
-        {sighting && <SheetContent sighting={sighting} />}
+        {displaySighting && <SheetContent sighting={displaySighting} />}
       </div>
     </>,
     document.body,
