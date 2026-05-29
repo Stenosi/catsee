@@ -5,6 +5,7 @@ import { CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { approveSighting, rejectSighting } from "../actions";
+import ImageLightbox from "@/components/image-lightbox";
 
 const rtf = new Intl.RelativeTimeFormat('it', { numeric: 'auto' });
 
@@ -43,6 +44,7 @@ interface PendingCardProps {
 export default function PendingCard(props: PendingCardProps) {
   const [loading, setLoading] = useState<'approve' | 'reject' | null>(null);
   const [dismissed, setDismissed] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   if (dismissed) return null;
 
@@ -53,7 +55,7 @@ export default function PendingCard(props: PendingCardProps) {
       toast.success('Post approvato');
       setDismissed(true);
     } catch {
-      toast.error('Errore durante l\'approvazione');
+      toast.error("Errore durante l'approvazione");
       setLoading(null);
     }
   }
@@ -75,48 +77,46 @@ export default function PendingCard(props: PendingCardProps) {
   return (
     <div className="p-4 space-y-3">
       <div className="flex gap-3">
-        {/* Thumbnail */}
-        <div className="w-[72px] h-[72px] rounded-xl overflow-hidden shrink-0 bg-muted">
+        {/* Thumbnail — tappabile per ingrandire */}
+        <button
+          type="button"
+          onClick={() => setLightboxOpen(true)}
+          className="w-18 h-18 rounded-xl overflow-hidden shrink-0 bg-muted active:opacity-80 transition-opacity"
+          aria-label="Ingrandisci immagine"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={props.thumbnailUrl}
             alt={props.catNickname}
             className="w-full h-full object-cover"
           />
-        </div>
+        </button>
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-sm font-semibold text-foreground truncate">{props.catNickname}</span>
-            <span className="text-xs text-muted-foreground">·</span>
-            <span className="text-xs text-muted-foreground">@{props.authorUsername}</span>
-          </div>
-
-          {/* Colori */}
-          {props.tagColors.length > 0 && (
-            <div className="flex items-center gap-1 mt-1">
-              {props.tagColors.map((c) => (
-                <span key={c} className={cn("w-3 h-3 rounded-full", COLOR_DOTS[c] ?? "bg-muted")} />
-              ))}
+          {/* Titolo + data sulla stessa riga */}
+          <div className="flex items-baseline justify-between gap-2">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-sm font-semibold text-foreground truncate">{props.catNickname}</span>
+              <span className="text-xs text-muted-foreground shrink-0">·</span>
+              <span className="text-xs text-muted-foreground shrink-0">@{props.authorUsername}</span>
             </div>
-          )}
+            <span className="text-xs text-muted-foreground shrink-0">{timeAgo}</span>
+          </div>
 
           {/* Nota */}
           {props.note && (
             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{props.note}</p>
           )}
 
-          {/* Meta */}
-          <div className="flex items-center gap-2 mt-1">
-            <span className={cn(
-              "text-xs font-medium",
-              props.aiVerified ? "text-success" : "text-warning"
-            )}>
-              {props.aiVerified ? "AI ✓" : "AI ✗"}
-            </span>
-            <span className="text-xs text-muted-foreground">·</span>
-            <span className="text-xs text-muted-foreground">{timeAgo}</span>
-          </div>
+          {/* Colori */}
+          {props.tagColors.length > 0 && (
+            <div className="flex items-center gap-1 mt-1.5">
+              {props.tagColors.map((c) => (
+                <span key={c} className={cn("w-3 h-3 rounded-full", COLOR_DOTS[c] ?? "bg-muted")} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -149,6 +149,13 @@ export default function PendingCard(props: PendingCardProps) {
           {loading === 'reject' ? 'Rifiuto…' : 'Rifiuta'}
         </button>
       </div>
+
+      <ImageLightbox
+        src={props.thumbnailUrl}
+        alt={props.catNickname}
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+      />
     </div>
   );
 }
