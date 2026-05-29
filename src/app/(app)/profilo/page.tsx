@@ -3,6 +3,7 @@ import { sightings, follows } from "@/db/schema";
 import { eq, and, isNull, count, desc, inArray } from "drizzle-orm";
 import { extractLat, extractLng } from "@/db/geo";
 import { requireOnboardedSession } from "@/lib/session";
+import { redirect } from "next/navigation";
 import ProfiloClient from "./_components/profilo-client";
 
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL ?? '';
@@ -70,7 +71,7 @@ export default async function ProfiloPage() {
         .limit(200),
     ])
 
-  if (!user) { return null };
+  if (!user) redirect('/mappa');
 
   const postPreviews = posts.map((p) => ({
     id: p.id,

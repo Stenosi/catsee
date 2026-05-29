@@ -10,6 +10,14 @@ function isPublic(pathname: string): boolean {
   );
 }
 
+// Solo top-level statiche come callbackUrl — route dinamiche (/profilo/[username], /post/[id])
+// potrebbero chiamare notFound() internamente e causare un loop 404 dopo il login.
+const SAFE_CALLBACK_PATHS = ['/feed', '/cerca', '/profilo', '/impostazioni', '/scatta', '/admin'];
+
+function isSafeCallback(pathname: string): boolean {
+  return SAFE_CALLBACK_PATHS.some((p) => pathname === p);
+}
+
 export default auth((req) => {
   const { pathname } = req.nextUrl;
   const session = req.auth;
@@ -22,7 +30,7 @@ export default auth((req) => {
   // Non autenticato → login
   if (!session) {
     const loginUrl = new URL('/login', req.url);
-    loginUrl.searchParams.set('callbackUrl', pathname);
+    if (isSafeCallback(pathname)) loginUrl.searchParams.set('callbackUrl', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
