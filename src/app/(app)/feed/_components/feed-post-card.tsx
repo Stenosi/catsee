@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import ImageLightbox from '@/components/image-lightbox';
 import { cn } from '@/lib/utils';
 import type { FeedPost } from '../actions';
 
@@ -18,6 +19,7 @@ const COLOR_LABELS: Record<string, string> = {
 
 export default function FeedPostCard({ post }: { post: FeedPost }) {
   const [loaded, setLoaded] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const dateFormatted = new Intl.DateTimeFormat('it-IT', {
     day: 'numeric',
@@ -59,7 +61,12 @@ export default function FeedPostCard({ post }: { post: FeedPost }) {
       </div>
 
       {/* Foto */}
-      <Link href={`/post/${post.id}`} className="block relative aspect-[4/3] bg-muted">
+      <button
+        type="button"
+        onClick={() => setLightboxOpen(true)}
+        className="block relative w-full aspect-square bg-muted cursor-zoom-in"
+        aria-label={`Vedi foto di ${post.catNickname}`}
+      >
         {!loaded && <Skeleton className="absolute inset-0 rounded-none" />}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -71,7 +78,13 @@ export default function FeedPostCard({ post }: { post: FeedPost }) {
             loaded ? 'opacity-100' : 'opacity-0',
           )}
         />
-      </Link>
+      </button>
+      <ImageLightbox
+        src={post.photoUrl}
+        alt={post.catNickname}
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+      />
 
       {/* Info */}
       <div className="flex flex-col gap-2 px-4 py-3">
