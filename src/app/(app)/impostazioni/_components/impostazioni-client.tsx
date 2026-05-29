@@ -3,7 +3,7 @@
 import { useState, useOptimistic, useTransition } from 'react';
 import { CheckCircle, Copy, CopyCheck, Download, LogOut, Share, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';
+import { ButtonGroup } from '@/components/ui/button-group';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
 import {

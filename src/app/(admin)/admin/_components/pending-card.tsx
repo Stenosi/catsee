@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { approveSighting, rejectSighting } from "../actions";
 import ImageLightbox from "@/components/image-lightbox";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 
 const rtf = new Intl.RelativeTimeFormat('it', { numeric: 'auto' });
 
@@ -79,7 +81,7 @@ export default function PendingCard(props: PendingCardProps) {
   return (
     // Tap sulla card (fuori da elementi interattivi) espande/collassa la nota
     <div
-      className="p-4 space-y-3 cursor-pointer select-none"
+      className="p-4 space-y-3 active:bg-muted transition-colors cursor-pointer select-none"
       onClick={() => props.note && props.onToggleExpand()}
     >
       <div className="flex gap-3">
@@ -134,34 +136,28 @@ export default function PendingCard(props: PendingCardProps) {
       </div>
 
       {/* Azioni */}
-      <div className="flex gap-3" onClick={(e) => e.stopPropagation()}>
-        <button
+      <ButtonGroup className="w-full" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+        <Button
+          variant="outline"
+          size="lg"
+          className="flex-1 bg-success/10 text-success hover:text-success hover:bg-success/20 border-success/30"
           onClick={handleApprove}
           disabled={loading !== null}
-          className={cn(
-            "flex-1 flex items-center justify-center gap-1.5 h-9 rounded-full text-sm font-medium transition-colors",
-            loading !== null
-              ? "bg-muted text-muted-foreground cursor-not-allowed"
-              : "bg-success/10 text-success hover:bg-success/20"
-          )}
         >
           <CheckCircle className="w-4 h-4" strokeWidth={2} />
           {loading === 'approve' ? 'Approvazione…' : 'Approva'}
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="destructive"
+          size="lg"
+          className="flex-1"
           onClick={handleReject}
           disabled={loading !== null}
-          className={cn(
-            "flex-1 flex items-center justify-center gap-1.5 h-9 rounded-full text-sm font-medium transition-colors",
-            loading !== null
-              ? "bg-muted text-muted-foreground cursor-not-allowed"
-              : "bg-destructive/10 text-destructive hover:bg-destructive/20"
-          )}
         >
           <XCircle className="w-4 h-4" strokeWidth={2} />
           {loading === 'reject' ? 'Rifiuto…' : 'Rifiuta'}
-        </button>
-      </div>
+        </Button>
+      </ButtonGroup>
 
       <ImageLightbox
         src={props.thumbnailUrl}

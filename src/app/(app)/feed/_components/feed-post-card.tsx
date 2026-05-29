@@ -63,7 +63,7 @@ export default function FeedPostCard({ post }: { post: FeedPost }) {
         {!loaded && <Skeleton className="absolute inset-0 rounded-none" />}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={post.thumbnailUrl}
+          src={post.photoUrl}
           alt={post.catNickname}
           onLoad={() => setLoaded(true)}
           className={cn(

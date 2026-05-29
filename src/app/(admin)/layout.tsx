@@ -5,6 +5,7 @@ import { sightings, reports, users } from '@/db/schema';
 import { eq, and, isNull, count } from 'drizzle-orm';
 import AdminHeader from './admin/_components/admin-header';
 import AdminTabs from './admin/_components/admin-tabs';
+import AdminSwipeMain from './admin/_components/admin-swipe-main';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await requireOnboardedSession();
@@ -34,9 +35,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         reportCount={reportCount}
         bannedCount={bannedCount}
       />
-      <main className="flex-1 overflow-y-auto">
+      <AdminSwipeMain>
         {children}
-      </main>
+      </AdminSwipeMain>
     </div>
   );
 }

@@ -331,7 +331,7 @@ function CercaHeader() {
 
 function LogoHeader() {
   return (
-    <Link href="/feed" className="text-xl font-bold text-primary active:opacity-70">
+    <Link href="/mappa" className="text-xl font-bold text-primary active:opacity-70">
       CatSee
     </Link>
   );

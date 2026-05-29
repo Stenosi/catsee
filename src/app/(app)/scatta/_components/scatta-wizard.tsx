@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Camera } from 'lucide-react';
 import { toast } from 'sonner';
-import imageCompression from 'browser-image-compression';
 import { Vibrant } from 'node-vibrant/browser';
 import CameraStep from './camera-step';
 import PreviewStep from './preview-step';
@@ -16,6 +15,36 @@ import AiLoadingStep from './ai-loading-step';
 import type { PaletteEntry } from '@/db/schema/sightings';
 
 type Step = 'camera' | 'preview' | 'form';
+
+const THUMB_SHORT_SIDE = 400;
+const ORIGINAL_LONG_SIDE = 1920;
+
+function resizeImage(blob: Blob, scale: (w: number, h: number) => number, quality: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(blob);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const { naturalWidth: w, naturalHeight: h } = img;
+      const s = scale(w, h);
+      const tw = Math.round(w * s);
+      const th = Math.round(h * s);
+      const canvas = document.createElement('canvas');
+      canvas.width = tw;
+      canvas.height = th;
+      canvas.getContext('2d')!.drawImage(img, 0, 0, tw, th);
+      canvas.toBlob((b) => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', quality);
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+const createOriginal = (blob: Blob) =>
+  resizeImage(blob, (w, h) => Math.min(1, ORIGINAL_LONG_SIDE / Math.max(w, h)), 0.92);
+
+const createThumbnail = (blob: Blob) =>
+  resizeImage(blob, (w, h) => Math.min(1, THUMB_SHORT_SIDE / Math.min(w, h)), 0.82);
 
 // ── Palette → cat color mapping ───────────────────────────────────────────────
 
@@ -150,15 +179,15 @@ export default function ScattaWizard() {
         return;
       }
 
-      // 2. Comprimi thumbnail (max 400px, qualità 0.7)
-      const thumbnailBlob = await imageCompression(
-        new File([capturedBlob], 'photo.jpg', { type: 'image/jpeg' }),
-        { maxWidthOrHeight: 400, useWebWorker: true, fileType: 'image/jpeg', initialQuality: 0.7 },
-      );
+      // 2. Processa originale (lato lungo ≤ 1920px, qualità 0.92) e thumbnail (lato corto = 400px, qualità 0.82) in parallelo
+      const [originalBlob, thumbnailBlob] = await Promise.all([
+        createOriginal(capturedBlob),
+        createThumbnail(capturedBlob),
+      ]);
 
       // 3. Upload foto originale + thumbnail in parallelo
       const [photoRes, thumbRes] = await Promise.all([
-        fetch(urlResult.photoUploadUrl, { method: 'PUT', body: capturedBlob, headers: { 'Content-Type': 'image/jpeg' } }),
+        fetch(urlResult.photoUploadUrl, { method: 'PUT', body: originalBlob, headers: { 'Content-Type': 'image/jpeg' } }),
         fetch(urlResult.thumbnailUploadUrl, { method: 'PUT', body: thumbnailBlob, headers: { 'Content-Type': 'image/jpeg' } }),
       ]);
 
