@@ -31,8 +31,8 @@ export default function AdminSwipeMain({ children }: { children: React.ReactNode
     const idx = TABS.indexOf(pathname);
     if (idx === -1) return;
 
-    if (dx < 0 && idx < TABS.length - 1) router.push(TABS[idx + 1]);
-    if (dx > 0 && idx > 0) router.push(TABS[idx - 1]);
+    if (dx < 0 && idx < TABS.length - 1) router.replace(TABS[idx + 1]);
+    if (dx > 0 && idx > 0) router.replace(TABS[idx - 1]);
   }
 
   return (

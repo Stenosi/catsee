@@ -29,7 +29,7 @@ export default function AdminTabs({ pendingCount, reportCount, bannedCount }: Ad
         return (
           <button
             key={tab.href}
-            onClick={() => router.push(tab.href)}
+            onClick={() => router.replace(tab.href)}
             className={cn(
               "flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium transition-colors",
               "relative",
