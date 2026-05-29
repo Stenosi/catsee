@@ -45,6 +45,7 @@ export default function PendingCard(props: PendingCardProps) {
   const [loading, setLoading] = useState<'approve' | 'reject' | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   if (dismissed) return null;
 
@@ -75,12 +76,16 @@ export default function PendingCard(props: PendingCardProps) {
   const timeAgo = props.createdAt ? relativeTime(props.createdAt) : '';
 
   return (
-    <div className="p-4 space-y-3">
+    // Tap sulla card (fuori da elementi interattivi) espande/collassa la nota
+    <div
+      className="p-4 space-y-3 cursor-pointer select-none"
+      onClick={() => props.note && setExpanded((v) => !v)}
+    >
       <div className="flex gap-3">
         {/* Thumbnail — tappabile per ingrandire */}
         <button
           type="button"
-          onClick={() => setLightboxOpen(true)}
+          onClick={(e) => { e.stopPropagation(); setLightboxOpen(true); }}
           className="w-18 h-18 rounded-xl overflow-hidden shrink-0 bg-muted active:opacity-80 transition-opacity"
           aria-label="Ingrandisci immagine"
         >
@@ -104,9 +109,16 @@ export default function PendingCard(props: PendingCardProps) {
             <span className="text-xs text-muted-foreground shrink-0">{timeAgo}</span>
           </div>
 
-          {/* Nota */}
+          {/* Nota — espandibile */}
           {props.note && (
-            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{props.note}</p>
+            <div
+              className={cn(
+                "overflow-hidden transition-[max-height] duration-300 ease-in-out mt-1",
+                expanded ? "max-h-40" : "max-h-8"
+              )}
+            >
+              <p className="text-xs text-muted-foreground leading-4">{props.note}</p>
+            </div>
           )}
 
           {/* Colori */}
@@ -121,7 +133,7 @@ export default function PendingCard(props: PendingCardProps) {
       </div>
 
       {/* Azioni */}
-      <div className="flex gap-3">
+      <div className="flex gap-3" onClick={(e) => e.stopPropagation()}>
         <button
           onClick={handleApprove}
           disabled={loading !== null}
