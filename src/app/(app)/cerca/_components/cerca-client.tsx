@@ -19,7 +19,7 @@ type Tab = (typeof TABS)[number];
 
 function ThumbSkeleton({ count }: { count: number }) {
   return (
-    <div className="grid grid-cols-3 gap-px">
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-px">
       {Array.from({ length: count }).map((_, i) => (
         <Skeleton key={i} className="aspect-square rounded-none" />
       ))}
@@ -29,7 +29,7 @@ function ThumbSkeleton({ count }: { count: number }) {
 
 function ThumbGrid({ items }: { items: ExploreThumb[] }) {
   return (
-    <div className="grid grid-cols-3 gap-px animate-in fade-in duration-300">
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7   animate-in fade-in duration-300">
       {items.map((item) => (
         <Link key={item.id} href={`/post/${item.id}`} className="aspect-square block overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}

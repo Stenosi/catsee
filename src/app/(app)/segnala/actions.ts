@@ -1,5 +1,6 @@
 'use server';
 
+import { eq, and } from 'drizzle-orm';
 import { db } from '@/db';
 import { reports } from '@/db/schema';
 import { getOnboardedSessionForAction } from '@/lib/session';
@@ -24,7 +25,6 @@ export async function createReport(
   }
 
   if (type === 'post') {
-    // Verifica che il post esista e non sia dell'utente corrente
     const post = await db.query.sightings.findFirst({
       where: (s, { eq, and, isNull }) =>
         and(eq(s.id, targetId), isNull(s.deletedAt)),
@@ -33,20 +33,24 @@ export async function createReport(
     if (!post) return { error: 'Avvistamento non trovato.' };
     if (post.userId === reporterId) return { error: 'Non puoi segnalare il tuo avvistamento.' };
 
-    try {
-      await db.insert(reports).values({
-        sightingId: targetId,
-        reporterId,
-        reasons,
-      });
-    } catch {
-      return { error: 'Hai già segnalato questo avvistamento.' };
+    const existing = await db.query.reports.findFirst({
+      where: (r, { eq, and }) =>
+        and(eq(r.sightingId, targetId), eq(r.reporterId, reporterId)),
+      columns: { id: true, resolution: true },
+    });
+
+    if (existing) {
+      if (existing.resolution === 'pending') {
+        return { error: 'Hai già segnalato questo avvistamento.' };
+      }
+      // Segnalazione già gestita: rimuovi il record per permettere una nuova segnalazione
+      await db.delete(reports).where(eq(reports.id, existing.id));
     }
+
+    await db.insert(reports).values({ sightingId: targetId, reporterId, reasons });
   } else {
-    // Verifica che non si stia segnalando se stessi
     if (targetId === reporterId) return { error: 'Non puoi segnalare te stesso.' };
 
-    // targetId per user reports è lo username — recupera l'id
     const target = await db.query.users.findFirst({
       where: (u, { eq, isNull, and }) =>
         and(eq(u.username, targetId), isNull(u.deletedAt)),
@@ -55,15 +59,21 @@ export async function createReport(
     if (!target) return { error: 'Utente non trovato.' };
     if (target.id === reporterId) return { error: 'Non puoi segnalare te stesso.' };
 
-    try {
-      await db.insert(reports).values({
-        reportedUserId: target.id,
-        reporterId,
-        reasons,
-      });
-    } catch {
-      return { error: 'Hai già segnalato questo utente.' };
+    const existing = await db.query.reports.findFirst({
+      where: (r, { eq, and }) =>
+        and(eq(r.reportedUserId, target.id), eq(r.reporterId, reporterId)),
+      columns: { id: true, resolution: true },
+    });
+
+    if (existing) {
+      if (existing.resolution === 'pending') {
+        return { error: 'Hai già segnalato questo utente.' };
+      }
+      // Segnalazione già gestita: rimuovi il record per permettere una nuova segnalazione
+      await db.delete(reports).where(eq(reports.id, existing.id));
     }
+
+    await db.insert(reports).values({ reportedUserId: target.id, reporterId, reasons });
   }
 
   return { success: true };

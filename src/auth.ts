@@ -2,6 +2,7 @@ import NextAuth from 'next-auth';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
 import Google from 'next-auth/providers/google';
 import Resend from 'next-auth/providers/resend';
+import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
 
@@ -84,12 +85,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // Il tipo è AdapterUser ma a runtime contiene tutti i nostri campi custom.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const dbUser = user as any;
+
+      let banned: boolean = dbUser.banned ?? false;
+
+      // Auto-unban: se il ban ha una scadenza ed è già passata, rimuoviamo il ban
+      if (banned && dbUser.bannedUntil && new Date(dbUser.bannedUntil) < new Date()) {
+        await db
+          .update(schema.users)
+          .set({ banned: false, bannedAt: null, bannedReason: null, bannedUntil: null, updatedAt: new Date() })
+          .where(eq(schema.users.id, dbUser.id));
+        banned = false;
+      }
+
       session.user.id = dbUser.id;
       session.user.username = dbUser.username ?? '';
       session.user.nickname = dbUser.nickname ?? '';
       session.user.role = dbUser.role ?? 'user';
       session.user.onboardingCompleted = dbUser.onboardingCompleted ?? false;
-      session.user.banned = dbUser.banned ?? false;
+      session.user.banned = banned;
       return session;
     },
   },

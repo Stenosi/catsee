@@ -36,9 +36,9 @@ type UsernameState = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 type GpsStatus = 'idle' | 'requesting' | 'granted' | 'denied';
 
 const PRIVACY_OPTIONS: { value: PrivacyLevel; label: string; desc: string }[] = [
-  { value: 'standard', label: 'Standard', desc: '±150m — bilancia privacy e utilità' },
-  { value: 'high', label: 'Privacy rafforzata', desc: '±300m — più anonimato' },
-  { value: 'precise', label: 'Posizione precisa', desc: '0m — coordinate esatte pubblicate' },
+  { value: 'standard', label: 'Standard', desc: '±150m - bilancia privacy e utilità' },
+  { value: 'high', label: 'Privacy rafforzata', desc: '±300m - più anonimato' },
+  { value: 'precise', label: 'Posizione precisa', desc: '0m - coordinate esatte pubblicate' },
 ];
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -49,28 +49,28 @@ export default function OnboardingPage() {
   // Step
   const [step, setStep] = useState<Step>('username');
 
-  // Step 1 — username
+  // Step 1 - username
   const [username, setUsername] = useState('');
   const [usernameState, setUsernameState] = useState<UsernameState>('idle');
   const [usernameError, setUsernameError] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Step 2 — nickname
+  // Step 2 - nickname
   const [nickname, setNickname] = useState('');
   const [formError, setFormError] = useState('');
   const [isPendingNickname, startNicknameTransition] = useTransition();
 
-  // Step 3 — avatar
+  // Step 3 - avatar
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Step 4 — privacy
+  // Step 4 - privacy
   const [privacyLevel, setPrivacyLevel] = useState<PrivacyLevel>('standard');
   const [isSavingPrivacy, startPrivacyTransition] = useTransition();
 
-  // Step 5 — GPS
+  // Step 5 - GPS
   const [gpsStatus, setGpsStatus] = useState<GpsStatus>('idle');
 
   // ── Username live check ─────────────────────────────────────────────────────
@@ -117,7 +117,7 @@ export default function OnboardingPage() {
     });
   }
 
-  // ── Step 3 — avatar ─────────────────────────────────────────────────────────
+  // ── Step 3 - avatar ─────────────────────────────────────────────────────────
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -140,7 +140,7 @@ export default function OnboardingPage() {
     }
   }, []);
 
-  // ── Step 4 — privacy ────────────────────────────────────────────────────────
+  // ── Step 4 - privacy ────────────────────────────────────────────────────────
 
   function handlePrivacyChange(value: string) {
     const level = value as PrivacyLevel;
@@ -148,7 +148,7 @@ export default function OnboardingPage() {
     startPrivacyTransition(async () => { await saveOnboardingPrivacyLevel(level); });
   }
 
-  // ── Step 5 — GPS ────────────────────────────────────────────────────────────
+  // ── Step 5 - GPS ────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (step !== 'gps') return;
@@ -315,7 +315,7 @@ export default function OnboardingPage() {
         <div className="flex flex-col flex-1 gap-8">
           <div className="flex flex-col gap-1">
             <h1 className="text-2xl font-semibold">Aggiungi una foto profilo</h1>
-            <p className="text-sm text-muted-foreground">Facoltativa — puoi aggiungerla o cambiarla in qualsiasi momento.</p>
+            <p className="text-sm text-muted-foreground">Facoltativa - puoi aggiungerla o cambiarla in qualsiasi momento.</p>
           </div>
 
           <div className="flex flex-col items-center gap-4">
@@ -432,7 +432,7 @@ export default function OnboardingPage() {
 
             {gpsStatus === 'idle' && (
               <p className="text-sm text-center text-muted-foreground">
-                Toccando il bottone qui sotto il browser ti chiederà il permesso. Puoi concederlo o negarlo — potrai cambiare idea in qualsiasi momento dalle impostazioni del telefono.
+                Toccando il bottone qui sotto il browser ti chiederà il permesso. Puoi concederlo o negarlo - potrai cambiare idea in qualsiasi momento dalle impostazioni del telefono.
               </p>
             )}
             {gpsStatus === 'granted' && (
@@ -440,7 +440,7 @@ export default function OnboardingPage() {
             )}
             {gpsStatus === 'denied' && (
               <p className="text-sm text-center text-muted-foreground">
-                Nessun problema — potrai attivare la posizione in seguito dalle impostazioni del browser.
+                Nessun problema - potrai attivare la posizione in seguito dalle impostazioni del browser.
               </p>
             )}
           </div>

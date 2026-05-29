@@ -26,7 +26,15 @@ export default function BottomNavbar() {
 
   if (HIDDEN_PATHS.includes(pathname)) return null;
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
+  const PROFILO_OWN_ROUTES = ['/profilo/badge', '/profilo/modifica', '/profilo/follow'];
+
+  const isActive = (href: string) => {
+    if (href === '/profilo') {
+      return pathname === '/profilo' ||
+        PROFILO_OWN_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'));
+    }
+    return pathname === href || pathname.startsWith(href + '/');
+  };
 
   return (
     <nav className="shrink-0 relative z-40 bg-card border-t border-border pb-[env(safe-area-inset-bottom)]">

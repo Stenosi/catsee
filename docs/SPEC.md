@@ -411,7 +411,7 @@ Report
 
 Questa sezione cataloga tutti i vettori di abuso identificati e le protezioni da implementare prima della prima release pubblica.
 
-### 11.1 Testi — gap attuali
+### 11.1 Testi - gap attuali
 
 | Campo | Dove | Protezione attuale | Da fare |
 |---|---|---|---|
@@ -421,9 +421,9 @@ Questa sezione cataloga tutti i vettori di abuso identificati e le protezioni da
 | `catNickname` | Form scatto | **Nessuna** | Aggiungere `containsProfanity()` in `publishSighting` |
 | `note` | Form scatto | **Nessuna** | Aggiungere `containsProfanity()` in `publishSighting` |
 
-> **Quick win:** aggiungere `containsProfanity()` a `catNickname` e `note` in `src/app/(app)/scatta/actions.ts` — due righe di codice.
+> **Quick win:** aggiungere `containsProfanity()` a `catNickname` e `note` in `src/app/(app)/scatta/actions.ts` - due righe di codice.
 
-### 11.2 Immagini — gap attuali
+### 11.2 Immagini - gap attuali
 
 | Tipo | Protezione attuale | Gap | Soluzione consigliata |
 |---|---|---|---|
@@ -457,21 +457,21 @@ Questa sezione cataloga tutti i vettori di abuso identificati e le protezioni da
 |---|---|---|---|
 | Account multipli stesso utente | Elusione ban | `allowDangerousEmailAccountLinking` | Ban per IP (parziale, VPN) o per device fingerprint (complesso) |
 | Re-onboarding dopo soft delete | Ripristino account bannato | `deletedAt: null` al re-onboarding (by design) | Al momento del ban: hard delete `accounts` OAuth per impedire rientro |
-| Bot / script automatici | Flood avvistamenti falsi | — | Rate limiting su `publishSighting` |
+| Bot / script automatici | Flood avvistamenti falsi | - | Rate limiting su `publishSighting` |
 
 ### 11.6 Priorità di intervento
 
-**Alta — fare prima della release:**
+**Alta - fare prima della release:**
 1. `containsProfanity()` su `catNickname` e `note` in `publishSighting` ← 2 righe
 2. Dashboard admin per moderare post `pending` (già in roadmap §4.11)
 3. Rate limiting su `publishSighting`, `follow`, `reaction`
 
-**Media — entro beta:**
+**Media - entro beta:**
 4. Filtro NSFW su avatar (servizio esterno o moderazione manuale su segnalazione)
 5. Protezione ban: hard delete `accounts` OAuth al ban utente
 6. Lock temporaneo username dopo eliminazione account
 
-**Bassa — post-lancio:**
+**Bassa - post-lancio:**
 7. GPS spoofing detection (cluster anomali in admin analytics)
 8. Anti-spam segnalazioni false
 9. Blurring automatico volti (v2)

@@ -35,7 +35,7 @@ async function loadModel(): Promise<ObjectDetection> {
         model = await cocoSsd.load({ modelUrl: IDB_KEY });
       }
     } catch {
-      // IndexedDB non disponibile o modello corrotto — ricade sul download di rete.
+      // IndexedDB non disponibile o modello corrotto - ricade sul download di rete.
     }
 
     if (!model) {
@@ -45,7 +45,7 @@ async function loadModel(): Promise<ObjectDetection> {
         const raw = (model as unknown as { model: { save(url: string): Promise<unknown> } }).model;
         await raw.save(IDB_KEY);
       } catch {
-        // Salvataggio fallito (es. storage quota) — nessun problema, si riscarica la prossima volta.
+        // Salvataggio fallito (es. storage quota) - nessun problema, si riscarica la prossima volta.
       }
     }
 
@@ -61,7 +61,7 @@ async function loadModel(): Promise<ObjectDetection> {
 
 /** Pre-carica il modello in background. Idempotente: sicuro da chiamare più volte. */
 export function preloadModel() {
-  loadModel().catch(() => { /* silent — l'errore verrà gestito all'uso effettivo */ });
+  loadModel().catch(() => { /* silent - l'errore verrà gestito all'uso effettivo */ });
 }
 
 export function useAiVerify(imageUrl: string | null, enabled: boolean) {

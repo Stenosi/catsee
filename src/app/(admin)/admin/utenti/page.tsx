@@ -12,6 +12,7 @@ export default async function UtentiPage() {
       avatarUrl: users.avatarUrl,
       bannedAt: users.bannedAt,
       bannedReason: users.bannedReason,
+      bannedUntil: users.bannedUntil,
     })
     .from(users)
     .where(and(eq(users.banned, true), isNull(users.deletedAt)))
@@ -39,6 +40,7 @@ export default async function UtentiPage() {
           avatarUrl={user.avatarUrl ?? null}
           bannedAt={user.bannedAt}
           bannedReason={user.bannedReason ?? null}
+          bannedUntil={user.bannedUntil ?? null}
         />
       ))}
     </div>

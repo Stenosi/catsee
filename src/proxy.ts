@@ -10,7 +10,7 @@ function isPublic(pathname: string): boolean {
   );
 }
 
-// Solo top-level statiche come callbackUrl — route dinamiche (/profilo/[username], /post/[id])
+// Solo top-level statiche come callbackUrl - route dinamiche (/profilo/[username], /post/[id])
 // potrebbero chiamare notFound() internamente e causare un loop 404 dopo il login.
 const SAFE_CALLBACK_PATHS = ['/feed', '/cerca', '/profilo', '/impostazioni', '/scatta', '/admin'];
 

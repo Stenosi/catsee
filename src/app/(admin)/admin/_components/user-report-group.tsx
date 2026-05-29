@@ -73,7 +73,7 @@ export default function UserReportGroup(props: UserReportGroupProps) {
       onPointerCancel={handlePointerUp}
     >
       <div className="flex gap-3">
-        {/* Avatar — tappabile per ingrandire */}
+        {/* Avatar - tappabile per ingrandire */}
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); if (props.reportedAvatarUrl) setLightboxOpen(true); }}

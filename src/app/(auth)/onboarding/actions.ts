@@ -59,7 +59,7 @@ export async function checkUsername(
   return { available: !existing };
 }
 
-/** Salva username + nickname e segna onboardingCompleted. Non fa redirect — il wizard continua lato client. */
+/** Salva username + nickname e segna onboardingCompleted. Non fa redirect - il wizard continua lato client. */
 export async function saveUsernameNickname(
   formData: FormData,
 ): Promise<{ success: true } | { error: string }> {
@@ -97,7 +97,7 @@ export async function saveUsernameNickname(
 
 // ── Avatar upload (usa requireSession, non requireOnboardedSession) ────────────
 // L'utente è autenticato ma potrebbe non essere ancora "onboardato" formalmente
-// nel cookie di sessione — non serve il check extra.
+// nel cookie di sessione - non serve il check extra.
 
 export type GetOnboardingAvatarUploadUrlResult =
   | { success: true; key: string; uploadUrl: string }

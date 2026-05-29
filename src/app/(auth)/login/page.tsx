@@ -1,23 +1,51 @@
-'use client';
-
 import Link from 'next/link';
-import { useState, useTransition } from 'react';
-import { ArrowLeft, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { loginWithGoogle } from './actions';
+import { ArrowLeft, Ban } from 'lucide-react';
+import { eq } from 'drizzle-orm';
+import { redirect } from 'next/navigation';
+import { auth } from '@/auth';
+import { db } from '@/db';
+import { users } from '@/db/schema';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import LoginForm from './_components/login-form';
 
-export default function LoginPage() {
-  const [isPending, startTransition] = useTransition();
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
+  const isBanned = error === 'banned';
 
-  function handleGoogle() {
-    startTransition(async () => {
-      await loginWithGoogle();
-    });
+  let bannedUntil: Date | null = null;
+  if (isBanned) {
+    const session = await auth();
+    // Ban revocato o scaduto: l'utente è libero, lo mandiamo al profilo
+    if (session?.user && !session.user.banned) {
+      redirect('/profilo');
+    }
+    if (session?.user?.id) {
+      const row = await db.query.users.findFirst({
+        where: eq(users.id, session.user.id),
+        columns: { bannedUntil: true },
+      });
+      bannedUntil = row?.bannedUntil ?? null;
+    }
   }
+
+  const daysLeft = bannedUntil
+    ? Math.max(0, Math.ceil((bannedUntil.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : null;
+
+  const expiryLabel = bannedUntil
+    ? new Intl.DateTimeFormat('it-IT', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(bannedUntil)
+    : null;
 
   return (
     <div className="flex flex-col flex-1 px-6 pt-4 pb-8">
-
       <Link
         href="/mappa"
         className="flex items-center gap-1 text-sm text-muted-foreground w-fit -ml-1 py-2"
@@ -28,50 +56,66 @@ export default function LoginPage() {
       </Link>
 
       <div className="flex flex-col flex-1 justify-center gap-8 max-w-sm mx-auto w-full">
+        {isBanned ? (
+          <>
+            <div className="flex flex-col gap-1 text-center">
+              <h1 className="text-2xl font-semibold text-foreground">Account sospeso</h1>
+              <p className="text-sm text-muted-foreground">
+                Non puoi accedere a CatSee in questo momento.
+              </p>
+            </div>
 
-        <div className="flex flex-col gap-1 text-center">
-          <h1 className="text-2xl font-semibold text-foreground">Bentornato</h1>
-          <p className="text-sm text-muted-foreground">Accedi per avvistare gatti e seguire la community.</p>
-        </div>
+            <Alert variant="destructive">
+              <Ban className="h-4 w-4" />
+              <AlertTitle>Accesso temporaneamente bloccato</AlertTitle>
+              <AlertDescription className="mt-1 space-y-3">
+                <p>
+                  {expiryLabel && daysLeft !== null ? (
+                    daysLeft === 0 ? (
+                      <>Il tuo ban scade <strong>oggi</strong>. Riprova tra poco.</>
+                    ) : (
+                      <>
+                        Il tuo ban scade il <strong>{expiryLabel}</strong>{' '}
+                        ({daysLeft === 1 ? 'domani' : `tra ${daysLeft} giorni`}).
+                      </>
+                    )
+                  ) : (
+                    <>Il tuo account è stato sospeso.</>
+                  )}
+                </p>
+                <p>
+                  Nel frattempo ti invitiamo a rivedere i contenuti del tuo profilo (foto, nickname e
+                  bio) e a correggere tutto ciò che potrebbe risultare inappropriato o offensivo.
+                  Questo ti aiuterà a evitare ulteriori segnalazioni o ban futuri.
+                </p>
+              </AlertDescription>
+            </Alert>
+          </>
+        ) : (
+          <>
+            <div className="flex flex-col gap-1 text-center">
+              <h1 className="text-2xl font-semibold text-foreground">Bentornato</h1>
+              <p className="text-sm text-muted-foreground">
+                Accedi per avvistare gatti e seguire la community.
+              </p>
+            </div>
 
-        <Button
-          onClick={handleGoogle}
-          disabled={isPending}
-          variant="outline"
-          className="w-full gap-2"  
-        >
-          {isPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <GoogleIcon />
-          )}
-          Continua con Google
-        </Button>
+            <LoginForm />
 
-        <p className="text-xs text-muted-foreground text-center">
-          Continuando accetti i{' '}
-          <Link href="/termini" className="underline underline-offset-2 hover:text-foreground">
-            Termini di servizio
-          </Link>{' '}
-          e la{' '}
-          <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground">
-            Privacy policy
-          </Link>
-          .
-        </p>
-
+            <p className="text-xs text-muted-foreground text-center">
+              Continuando accetti i{' '}
+              <Link href="/termini" className="underline underline-offset-2 hover:text-foreground">
+                Termini di servizio
+              </Link>{' '}
+              e la{' '}
+              <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground">
+                Privacy policy
+              </Link>
+              .
+            </p>
+          </>
+        )}
       </div>
     </div>
-  );
-}
-
-function GoogleIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
-      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-    </svg>
   );
 }

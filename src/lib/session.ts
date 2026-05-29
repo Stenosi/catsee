@@ -21,7 +21,7 @@ export async function requireOnboardedSession() {
 }
 
 // ── Varianti per server actions chiamate da client components ─────────────────
-// Non usano redirect() — restituiscono null per permettere all'action di
+// Non usano redirect() - restituiscono null per permettere all'action di
 // ritornare un { error } senza innescare "unexpected response" in Next.js 16.
 
 export async function getSessionForAction() {

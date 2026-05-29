@@ -69,7 +69,7 @@ export default function ReportGroup(props: ReportGroupProps) {
       onPointerCancel={handlePointerUp}
     >
       <div className="flex gap-3">
-        {/* Thumbnail — tappabile per ingrandire */}
+        {/* Thumbnail - tappabile per ingrandire */}
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); setLightboxOpen(true); }}
@@ -111,7 +111,7 @@ export default function ReportGroup(props: ReportGroupProps) {
             </span>
           </div>
 
-          {/* Nota — espandibile */}
+          {/* Nota - espandibile */}
           {props.note && (
             <div
               className={cn(

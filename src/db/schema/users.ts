@@ -8,6 +8,7 @@ import {
   pgEnum,
   jsonb,
   boolean,
+  integer,
   index,
 } from 'drizzle-orm/pg-core';
 
@@ -67,8 +68,11 @@ export const users = pgTable(
 
     // ── Ban (gestito dall'admin)
     banned: boolean('banned').default(false).notNull(),
+    banCount: integer('ban_count').default(0).notNull(),
     bannedAt: timestamp('banned_at', { withTimezone: true }),
     bannedReason: text('banned_reason'),
+    /** Scadenza del ban. NULL = ban permanente (raro). */
+    bannedUntil: timestamp('banned_until', { withTimezone: true }),
     /** Fino a quando l'utente non può caricare una foto profilo (ban temporaneo avatar). */
     avatarBannedUntil: timestamp('avatar_banned_until', { withTimezone: true }),
 

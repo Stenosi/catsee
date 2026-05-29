@@ -97,7 +97,7 @@ export default function PendingCard(props: PendingCardProps) {
       onPointerCancel={handlePointerUp}
     >
       <div className="flex gap-3">
-        {/* Thumbnail — tappabile per ingrandire */}
+        {/* Thumbnail - tappabile per ingrandire */}
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); setLightboxOpen(true); }}
@@ -130,7 +130,7 @@ export default function PendingCard(props: PendingCardProps) {
             <span className="text-xs text-muted-foreground shrink-0">{timeAgo}</span>
           </div>
 
-          {/* Nota — espandibile */}
+          {/* Nota - espandibile */}
           {props.note && (
             <div
               className={cn(

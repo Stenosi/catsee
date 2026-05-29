@@ -538,7 +538,7 @@ L'upload avatar falliva su Vercel (sia mobile che desktop) con errore generico. 
 ### Debiti tecnici aggiornati (sessione 10)
 
 - ~~**Redirect post-pubblicazione**~~ ✅ - redirect a `/feed` dopo publish.
-- ~~**Desktop lock `/scatta`:**~~ ✅ Implementato — schermata "Funzione solo mobile" con rilevamento `maxTouchPoints`.
+- ~~**Desktop lock `/scatta`:**~~ ✅ Implementato - schermata "Funzione solo mobile" con rilevamento `maxTouchPoints`.
 - ~~**Pannello admin moderazione:**~~ ✅ Dashboard admin completa (moderazione, segnalazioni, utenti).
 - ~~**Profilo pubblico `/profilo/[username]` dalla mappa:**~~ ✅ Avatar+username nel sighting sheet sono link a `/profilo/[username]`.
 - **Tile layer dark mode:** light mode usa `Stadia.AlidadeSmooth`, dark mode dovrà usare `Stadia.AlidadeSmoothDark` (`https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png`). Il commento è già nel codice in `map-inner.tsx` e `profile-map-inner.tsx`.
@@ -667,7 +667,7 @@ Con i `loading.tsx`, Next.js App Router mostra istantaneamente header + navbar +
 ### Onboarding - espansione a 5 step
 
 - **`src/app/(auth)/onboarding/page.tsx`** riscritto con 5 step: username → nickname → avatar → privacy → GPS primer.
-- **`src/app/(auth)/onboarding/actions.ts`**: `completeOnboarding` sostituita da `saveUsernameNickname` — salva username+nickname+`onboardingCompleted=true` e restituisce `{ success: true }` senza redirect. Il redirect a `/mappa` avviene lato client alla fine del wizard (step GPS).
+- **`src/app/(auth)/onboarding/actions.ts`**: `completeOnboarding` sostituita da `saveUsernameNickname` - salva username+nickname+`onboardingCompleted=true` e restituisce `{ success: true }` senza redirect. Il redirect a `/mappa` avviene lato client alla fine del wizard (step GPS).
 - **Step 3 - Avatar** (opzionale, "Salta" disponibile): reusa `getAvatarUploadUrl` + `saveAvatarUrl` + `AvatarCropModal` da `profilo/modifica`. Funziona perché `onboardingCompleted` viene settato a `true` nel passo precedente.
 - **Step 4 - Privacy**: RadioGroup con 3 opzioni (Standard/Privacy rafforzata/Posizione precisa). Chiama `savePrivacyLevel` da `impostazioni/actions.ts`. Default: Standard.
 - **Step 5 - GPS primer**: schermata informativa con icona `MapPin`, bottone che triggera `navigator.geolocation.getCurrentPosition()`, feedback visivo per granted/denied, "Decidi dopo" come fallback.
@@ -678,23 +678,23 @@ Con i `loading.tsx`, Next.js App Router mostra istantaneamente header + navbar +
 - **Dashboard Admin** (`/admin`): moderazione post pending, segnalazioni, gestione utenti.
 - **Badge engine:** `checkAndAwardBadges(userId, trigger)` per assegnazione automatica badge.
 - **Sondaggi:** tabelle DB (`polls`, `poll_votes`) + card nel feed + UI creazione admin.
-- **Notifiche Push:** service worker, VAPID, tabella `push_subscriptions`, libreria `web-push` — vedi piano dettagliato in sezione successiva.
-- **PWA install prompt:** da aggiungere in onboarding step dedicato — vedi piano dettagliato in sezione successiva.
+- **Notifiche Push:** service worker, VAPID, tabella `push_subscriptions`, libreria `web-push` - vedi piano dettagliato in sezione successiva.
+- **PWA install prompt:** da aggiungere in onboarding step dedicato - vedi piano dettagliato in sezione successiva.
 - **Performance punto 3** (da sessione 13): separare `getSession` dal layout con `Suspense`.
 
 ## Aggiornamenti sessione 15 (2026-05-29)
 
-### AI verify — cache IndexedDB + preload anticipato
+### AI verify - cache IndexedDB + preload anticipato
 
 - **`use-ai-verify.ts`** refactored:
   - `loadingPromise` module-level: evita download paralleli concorrenti (più chiamanti attendono la stessa Promise).
   - Prima sessione: scarica il modello da rete → salva il graph model in IndexedDB via `(model as any).model.save('indexeddb://catsee-coco-ssd')`. Fire-and-forget, errori di salvataggio ignorati silenziosamente.
   - Sessioni successive: `tf.io.listModels()` controlla la presenza della chiave → `cocoSsd.load({ modelUrl: 'indexeddb://catsee-coco-ssd' })` carica senza download di rete. Funziona sia in browser che in PWA.
   - `preloadModel()` esportato: idempotente, fire-and-forget. Sicuro da chiamare più volte.
-  - **Pattern chiave:** `cocoSsd.load({ modelUrl: 'indexeddb://...' })` è il modo ufficiale TF.js per caricare da IndexedDB — evita di dover ricostruire la classe `ObjectDetection` manualmente.
+  - **Pattern chiave:** `cocoSsd.load({ modelUrl: 'indexeddb://...' })` è il modo ufficiale TF.js per caricare da IndexedDB - evita di dover ricostruire la classe `ObjectDetection` manualmente.
 
 - **`camera-step.tsx`**:
-  - Mount effect: `navigator.permissions.query({ name: 'camera' })` — se `state === 'granted'` (permesso già concesso in sessione precedente) chiama `preloadModel()` subito, prima ancora che `startCamera` risolva.
+  - Mount effect: `navigator.permissions.query({ name: 'camera' })` - se `state === 'granted'` (permesso già concesso in sessione precedente) chiama `preloadModel()` subito, prima ancora che `startCamera` risolva.
   - Effect `permission === 'granted'`: chiama `preloadModel()` anche al primo accesso (quando l'utente concede il permesso per la prima volta). Sostituisce anche il vecchio commento sul "sync srcObject".
 
 ### Fix UX vari (sessione precedente alla compressione)
@@ -712,13 +712,49 @@ Con i `loading.tsx`, Next.js App Router mostra istantaneamente header + navbar +
 
 ### Debiti tecnici aggiornati
 
-- ~~**AI verify cache tra sessioni**~~ ✅ Risolto — IndexedDB caching + preload anticipato.
-- **Dashboard Admin** (`/admin`): moderazione post pending, segnalazioni, gestione utenti. Piano dettagliato esiste (vedi piano in questo file).
+- ~~**AI verify cache tra sessioni**~~ ✅ Risolto - IndexedDB caching + preload anticipato.
+- ~~**Dashboard Admin**~~ ✅ Già implementata in `src/app/(admin)/`.
+- ~~**Performance punto 3**~~ ✅ Layout non-async con `AppHeaderServer` in `<Suspense>`.
+- ~~**Desktop lock `/scatta`**~~ ✅ Schermata "Funzione solo mobile" via `maxTouchPoints`.
 - **Badge engine:** `checkAndAwardBadges(userId, trigger)` per assegnazione automatica badge.
 - **Sondaggi:** tabelle DB + card feed + UI admin.
 - **Notifiche Push:** service worker, VAPID, `push_subscriptions`, `web-push`.
 - **PWA install prompt:** step onboarding dedicato.
-- **Performance punto 3:** separare `getSession` dal layout con `Suspense`.
+
+## Aggiornamenti sessione 16 (2026-05-30)
+
+### Sistema ban - refactoring completo
+
+- **Schema `users`:** aggiunti `ban_count integer default 0` e `banned_until timestamp`. Il campo `ban_count` non viene azzerato allo sban — mantiene la storia dei ban per il calcolo incrementale.
+- **Durate incrementali:** `[1, 3, 7, 14, 30]` giorni. La durata viene calcolata in `banUser` leggendo il `banCount` attuale e indicizzando l'array (cap a 30 giorni al 5° ban+).
+- **`banUser` (admin action):** ora (1) incrementa `banCount`, (2) calcola `bannedUntil` dagli step, (3) soft-delete dei sighting pending, (4) chiude tutti i report pending come `user_banned` → l'utente sparisce da `/admin/segnalazioni` e compare in `/admin/utenti`.
+- **`adjustBanDuration(userId, delta)`:** nuova action per modificare `bannedUntil` di ±1 giorno, clampata tra 1 giorno minimo e 30 giorni massimo dal momento della chiamata.
+- **`unbanUser`:** azzera anche `bannedUntil` (oltre a `bannedAt`, `bannedReason`, `banned`). Non azzera `banCount`.
+- **Auto-unban in `auth.ts`:** nel session callback, se `dbUser.banned && dbUser.bannedUntil < now()` → aggiorna il DB a `banned: false` e restituisce la sessione come utente normale. L'utente si sbanna automaticamente senza intervento admin.
+
+### Pagina ban `/login?error=banned`
+
+- **`login/page.tsx`** convertito a Server Component. Se `error=banned`: legge la sessione, se `!session.user.banned` (ban già revocato/scaduto) fa redirect a `/profilo`. Altrimenti legge `bannedUntil` dal DB e mostra l'`Alert` con countdown giorni + testo che invita a rivedere il profilo.
+- **`login/_components/login-form.tsx`:** estratto come Client Component separato (contiene `useTransition` + bottone Google).
+- **Contenuto alert ban:** data scadenza + giorni rimanenti + invito a rivedere foto, nickname e bio per evitare ulteriori segnalazioni.
+
+### Admin `/admin/utenti` — controllo giorni ban
+
+- **`UserAdminRow`:** aggiunto `bannedUntil` come prop. Sotto il bottone "Revoca ban" compare un ButtonGroup inline `[−] X giorni [+]` che chiama `adjustBanDuration`. Update ottimistico con rollback in caso di errore. Il `−` si disabilita a 1 giorno rimasto, il `+` a 30 giorni.
+
+### Fix: navbar tab `/profilo` su profili altrui
+
+- **`bottom-navbar.tsx`:** `isActive('/profilo')` usa una allowlist di route proprie (`/profilo/badge`, `/profilo/modifica`, `/profilo/follow`). Qualsiasi path `/profilo/[username]` non attiva più il tab.
+
+### Fix: re-segnalazione dopo dismissal admin
+
+- **`segnala/actions.ts`:** prima di inserire, controlla se esiste già un report da questo utente per questo target. Se `resolution === 'pending'` → errore "hai già segnalato". Se già risolto (dismissed, post_removed, user_banned, ecc.) → elimina il vecchio record e inserisce il nuovo. Permette di segnalare di nuovo dopo che l'admin ha gestito la segnalazione precedente.
+
+### Convenzioni sessione 16
+
+- **Ban flow admin:** `banUser` è l'unico punto dove si imposta il ban — non fare update manuali a `banned`/`bannedUntil`/`banCount` altrove. Stesso principio per `unbanUser`.
+- **Login page come Server Component:** leggere `searchParams` server-side, gestire redirect da server. Il form interattivo vive in `_components/login-form.tsx` (Client Component).
+- **Navbar active state per profili:** l'allowlist `PROFILO_OWN_ROUTES` in `bottom-navbar.tsx` va aggiornata se si aggiungono nuove sub-route del profilo proprio (es. `/profilo/impostazioni`).
 
 ## Piano: Notifiche Push (da implementare)
 
@@ -775,9 +811,9 @@ notifications: {
 - `src/hooks/use-push-notifications.ts`
 - `src/lib/push.ts`
 - `src/db/schema/push-subscriptions.ts`
-- `src/app/(app)/impostazioni/actions.ts` — `savePushSubscription()`
+- `src/app/(app)/impostazioni/actions.ts` - `savePushSubscription()`
 - Trigger in: actions follow, reaction, approval
-- `src/app/layout.tsx` — registrazione SW al mount
+- `src/app/layout.tsx` - registrazione SW al mount
 - Onboarding: aggiungere step notifiche dopo GPS primer
 
 ## Piano: PWA Install Prompt (da implementare)
@@ -793,7 +829,7 @@ notifications: {
 - "Salta": procede comunque
 
 **File da creare/modificare:**
-- `src/hooks/use-pwa-install.ts` — hook che gestisce `beforeinstallprompt`
-- `src/app/(app)/impostazioni/page.tsx` — già presente bottone install, da connettere al hook
-- `src/app/layout.tsx` — cattura `beforeinstallprompt` globalmente
+- `src/hooks/use-pwa-install.ts` - hook che gestisce `beforeinstallprompt`
+- `src/app/(app)/impostazioni/page.tsx` - già presente bottone install, da connettere al hook
+- `src/app/layout.tsx` - cattura `beforeinstallprompt` globalmente
 - Onboarding: aggiungere step install dopo notifiche
