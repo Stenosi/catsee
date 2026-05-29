@@ -52,18 +52,14 @@ export default function ReportModal({ open, onClose, type, targetId }: ReportMod
   async function handleSubmit() {
     if (!selected) return;
     setLoading(true);
-    try {
-      const result = await createReport(type, targetId, [selected]);
-      if ('error' in result) {
-        toast.error(result.error);
-      } else {
-        toast.success('Segnalazione inviata');
-        onClose();
-        setSelected(null);
-      }
-    } finally {
-      setLoading(false);
+    const result = await createReport(type, targetId, [selected]);
+    setLoading(false);
+    if ('error' in result) {
+      toast.error(result.error);
+      return;
     }
+    toast.success('Segnalazione inviata');
+    onClose();
   }
 
   const reasons = type === 'post' ? POST_REASONS : USER_REASONS;
