@@ -508,7 +508,7 @@ export default function OnboardingPage() {
                 <Button onClick={requestGps} className="w-full">
                   <MapPin className="w-4 h-4" /> Attiva posizione
                 </Button>
-                <Button variant="ghost" onClick={() => setStep('pwa')} className="w-full">
+                <Button variant="ghost" onClick={() => router.push('/profilo')} className="w-full">
                   Decidi dopo
                 </Button>
               </>
@@ -519,7 +519,7 @@ export default function OnboardingPage() {
               </Button>
             )}
             {(gpsStatus === 'granted' || gpsStatus === 'denied') && (
-              <Button onClick={() => setStep('pwa')} className="w-full">
+              <Button onClick={() => router.push('/profilo')} className="w-full">
                 Continua
               </Button>
             )}
