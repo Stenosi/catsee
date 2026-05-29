@@ -619,14 +619,14 @@ export default function OnboardingPage() {
             <>
               <div className="flex flex-col gap-1">
                 <h1 className="text-2xl font-semibold">Installa CatSee</h1>
-                <p className="text-sm text-muted-foreground">Aggiungi CatSee alla schermata Home per accedervi rapidamente, senza barre del browser.</p>
+                <p className="text-sm text-muted-foreground">Puoi aggiungere CatSee alla schermata Home per un accesso rapido e un'esperienza a schermo intero.</p>
               </div>
               <div className="flex flex-col items-center gap-6 py-2">
                 <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
                   <Smartphone className="w-10 h-10 text-primary" />
                 </div>
                 <p className="text-sm text-center text-muted-foreground">
-                  Per installare l'app, apri CatSee in <span className="font-medium text-foreground">Chrome su Android</span> e tocca "Installa app" nel menu del browser, oppure cerca l'icona di installazione nella barra degli indirizzi.
+                  Cerca l'icona di installazione nella barra degli indirizzi del browser, oppure usa il menu del browser e seleziona <span className="font-medium text-foreground">"Installa app"</span> o <span className="font-medium text-foreground">"Aggiungi alla schermata Home"</span>.
                 </p>
               </div>
               <Button onClick={() => router.push('/profilo')} className="w-full mt-auto">
