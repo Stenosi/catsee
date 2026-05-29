@@ -2,11 +2,16 @@
 
 import { auth } from '@/auth';
 import { db } from '@/db';
-import { users } from '@/db/schema';
+import { users, r2CleanupQueue } from '@/db/schema';
+import type { UserSettings } from '@/db/schema';
 import { eq, and, ne } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { containsProfanity } from '@/lib/obscenity';
+import { requireSession } from '@/lib/session';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { r2, R2_BUCKET, R2_PUBLIC_URL } from '@/lib/r2';
 
 const RESERVED_USERNAMES = new Set([
   'admin', 'support', 'moderator', 'staff', 'official',
@@ -88,4 +93,86 @@ export async function saveUsernameNickname(
     .where(eq(users.id, session.user.id));
 
   return { success: true };
+}
+
+// ── Avatar upload (usa requireSession, non requireOnboardedSession) ────────────
+// L'utente è autenticato ma potrebbe non essere ancora "onboardato" formalmente
+// nel cookie di sessione — non serve il check extra.
+
+export type GetOnboardingAvatarUploadUrlResult =
+  | { success: true; key: string; uploadUrl: string }
+  | { success: false; error: string };
+
+export async function getOnboardingAvatarUploadUrl(): Promise<GetOnboardingAvatarUploadUrlResult> {
+  const session = await requireSession();
+  const key = `avatars/${session.user.id}/${crypto.randomUUID()}.jpg`;
+  try {
+    const uploadUrl = await getSignedUrl(
+      r2,
+      new PutObjectCommand({ Bucket: R2_BUCKET, Key: key, ContentType: 'image/jpeg' }),
+      { expiresIn: 300 },
+    );
+    return { success: true, key, uploadUrl };
+  } catch {
+    return { success: false, error: 'Errore nella generazione del link di upload.' };
+  }
+}
+
+export type SaveOnboardingAvatarResult =
+  | { success: true; avatarUrl: string }
+  | { success: false; error: string };
+
+export type PrivacyLevel = 'standard' | 'high' | 'precise';
+
+export async function saveOnboardingAvatarUrl(key: string): Promise<SaveOnboardingAvatarResult> {
+  const session = await requireSession();
+  const userId = session.user.id;
+
+  const current = await db.query.users.findFirst({
+    where: (u, { eq }) => eq(u.id, userId),
+    columns: { avatarUrl: true },
+  });
+
+  const newUrl = `${R2_PUBLIC_URL}/${key}`;
+
+  await db.update(users).set({ avatarUrl: newUrl, updatedAt: new Date() }).where(eq(users.id, userId));
+
+  if (current?.avatarUrl) {
+    const oldKey = current.avatarUrl.replace(`${R2_PUBLIC_URL}/`, '');
+    if (oldKey !== key) {
+      await db.insert(r2CleanupQueue).values({ r2Key: oldKey, fileType: 'avatar' });
+    }
+  }
+
+  return { success: true, avatarUrl: newUrl };
+}
+
+export async function saveOnboardingPrivacyLevel(
+  level: PrivacyLevel,
+): Promise<{ success: boolean; error?: string }> {
+  const session = await requireSession();
+
+  try {
+    const userRow = await db
+      .select({ settings: users.settings })
+      .from(users)
+      .where(eq(users.id, session.user.id))
+      .then((r) => r[0]);
+
+    const current = userRow?.settings ?? { preciseLocation: false, highPrivacy: false };
+    const updated: UserSettings = {
+      ...current,
+      preciseLocation: level === 'precise',
+      highPrivacy: level === 'high',
+    };
+
+    await db
+      .update(users)
+      .set({ settings: updated, updatedAt: new Date() })
+      .where(eq(users.id, session.user.id));
+
+    return { success: true };
+  } catch {
+    return { success: false, error: 'Impossibile salvare le impostazioni.' };
+  }
 }

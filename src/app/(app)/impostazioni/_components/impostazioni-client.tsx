@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useOptimistic, useTransition } from 'react';
-import { CheckCircle, Download, LogOut, Share, Trash2 } from 'lucide-react';
+import { CheckCircle, Copy, CopyCheck, Download, LogOut, Share, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -53,6 +53,14 @@ export default function ImpostazioniClient({ settings, username }: Props) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [usernameInput, setUsernameInput] = useState('');
   const [isDeleting, startDeleteTransition] = useTransition();
+  const [copied, setCopied] = useState(false);
+
+  function handleCopyUsername() {
+    navigator.clipboard.writeText(username).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
 
   const isInstalled = state === 'unsupported';
 
@@ -188,7 +196,18 @@ export default function ImpostazioniClient({ settings, username }: Props) {
 
             <div className="flex flex-col gap-2">
               <label className="text-sm text-muted-foreground">
-                Digita <span className="font-medium text-foreground">@{username}</span> per confermare
+                Digita{' '}
+                <button
+                  type="button"
+                  onClick={handleCopyUsername}
+                  className="inline-flex items-center gap-1 font-medium text-foreground rounded px-0.5 hover:bg-muted transition-colors"
+                >
+                  {username}
+                  {copied
+                    ? <CopyCheck className="w-3 h-3 text-success shrink-0" />
+                    : <Copy className="w-3 h-3 text-muted-foreground shrink-0" />}
+                </button>
+                {' '}per confermare
               </label>
               <Input
                 value={usernameInput}

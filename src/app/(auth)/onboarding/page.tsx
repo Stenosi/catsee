@@ -11,9 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
-import { checkUsername, saveUsernameNickname } from './actions';
-import { getAvatarUploadUrl, saveAvatarUrl } from '@/app/(app)/profilo/modifica/actions';
-import { savePrivacyLevel, type PrivacyLevel } from '@/app/(app)/impostazioni/actions';
+import { checkUsername, saveUsernameNickname, getOnboardingAvatarUploadUrl, saveOnboardingAvatarUrl, saveOnboardingPrivacyLevel, type PrivacyLevel } from './actions';
 import AvatarCropModal from '@/app/(app)/profilo/modifica/_components/avatar-crop-modal';
 
 // ── Shared components ─────────────────────────────────────────────────────────
@@ -132,10 +130,10 @@ export default function OnboardingPage() {
     setCropSrc(null);
     setIsUploadingAvatar(true);
     try {
-      const urlResult = await getAvatarUploadUrl();
+      const urlResult = await getOnboardingAvatarUploadUrl();
       if (!urlResult.success) return;
       await fetch(urlResult.uploadUrl, { method: 'PUT', body: blob, headers: { 'Content-Type': 'image/jpeg' } });
-      const saveResult = await saveAvatarUrl(urlResult.key);
+      const saveResult = await saveOnboardingAvatarUrl(urlResult.key);
       if (saveResult.success) setAvatarPreviewUrl(saveResult.avatarUrl);
     } finally {
       setIsUploadingAvatar(false);
@@ -147,7 +145,7 @@ export default function OnboardingPage() {
   function handlePrivacyChange(value: string) {
     const level = value as PrivacyLevel;
     setPrivacyLevel(level);
-    startPrivacyTransition(async () => { await savePrivacyLevel(level); });
+    startPrivacyTransition(async () => { await saveOnboardingPrivacyLevel(level); });
   }
 
   // ── Step 5 — GPS ────────────────────────────────────────────────────────────

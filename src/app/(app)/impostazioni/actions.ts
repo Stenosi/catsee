@@ -97,6 +97,7 @@ export async function deleteAccount(
       nickname: 'Utente eliminato',
       bio: null,
       avatarUrl: null,
+      onboardingCompleted: false,
       updatedAt: new Date(),
     })
     .where(eq(users.id, session.user.id));
