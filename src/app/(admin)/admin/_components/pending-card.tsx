@@ -27,7 +27,7 @@ const COLOR_DOTS: Record<string, string> = {
   other: "bg-muted border border-dashed border-muted-foreground/40",
 };
 
-interface PendingCardProps {
+export interface PendingCardProps {
   id: string;
   thumbnailUrl: string;
   catNickname: string;
@@ -39,13 +39,14 @@ interface PendingCardProps {
   authorNickname: string;
   authorUsername: string;
   authorAvatarUrl: string | null;
+  expanded: boolean;
+  onToggleExpand: () => void;
 }
 
 export default function PendingCard(props: PendingCardProps) {
   const [loading, setLoading] = useState<'approve' | 'reject' | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [expanded, setExpanded] = useState(false);
 
   if (dismissed) return null;
 
@@ -79,7 +80,7 @@ export default function PendingCard(props: PendingCardProps) {
     // Tap sulla card (fuori da elementi interattivi) espande/collassa la nota
     <div
       className="p-4 space-y-3 cursor-pointer select-none"
-      onClick={() => props.note && setExpanded((v) => !v)}
+      onClick={() => props.note && props.onToggleExpand()}
     >
       <div className="flex gap-3">
         {/* Thumbnail — tappabile per ingrandire */}
@@ -114,7 +115,7 @@ export default function PendingCard(props: PendingCardProps) {
             <div
               className={cn(
                 "overflow-hidden transition-[max-height] duration-300 ease-in-out mt-1",
-                expanded ? "max-h-40" : "max-h-8"
+                props.expanded ? "max-h-40" : "max-h-8"
               )}
             >
               <p className="text-xs text-muted-foreground leading-4">{props.note}</p>

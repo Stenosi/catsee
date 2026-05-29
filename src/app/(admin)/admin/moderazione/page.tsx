@@ -1,7 +1,7 @@
 import { db } from '@/db';
 import { sightings, users } from '@/db/schema';
 import { eq, and, isNull, asc } from 'drizzle-orm';
-import PendingCard from '../_components/pending-card';
+import PendingList from '../_components/pending-list';
 
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL ?? '';
 
@@ -38,23 +38,20 @@ export default async function ModerazionePage() {
   }
 
   return (
-    <div className="divide-y divide-border">
-      {pending.map((post) => (
-        <PendingCard
-          key={post.id}
-          id={post.id}
-          thumbnailUrl={`${R2_PUBLIC_URL}/${post.photoThumbnailKey}`}
-          catNickname={post.catNickname ?? 'Senza nome'}
-          note={post.note ?? null}
-          tagColors={post.tagColors ?? []}
-          tagFur={post.tagFur ?? null}
-          aiVerified={post.aiVerified ?? false}
-          createdAt={post.createdAt}
-          authorNickname={post.authorNickname}
-          authorUsername={post.authorUsername}
-          authorAvatarUrl={post.authorAvatarUrl ?? null}
-        />
-      ))}
-    </div>
+    <PendingList
+      items={pending.map((post) => ({
+        id: post.id,
+        thumbnailUrl: `${R2_PUBLIC_URL}/${post.photoThumbnailKey}`,
+        catNickname: post.catNickname ?? 'Senza nome',
+        note: post.note ?? null,
+        tagColors: post.tagColors ?? [],
+        tagFur: post.tagFur ?? null,
+        aiVerified: post.aiVerified ?? false,
+        createdAt: post.createdAt,
+        authorNickname: post.authorNickname,
+        authorUsername: post.authorUsername,
+        authorAvatarUrl: post.authorAvatarUrl ?? null,
+      }))}
+    />
   );
 }
