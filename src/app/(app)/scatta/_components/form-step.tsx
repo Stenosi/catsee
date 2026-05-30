@@ -37,7 +37,7 @@ const schema = z.object({
   catName: z.string().min(1, 'Il nome è obbligatorio').max(30, 'Massimo 30 caratteri'),
   colors: z.array(z.string()).min(1, 'Seleziona almeno un colore').max(3, 'Massimo 3 colori'),
   furLength: z.enum(['short', 'long'], { error: 'Seleziona la lunghezza del pelo' }),
-  catType: z.enum(['stray', 'domestic']).default('stray'),
+  catType: z.enum(['stray', 'domestic']),
   notes: z.string().max(200, 'Massimo 200 caratteri').optional(),
 });
 
