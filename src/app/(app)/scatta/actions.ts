@@ -4,11 +4,12 @@ import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { r2, R2_BUCKET, R2_PUBLIC_URL } from '@/lib/r2';
 import { db } from '@/db';
-import { sightings, users } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { sightings, users, badges } from '@/db/schema';
+import { eq, inArray } from 'drizzle-orm';
 import { makePoint, fuzzCoordinates } from '@/db/geo';
 import { requireOnboardedSession } from '@/lib/session';
 import { containsProfanity } from '@/lib/obscenity';
+import { checkAndAwardBadges } from '@/lib/badges';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
 
@@ -49,6 +50,7 @@ const publishSchema = z.object({
   catName: z.string().min(1).max(30),
   colors: z.array(z.string()).min(1).max(3),
   furLength: z.enum(['short', 'long']),
+  catType: z.enum(['stray', 'domestic']).default('stray'),
   notes: z.string().max(200).optional(),
   pinLat: z.number(),
   pinLng: z.number(),
@@ -56,8 +58,10 @@ const publishSchema = z.object({
   aiVerified: z.boolean().optional(),
 });
 
+export type NewBadge = { id: string; name: string; icon: string };
+
 export type PublishSightingResult =
-  | { success: true; photoUrl: string }
+  | { success: true; photoUrl: string; newBadges: NewBadge[] }
   | { success: false; error: string };
 
 export async function publishSighting(data: z.infer<typeof publishSchema>): Promise<PublishSightingResult> {
@@ -67,7 +71,7 @@ export async function publishSighting(data: z.infer<typeof publishSchema>): Prom
   const parsed = publishSchema.safeParse(data);
   if (!parsed.success) return { success: false, error: 'Dati non validi.' };
 
-  const { photoKey, thumbnailKey, catName, colors, furLength, notes, pinLat, pinLng, extractedPalette, aiVerified } = parsed.data;
+  const { photoKey, thumbnailKey, catName, colors, furLength, catType, notes, pinLat, pinLng, extractedPalette, aiVerified } = parsed.data;
 
   if (containsProfanity(catName)) return { success: false, error: 'Il nome contiene parole non ammesse.' };
   if (notes && containsProfanity(notes)) return { success: false, error: 'Le note contengono parole non ammesse.' };
@@ -83,6 +87,8 @@ export async function publishSighting(data: z.infer<typeof publishSchema>): Prom
   const fuzzed = fuzzCoordinates(pinLat, pinLng, fuzzRadius);
   const verified = aiVerified === true;
 
+  const publishTs = new Date();
+
   await db.insert(sightings).values({
     userId,
     photoKey,
@@ -90,6 +96,7 @@ export async function publishSighting(data: z.infer<typeof publishSchema>): Prom
     catNickname: catName.trim(),
     tagColors: colors,
     tagFur: furLength,
+    catType,
     note: notes?.trim() ?? null,
     extractedPalette: extractedPalette ?? [],
     locationReal: makePoint(pinLng, pinLat) as unknown as { lat: number; lng: number },
@@ -99,5 +106,19 @@ export async function publishSighting(data: z.infer<typeof publishSchema>): Prom
     visibility: 'public',
   });
 
-  return { success: true, photoUrl: `${R2_PUBLIC_URL}/${photoKey}` };
+  // Badge engine — non-fatal
+  let newBadges: NewBadge[] = [];
+  try {
+    const awardedIds = await checkAndAwardBadges(userId, 'publish', { timestamp: publishTs });
+    if (awardedIds.length > 0) {
+      newBadges = await db
+        .select({ id: badges.id, name: badges.name, icon: badges.icon })
+        .from(badges)
+        .where(inArray(badges.id, awardedIds));
+    }
+  } catch {
+    // Badge errors never block publish
+  }
+
+  return { success: true, photoUrl: `${R2_PUBLIC_URL}/${photoKey}`, newBadges };
 }

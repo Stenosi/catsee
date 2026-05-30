@@ -21,19 +21,23 @@ const PositionMap = dynamic(() => import('./position-map'), {
 });
 
 const CAT_COLORS = [
-  { id: 'black', label: 'Nero', dot: '#1c1c1e' },
-  { id: 'white', label: 'Bianco', dot: '#e5e5ea' },
-  { id: 'gray', label: 'Grigio', dot: '#8e8e93' },
-  { id: 'orange', label: 'Arancione / Rosso', dot: '#ff9500' },
-  { id: 'brown', label: 'Marrone', dot: '#92400e' },
-  { id: 'tabby', label: 'Tigrato', dot: '#a16207' },
-  { id: 'other', label: 'Altro', dot: '#6b7280', dashed: true },
+  { id: 'black',    label: 'Nero',      dot: '#1c1c1e' },
+  { id: 'gray',     label: 'Grigio',    dot: '#8e8e93' },
+  { id: 'white',    label: 'Bianco',    dot: '#e5e5ea' },
+  { id: 'cream',    label: 'Crema',     dot: '#f5e6c8' },
+  { id: 'orange',   label: 'Arancione', dot: '#ff9500' },
+  { id: 'cinnamon', label: 'Cannella',  dot: '#c67c3b' },
+  { id: 'brown',    label: 'Marrone',   dot: '#92400e' },
+  { id: 'siamese',  label: 'Siamese',   dot: '#c8a87a' },
+  { id: 'tabby',    label: 'Tigrato',   dot: '#a16207' },
+  { id: 'other',    label: 'Altro',     dot: '#6b7280', dashed: true },
 ] as const;
 
 const schema = z.object({
   catName: z.string().min(1, 'Il nome è obbligatorio').max(30, 'Massimo 30 caratteri'),
   colors: z.array(z.string()).min(1, 'Seleziona almeno un colore').max(3, 'Massimo 3 colori'),
   furLength: z.enum(['short', 'long'], { error: 'Seleziona la lunghezza del pelo' }),
+  catType: z.enum(['stray', 'domestic']).default('stray'),
   notes: z.string().max(200, 'Massimo 200 caratteri').optional(),
 });
 
@@ -76,19 +80,20 @@ export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish
     formState: { errors, isSubmitting, dirtyFields },
   } = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: { catName: '', colors: [], notes: '' },
+    defaultValues: { catName: '', colors: [], catType: 'stray', notes: '' },
   });
 
   const selectedColors = watch('colors');
+  const furLength = watch('furLength');
+  const catType = watch('catType');
+  const catNameValue = watch('catName');
+  const notesValue = watch('notes') ?? '';
 
   useEffect(() => {
     if (suggestedColors && suggestedColors.length > 0 && !dirtyFields.colors) {
       setValue('colors', suggestedColors, { shouldValidate: true });
     }
   }, [suggestedColors, dirtyFields.colors, setValue]);
-  const furLength = watch('furLength');
-  const catNameValue = watch('catName');
-  const notesValue = watch('notes') ?? '';
 
   const { ref: registerNotesRef, ...notesRegister } = register('notes');
   const notesCallbackRef = useCallback(
@@ -243,6 +248,24 @@ export default function FormStep({ imageUrl, coords, geoError, onBack, onPublish
             {errors.furLength && (
               <p className="text-xs text-destructive">{errors.furLength.message}</p>
             )}
+          </div>
+
+          {/* Tipo gatto */}
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-foreground">Tipo</label>
+            <ToggleGroup
+              spacing={0}
+              variant="outline"
+              value={catType ? [catType] : []}
+              onValueChange={(val) => {
+                const v = val[val.length - 1] as 'stray' | 'domestic' | undefined;
+                if (v) setValue('catType', v, { shouldValidate: true });
+              }}
+              className="w-full"
+            >
+              <ToggleGroupItem value="stray" className="flex-1">Randagio</ToggleGroupItem>
+              <ToggleGroupItem value="domestic" className="flex-1">Domestico</ToggleGroupItem>
+            </ToggleGroup>
           </div>
 
           {/* Note */}

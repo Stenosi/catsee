@@ -18,7 +18,9 @@ export const badgeCategoryEnum = pgEnum('badge_category', [
   'streak',    // serie consecutive
   'time',      // basato su orario (notturno, ecc.)
   'color',     // basato su tag colore
-  'special',   // edizioni speciali, eventi
+  'fur',       // basato su lunghezza pelo
+  'type',      // basato su tipo gatto (randagio/domestico)
+  'special',   // edizioni speciali, eventi stagionali
 ]);
 
 /**

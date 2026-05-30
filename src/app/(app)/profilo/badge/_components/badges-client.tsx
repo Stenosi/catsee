@@ -14,10 +14,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   streak: 'Serie',
   time: 'Orari',
   color: 'Colori',
+  fur: 'Pelo',
+  type: 'Tipo',
   special: 'Speciali',
 };
 
-const CATEGORY_ORDER = ['milestone', 'streak', 'time', 'color', 'special'];
+const CATEGORY_ORDER = ['milestone', 'streak', 'time', 'color', 'fur', 'type', 'special'];
 
 export type BadgeRow = {
   id: string;

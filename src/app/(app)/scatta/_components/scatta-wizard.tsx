@@ -204,6 +204,7 @@ export default function ScattaWizard() {
         catName: data.catName,
         colors: data.colors,
         furLength: data.furLength,
+        catType: data.catType,
         notes: data.notes,
         pinLat: data.pinLat,
         pinLng: data.pinLng,
@@ -226,6 +227,19 @@ export default function ScattaWizard() {
           duration: 6000,
         });
       }
+
+      // Badge toasts (after short delay so publish toast appears first)
+      if (result.newBadges.length > 0) {
+        setTimeout(() => {
+          for (const badge of result.newBadges) {
+            toast.success(`${badge.icon} Badge sbloccato: ${badge.name}!`, {
+              description: 'Visibile nel tuo profilo.',
+              duration: 5000,
+            });
+          }
+        }, 800);
+      }
+
       router.replace('/feed');
     } catch {
       toast.error('Qualcosa è andato storto. Riprova.');

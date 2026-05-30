@@ -195,7 +195,7 @@ L'ordine di sviluppo che ha più senso (non rigido):
 7. ✅ Flow scatto: camera → AI verify → palette → form → R2 upload → DB save
 8. ✅ Feed seguiti (Esplora e Vicini rimandati a v1.1)
 9. ✅ Reazioni emoji + Follow/Unfollow
-10. ✅ Sistema badge + unlock animations (badge engine automatico da fare)
+10. ✅ Sistema badge + unlock animations + badge engine automatico
 11. ⬜ Moderazione (segnalazioni, pannello admin)
 11b. ✅ Impostazioni: privacy fuzzing (3 livelli), elimina account
 11c. ⬜ Sicurezza contenuti pre-release (vedi `docs/SPEC.md` §11)
@@ -755,6 +755,52 @@ Con i `loading.tsx`, Next.js App Router mostra istantaneamente header + navbar +
 - **Ban flow admin:** `banUser` è l'unico punto dove si imposta il ban — non fare update manuali a `banned`/`bannedUntil`/`banCount` altrove. Stesso principio per `unbanUser`.
 - **Login page come Server Component:** leggere `searchParams` server-side, gestire redirect da server. Il form interattivo vive in `_components/login-form.tsx` (Client Component).
 - **Navbar active state per profili:** l'allowlist `PROFILO_OWN_ROUTES` in `bottom-navbar.tsx` va aggiornata se si aggiungono nuove sub-route del profilo proprio (es. `/profilo/impostazioni`).
+
+## Aggiornamenti sessione 17 (2026-05-30)
+
+### Badge engine — implementazione completa
+
+- **`src/lib/badges.ts`** (nuovo): `checkAndAwardBadges(userId, 'publish', { timestamp })` → `string[]` badge ID appena sbloccati. Tutte le query dati girano in parallelo (un unico `Promise.all` con 6 query + 10 query colore). Funzione helper `computeStreak` per calcolare la streak corrente da un array di date ISO ordinato desc.
+- **Trigger `'publish'`** gestisce: milestone (1/5/10/50/100), streak (2/7/14/30 giorni), time (22-06 notturno, 05-08 mattiniero, 17-20 ora magica), color (10 colori × target 5), fur (pelo corto/lungo × target 5/10), type (randagio/domestico × target 5/10), stagionale (primavera/estate/autunno/inverno), date speciali (1/1, 25/12, 15/8, 31/10, venerdì 13), `all_seasons` (ha tutti e 4 i badge stagionali).
+- **Pattern tryAward:** `Set` locale di badge già posseduti caricato all'inizio; ogni assegnazione controlla il Set, poi fa INSERT, poi aggiorna Set. Gli errori FK (badge non in catalogo) sono ignorati silenziosamente. Badge non-fatali per il publish.
+
+### 10 colori gatto — estensione completa
+
+- **`src/db/schema/sightings.ts`:** `TAG_COLORS` aggiornato con tutti e 10 i colori (black, gray, white, cream, orange, cinnamon, brown, siamese, tabby, other). Nessuna migration DB richiesta (text[]).
+- **`src/app/(app)/scatta/_components/form-step.tsx`:** `CAT_COLORS` aggiornato con hex dot per tutti e 10 i colori nell'ordine scuro→chiaro→caldo→pattern→altro.
+- **`src/app/(admin)/admin/_components/pending-card.tsx`:** `COLOR_DOTS` aggiornato con `cream: "bg-amber-100"`, `cinnamon: "bg-amber-600"`, `siamese: "bg-yellow-200 border border-yellow-400"`.
+
+### Tipo gatto (catType) nel form scatto
+
+- **`form-step.tsx`:** aggiunto `ToggleGroup` "Randagio / Domestico" sotto il pelo. Schema Zod: `catType: z.enum(['stray','domestic']).default('stray')`. `PostFormData` include `catType`.
+- **`scatta/actions.ts`:** `publishSchema` e INSERT aggiornati con `catType`. L'enum DB `catTypeEnum` ha già `community` per uso futuro; la UI espone solo `stray` e `domestic`.
+
+### Badge engine integrato nel publish flow
+
+- **`scatta/actions.ts`:** dopo l'INSERT, chiama `checkAndAwardBadges` in try/catch non-fatale. Se ci sono badge sbloccati, fa una query supplementare per name+icon. Ritorna `{ success: true, photoUrl, newBadges: { id, name, icon }[] }`.
+- **`scatta-wizard.tsx`:** dopo il successo del publish, mostra un `toast.success` per ogni badge appena sbloccato con delay 800ms (così appare dopo il toast di pubblicazione).
+
+### Catalogo badge completo
+
+- **`scripts/seed.ts`:** catalogo aggiornato con 41 badge totali (5 milestone + 4 streak + 3 time + 11 color + 4 fur + 4 type + 10 special). `displayOrder` zero-paddato a 3 cifre per ordinamento corretto ('010'–'654'). Il seed è idempotente → aggiorna anche i displayOrder delle badge esistenti.
+
+### Pagina badge aggiornata
+
+- **`badges-client.tsx`:** `CATEGORY_ORDER` e `CATEGORY_LABELS` aggiornati con `fur: 'Pelo'` e `type: 'Tipo'`.
+- **`badge/page.tsx`:** refactored per calcolare il progresso per tutti i tipi di badge. Nuove helper functions: `getFurCounts`, `getTypeCounts`. Per i badge colore, usa query parallele solo per i colori effettivamente locked con target. Logica di routing badge-ID → metrica di progresso tramite pattern matching sull'ID.
+
+### Requisiti post-sessione
+
+- **`pnpm db:push`** — deve essere eseguito dall'utente in terminale (richiede TTY interattivo per rispondere "No" alla domanda di truncation dell'enum). Aggiunge i valori `'fur'` e `'type'` a `badge_category` enum e `'banned_until'`/`'ban_count'` a `users`.
+- **`pnpm db:seed`** — da eseguire dopo db:push per inserire i 41 badge nel catalogo.
+
+### Debiti tecnici aggiornati (sessione 17)
+
+- ~~**Badge engine**~~ ✅ Implementato.
+- ~~**10 colori + catType form**~~ ✅ Implementato.
+- **Sondaggi:** tabelle DB + card feed + UI admin.
+- **Notifiche Push:** service worker, VAPID, `push_subscriptions`, `web-push`.
+- **PWA install prompt:** step onboarding dedicato.
 
 ## Piano: Notifiche Push (da implementare)
 

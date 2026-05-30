@@ -22,10 +22,13 @@ function relativeTime(date: Date): string {
 
 const COLOR_DOTS: Record<string, string> = {
   black: "bg-gray-900",
-  white: "bg-gray-100 border border-gray-300",
   gray: "bg-gray-400",
+  white: "bg-gray-100 border border-gray-300",
+  cream: "bg-amber-100",
   orange: "bg-orange-400",
+  cinnamon: "bg-amber-600",
   brown: "bg-amber-800",
+  siamese: "bg-yellow-200 border border-yellow-400",
   tabby: "bg-amber-500",
   other: "bg-muted border border-dashed border-muted-foreground/40",
 };

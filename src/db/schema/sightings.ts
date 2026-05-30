@@ -118,10 +118,13 @@ export const SIGHTING_LIMITS = {
 /** Tag colori disponibili - sincronizzato con UI */
 export const TAG_COLORS = [
   'black',
-  'white',
   'gray',
+  'white',
+  'cream',
   'orange',
+  'cinnamon',
   'brown',
+  'siamese',
   'tabby',
   'other',
 ] as const;
