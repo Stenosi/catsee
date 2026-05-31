@@ -81,7 +81,7 @@ export default function ZoomableImage({ src, alt }: Props) {
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
         style={{ touchAction: 'none', visibility: zooming ? 'hidden' : 'visible' }}
-        className="absolute inset-0 w-full h-full object-cover select-none"
+        className="absolute inset-0 w-full h-full object-cover object-center select-none"
         draggable={false}
       />
 
