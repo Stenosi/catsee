@@ -97,7 +97,10 @@ export default function PositionMap({ originLat, originLng, restrictToOrigin = t
           restrictToOrigin={restrictToOrigin}
           onChange={onChange}
         />
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <TileLayer
+          url={`https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png?api_key=${process.env.NEXT_PUBLIC_STADIA_API_KEY}`}
+          attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        />
         {restrictToOrigin && (
           <Circle
             center={[originLat, originLng]}

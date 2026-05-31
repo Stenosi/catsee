@@ -7,9 +7,40 @@ import L from 'leaflet';
 import 'leaflet.markercluster';
 import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { LocateFixed } from 'lucide-react';
+import { LocateFixed, Navigation } from 'lucide-react';
 import type { MapSighting } from '../actions';
 import SightingSheet from './sighting-sheet';
+
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+interface NearestFlyBinderProps {
+  sightings: MapSighting[];
+  flyToNearestRef: React.MutableRefObject<(() => void) | null>;
+}
+
+function NearestFlyBinder({ sightings, flyToNearestRef }: NearestFlyBinderProps) {
+  const map = useMap();
+  flyToNearestRef.current = useCallback(() => {
+    if (sightings.length === 0) return;
+    const { lat, lng } = map.getCenter();
+    let nearest = sightings[0];
+    let minDist = haversineKm(lat, lng, nearest.lat, nearest.lng);
+    for (const s of sightings) {
+      const d = haversineKm(lat, lng, s.lat, s.lng);
+      if (d < minDist) { minDist = d; nearest = s; }
+    }
+    map.flyTo([nearest.lat, nearest.lng], 15, { duration: 1.2 });
+  }, [map, sightings]);
+  return null;
+}
 
 function createCatPin(thumbnailUrl: string): L.DivIcon {
   return L.divIcon({
@@ -134,6 +165,7 @@ export default function MapInner({ sightings }: Props) {
   const [userPosition, setUserPosition] = useState<[number, number] | null>(null);
   const [isEmpty, setIsEmpty] = useState(false);
   const flyToRef = useRef<((pos: [number, number] | null) => void) | null>(null);
+  const flyToNearestRef = useRef<(() => void) | null>(null);
 
   const handlePinClick = useCallback((s: MapSighting) => {
     setSelectedSighting(s);
@@ -161,6 +193,7 @@ export default function MapInner({ sightings }: Props) {
         <CatMarkerCluster sightings={sightings} onPinClick={handlePinClick} />
         <ViewportEmptyChecker sightings={sightings} onEmpty={setIsEmpty} />
         <MapFlyToBinder flyToRef={flyToRef} />
+        <NearestFlyBinder sightings={sightings} flyToNearestRef={flyToNearestRef} />
       </MapContainer>
 
       {/* FAB outside MapContainer, but still overlays it */}
@@ -175,12 +208,16 @@ export default function MapInner({ sightings }: Props) {
       </div>
 
       <div
-        className="absolute inset-x-0 top-4 flex justify-center z-900 pointer-events-none transition-opacity duration-300"
-        style={{ opacity: isEmpty ? 1 : 0 }}
+        className="absolute inset-x-0 top-4 flex justify-center z-900 transition-opacity duration-300"
+        style={{ opacity: isEmpty ? 1 : 0, pointerEvents: isEmpty ? 'auto' : 'none' }}
       >
-        <div className="bg-card/90 backdrop-blur-sm rounded-full px-4 py-2 shadow">
-          <p className="text-sm text-muted-foreground">Nessun gatto in quest&apos;area</p>
-        </div>
+        <button
+          onClick={() => flyToNearestRef.current?.()}
+          className="flex items-center gap-2 bg-card/90 backdrop-blur-sm rounded-full px-4 py-2 shadow active:opacity-70"
+        >
+          <Navigation className="w-3.5 h-3.5 text-primary shrink-0" />
+          <span className="text-sm text-muted-foreground">Nessun gatto qui — trova il più vicino</span>
+        </button>
       </div>
 
       <SightingSheet sighting={selectedSighting} onClose={() => setSelectedSighting(null)} />
