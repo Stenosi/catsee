@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Settings, ChevronLeft, Search, X, Loader2, ShieldCheck, Flag } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import ReportModal from "./report-modal";
 
@@ -153,9 +154,11 @@ function PostHeader({ postId, userId }: { postId: string; userId: string | null 
   return (
     <div className="flex w-full items-center gap-2">
       <BackHeaderButton />
-      <span className="flex-1 text-base font-semibold text-foreground truncate">
-        {catName ?? 'Avvistamento'}
-      </span>
+      <div className="flex-1 min-w-0">
+        {catName
+          ? <span className="text-base font-semibold text-foreground truncate block">{catName}</span>
+          : <Skeleton className="h-4 w-28" />}
+      </div>
       {userId && postId && <FlagButton type="post" targetId={postId} />}
     </div>
   );

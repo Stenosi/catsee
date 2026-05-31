@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { REACTION_EMOJIS } from '@/db/schema/reactions';
 import { fetchPostDetail } from './actions';
 import PostReactions from './_components/post-reactions';
+import ZoomableImage from './_components/zoomable-image';
 
 const COLOR_LABELS: Record<string, string> = {
   black: 'Nero',
@@ -34,12 +35,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
     <div className="flex flex-col min-h-full pb-[env(safe-area-inset-bottom)]">
       {/* Foto hero */}
       <div className="relative w-full aspect-3/4 bg-muted shrink-0 overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={post.photoUrl}
-          alt={post.catNickname}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        <ZoomableImage src={post.photoUrl} alt={post.catNickname} />
       </div>
 
       {/* Contenuto */}
@@ -75,12 +71,9 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
         </Link>
 
         {/* Nome gatto */}
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{post.catNickname}</h1>
-          {post.note && (
-            <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{post.note}</p>
-          )}
-        </div>
+        {post.note && (
+          <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{post.note}</p>
+        )}
 
         {/* Tags */}
         <div className="flex flex-wrap gap-2">
