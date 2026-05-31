@@ -28,6 +28,7 @@ export default function CameraStep({ onCapture }: Props) {
   const [permission, setPermission] = useState<Permission>('loading');
   const [facing, setFacing] = useState<FacingMode>('environment');
   const [capturing, setCapturing] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
   const [zoomCaps, setZoomCaps] = useState<ZoomCaps | null>(null);
   const [zoom, setZoom] = useState(1);
 
@@ -41,6 +42,7 @@ export default function CameraStep({ onCapture }: Props) {
     streamRef.current = null;
     setZoomCaps(null);
     setZoom(1);
+    setVideoReady(false);
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -191,6 +193,7 @@ export default function CameraStep({ onCapture }: Props) {
         autoPlay
         playsInline
         muted
+        onCanPlay={() => setVideoReady(true)}
         onPointerDown={onPinchPointerDown}
         onPointerMove={onPinchPointerMove}
         onPointerUp={onPinchPointerUp}
@@ -289,7 +292,7 @@ export default function CameraStep({ onCapture }: Props) {
 
               <button
                 onClick={capture}
-                disabled={capturing}
+                disabled={capturing || !videoReady}
                 aria-label="Scatta foto"
                 className={cn(
                   'w-20 h-20 rounded-full border-4 border-white',

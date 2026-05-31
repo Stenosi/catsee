@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 import { Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { Vibrant } from 'node-vibrant/browser';
@@ -274,7 +275,13 @@ export default function ScattaWizard() {
 
   return (
     <div className="fixed inset-0 bg-black z-50">
-      {step === 'camera' && <CameraStep onCapture={handleCapture} />}
+      {/* CameraStep rimane montato fino a conferma foto (step form) così
+          il feed video non si riavvia se si scarta e si ritorna alla camera. */}
+      {step !== 'form' && (
+        <div className={cn('absolute inset-0', step === 'preview' && 'invisible pointer-events-none')}>
+          <CameraStep onCapture={handleCapture} />
+        </div>
+      )}
       {step === 'preview' && capturedUrl && (
         <PreviewStep
           imageUrl={capturedUrl}
