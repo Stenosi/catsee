@@ -6,6 +6,7 @@ import type { MapSighting } from '../actions';
 import {
   Drawer,
   DrawerContent,
+  DrawerTitle,
 } from '@/components/ui/drawer';
 
 interface Props {
@@ -21,6 +22,7 @@ export default function SightingSheet({ sighting, onClose }: Props) {
   return (
     <Drawer open={sighting !== null} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
       <DrawerContent className="bg-card text-foreground">
+        <DrawerTitle className="sr-only">Dettaglio avvistamento</DrawerTitle>
         {displaySighting && <SheetContent sighting={displaySighting} />}
       </DrawerContent>
     </Drawer>
