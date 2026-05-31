@@ -33,6 +33,15 @@ export type PostDetail = {
   isOwner: boolean;
 };
 
+export async function fetchPostCatName(id: string): Promise<string | null> {
+  const rows = await db
+    .select({ catNickname: sightings.catNickname })
+    .from(sightings)
+    .where(and(eq(sightings.id, id), isNull(sightings.deletedAt)))
+    .limit(1);
+  return rows[0]?.catNickname ?? null;
+}
+
 export async function fetchPostDetail(id: string): Promise<PostDetail | null> {
   const session = await getSession();
   const currentUserId = session?.user?.id ?? null;

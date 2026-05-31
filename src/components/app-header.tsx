@@ -141,10 +141,21 @@ function FlagButton({ type, targetId }: { type: 'post' | 'user'; targetId: strin
 }
 
 function PostHeader({ postId, userId }: { postId: string; userId: string | null }) {
+  const [catName, setCatName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!postId) return;
+    import('@/app/(app)/post/[id]/actions').then(({ fetchPostCatName }) => {
+      fetchPostCatName(postId).then((name) => { if (name) setCatName(name); });
+    });
+  }, [postId]);
+
   return (
     <div className="flex w-full items-center gap-2">
       <BackHeaderButton />
-      <span className="flex-1 text-base font-semibold text-foreground">Avvistamento</span>
+      <span className="flex-1 text-base font-semibold text-foreground truncate">
+        {catName ?? 'Avvistamento'}
+      </span>
       {userId && postId && <FlagButton type="post" targetId={postId} />}
     </div>
   );

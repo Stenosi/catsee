@@ -33,12 +33,12 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
   return (
     <div className="flex flex-col min-h-full pb-[env(safe-area-inset-bottom)]">
       {/* Foto hero */}
-      <div className="relative w-full aspect-4/3 bg-muted shrink-0">
+      <div className="relative w-full aspect-3/4 bg-muted shrink-0 overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={post.photoUrl}
           alt={post.catNickname}
-          className="w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover"
         />
       </div>
 
