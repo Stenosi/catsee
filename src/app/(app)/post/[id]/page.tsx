@@ -20,6 +20,12 @@ const FUR_LABELS: Record<string, string> = {
   long: 'Pelo lungo',
 };
 
+const CAT_TYPE_LABELS: Record<string, string> = {
+  stray: 'Randagio',
+  domestic: 'Domestico',
+  community: 'Randagio',
+};
+
 export default async function PostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const post = await fetchPostDetail(id);
@@ -87,6 +93,9 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
           ))}
           <span className="px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
             {FUR_LABELS[post.tagFur] ?? post.tagFur}
+          </span>
+          <span className="px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+            {CAT_TYPE_LABELS[post.catType] ?? post.catType}
           </span>
         </div>
 

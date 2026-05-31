@@ -18,6 +18,7 @@ export type PostDetail = {
   note: string | null;
   tagColors: string[];
   tagFur: 'short' | 'long';
+  catType: 'stray' | 'domestic' | 'community';
   createdAt: Date;
   aiVerified: boolean;
   lat: number;
@@ -55,6 +56,7 @@ export async function fetchPostDetail(id: string): Promise<PostDetail | null> {
       note: sightings.note,
       tagColors: sightings.tagColors,
       tagFur: sightings.tagFur,
+      catType: sightings.catType,
       createdAt: sightings.createdAt,
       aiVerified: sightings.aiVerified,
       lat: extractLat(sightings.locationFuzzed),
@@ -111,6 +113,7 @@ export async function fetchPostDetail(id: string): Promise<PostDetail | null> {
     note: row.note,
     tagColors: row.tagColors,
     tagFur: row.tagFur as 'short' | 'long',
+    catType: row.catType as 'stray' | 'domestic' | 'community',
     createdAt: row.createdAt,
     aiVerified: row.aiVerified,
     lat: row.lat,
