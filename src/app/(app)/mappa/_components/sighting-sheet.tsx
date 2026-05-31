@@ -9,6 +9,18 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 
+const COLOR_LABELS: Record<string, string> = {
+  black: 'Nero', gray: 'Grigio', white: 'Bianco', cream: 'Crema',
+  orange: 'Arancione', cinnamon: 'Cannella', brown: 'Marrone',
+  siamese: 'Siamese', tabby: 'Tigrato', other: 'Altro',
+};
+
+const FUR_LABELS: Record<string, string> = { short: 'Pelo corto', long: 'Pelo lungo' };
+
+const CAT_TYPE_LABELS: Record<string, string> = {
+  stray: 'Randagio', domestic: 'Domestico', community: 'Randagio',
+};
+
 interface Props {
   sighting: MapSighting | null;
   onClose: () => void;
@@ -74,18 +86,19 @@ function SheetContent({ sighting }: { sighting: MapSighting }) {
             <h2 className="text-lg font-bold text-foreground leading-tight">{sighting.catNickname}</h2>
             <p className="text-xs text-muted-foreground mt-1">{dateFormatted}</p>
 
-            {sighting.tagColors.length > 0 && (
-              <div className="flex gap-1.5 flex-wrap mt-2">
-                {sighting.tagColors.map((c) => (
-                  <span
-                    key={c}
-                    className="px-2.5 py-0.5 rounded-full text-xs bg-muted text-muted-foreground capitalize"
-                  >
-                    {c}
-                  </span>
-                ))}
-              </div>
-            )}
+            <div className="flex gap-1.5 flex-wrap mt-2">
+              {sighting.tagColors.map((c) => (
+                <span key={c} className="px-2.5 py-0.5 rounded-full text-xs bg-muted text-muted-foreground capitalize">
+                  {COLOR_LABELS[c] ?? c}
+                </span>
+              ))}
+              <span className="px-2.5 py-0.5 rounded-full text-xs bg-muted text-muted-foreground">
+                {FUR_LABELS[sighting.tagFur] ?? sighting.tagFur}
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-xs bg-muted text-muted-foreground">
+                {CAT_TYPE_LABELS[sighting.catType] ?? sighting.catType}
+              </span>
+            </div>
           </div>
         </div>
       </div>

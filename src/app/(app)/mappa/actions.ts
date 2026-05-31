@@ -16,6 +16,8 @@ export type MapSighting = {
   thumbnailUrl: string;
   catNickname: string;
   tagColors: string[];
+  tagFur: string;
+  catType: string;
   createdAt: Date;
   username: string;
   avatarUrl: string | null;
@@ -35,6 +37,8 @@ export async function fetchMapSightings(): Promise<FetchMapSightingsResult> {
         photoThumbnailKey: sightings.photoThumbnailKey,
         catNickname: sightings.catNickname,
         tagColors: sightings.tagColors,
+        tagFur: sightings.tagFur,
+        catType: sightings.catType,
         createdAt: sightings.createdAt,
         username: users.username,
         avatarUrl: users.avatarUrl,
